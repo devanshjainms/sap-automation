@@ -19,14 +19,6 @@ resource "azurerm_role_assignment" "appconf_dataowner" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
-// TODO: PLEASE REMOVE ROBERT DE VEEN FROM THE CODE
-resource "azurerm_role_assignment" "appconf_dataowner2" {
-  provider             = azurerm.main
-  scope                = azurerm_app_configuration.app_config.id
-  role_definition_name = "App Configuration Data Owner"
-  principal_id         = "47778390-c43d-4e18-a90f-d816301b569f" # Robert de Veen
-}
-
 resource "time_sleep" "wait_for_appconf_dataowner_assignment" {
   create_duration = "60s"
 

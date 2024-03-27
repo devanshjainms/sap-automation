@@ -84,9 +84,9 @@ eval "$(setup_dependencies | sed 's/^/export /')"
 end_group
 
 file_deployer_tfstate_key=${deployerfolder}.tfstate
-file_key_vault=""
-file_REMOTE_STATE_SA=""
-file_REMOTE_STATE_RG=${deployerfolder}
+# file_key_vault=""
+# file_REMOTE_STATE_SA=""
+# file_REMOTE_STATE_RG=${deployerfolder}
 
 start_group "Variables"
 var=$(get_value_with_key "Deployer_Key_Vault")
@@ -437,32 +437,6 @@ fi
 
 if [ -f .sap_deployment_automation/${ENVIRONMENT}${LOCATION}.md ]; then
     upload_summary ".sap_deployment_automation/${ENVIRONMENT}${LOCATION}.md"
-fi
-end_group
-
-start_group "Adding variables to platform variable group"
-if [ 0 == $return_code ]; then
-    if [[ -n "${file_REMOTE_STATE_SA}" ]]; then
-        set_value_with_key "Terraform_Remote_Storage_Account_Name" ${file_REMOTE_STATE_SA}
-    fi
-    if [[ -n "${file_REMOTE_STATE_RG}" ]]; then
-        set_value_with_key "Terraform_Remote_Storage_Resource_Group_Name" ${file_REMOTE_STATE_RG} fi
-    fi
-    if [[ -n "${ARM_SUBSCRIPTION_ID}" ]]; then
-        set_value_with_key "Terraform_Remote_Storage_Subscription" ${ARM_SUBSCRIPTION_ID} fi
-    fi
-    if [[ -n "${file_deployer_tfstate_key}" ]]; then
-        set_value_with_key "Deployer_State_FileName" ${file_deployer_tfstate_key} fi
-    fi
-    if [[ -n "${file_key_vault}" ]]; then
-        set_value_with_key "Deployer_Key_Vault" ${file_key_vault} fi
-    fi
-    if [[ -n "${ENVIRONMENT}" ]]; then
-        set_value_with_key "ControlPlaneEnvironment" ${ENVIRONMENT} fi
-    fi
-    if [[ -n "${LOCATION}" ]]; then
-        set_value_with_key "ControlPlaneLocation" ${LOCATION}
-    fi
 fi
 end_group
 

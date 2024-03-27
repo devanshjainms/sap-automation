@@ -64,6 +64,7 @@ end_group
 set -euo pipefail
 
 export USE_MSI=false
+export VARIABLE_GROUP_ID=${deployerfolder}
 
 cd ${CONFIG_REPO_PATH}
 

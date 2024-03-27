@@ -58,6 +58,7 @@ fi
 
 # TODO:
 export USE_MSI=false
+export VARIABLE_GROUP_ID=${deployerfolder}
 
 start_group "Setup platform dependencies"
 # Will return vars which we need to export afterwards
@@ -142,7 +143,6 @@ echo "Environment(filename): $ENVIRONMENT_IN_FILENAME"
 echo "Location(filename):    $LOCATION_IN_FILENAME"
 echo "Network(filename):     $NETWORK_IN_FILENAME"
 
-export VARIABLE_GROUP_ID=$deployerfolder
 
 if [ $ENVIRONMENT != $ENVIRONMENT_IN_FILENAME ]; then
     exit_error "The environment setting in ${workload_zone_configuration_file} '$ENVIRONMENT' does not match the ${workload_zone_configuration_file} file name '$ENVIRONMENT_IN_FILENAME'. Filename should have the pattern [ENVIRONMENT]-[REGION_CODE]-[NETWORK_LOGICAL_NAME]-INFRASTRUCTURE" 2

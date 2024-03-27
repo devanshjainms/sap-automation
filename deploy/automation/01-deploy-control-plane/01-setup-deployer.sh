@@ -59,6 +59,7 @@ end_group
 set -euo pipefail
 
 export USE_MSI=false
+export VARIABLE_GROUP_ID=${deployerfolder}
 
 if [[ $(get_platform) = github ]]; then
     export CONFIG_REPO_PATH=${GITHUB_WORKSPACE}/WORKSPACES

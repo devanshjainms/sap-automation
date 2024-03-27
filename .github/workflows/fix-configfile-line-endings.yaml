@@ -1,3 +1,11 @@
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |     This workflows checks config line endings with GitHub Actions          |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+name: Check Config Files line endings
+
 on:
   push:
     branches:

@@ -68,6 +68,7 @@ end_group
 echo "Deploying the SAP Workload zone defined in ${workload_zone_folder}"
 
 if [ ! -f ${CONFIG_REPO_PATH}/LANDSCAPE/${workload_zone_folder}/${workload_zone_configuration_file} ]; then
+    echo "File: ${CONFIG_REPO_PATH}/LANDSCAPE/${workload_zone_folder}/${workload_zone_configuration_file}"
     exit_error "${workload_zone_configuration_file} was not found" 2
 fi
 

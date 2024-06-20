@@ -1,0 +1,61 @@
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |                 Playbook for SAP Functional Tests (sap-automation-qa)      |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+---
+
+- hosts:                               localhost
+  name:                                "SAP Functional Tests: - setup deployer"
+  gather_facts:                        true
+  vars_files:
+    - vars/ansible-input-api.yaml
+  tasks:
+    - name:                            "SAP Functional Tests: - Create Progress folder"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress"
+        state:                         directory
+        mode:                          0755
+
+    - name:                            "SAP Functional Tests: - Remove sap-funtional-test flag"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress/sap-functional-tests-done"
+        state:                          absent
+
+    - name:                            "SAP Functional Tests: - setup prerequisites"
+      ansible.builtin.include_role:
+        name:                          "roles-misc/0.10-sap-functional-tests"
+        tasks_from:                    "setup"
+
+- hosts: "{{ sap_sid | upper }}_DB  :
+    {{ sap_sid | upper }}_SCS :
+    {{ sap_sid | upper }}_ERS :
+    {{ sap_sid | upper }}_PAS :
+    {{ sap_sid | upper }}_APP"
+  name:                                "SAP Functional Tests: - run checks"
+  remote_user:                         "{{ orchestration_ansible_user }}"
+  gather_facts:                        true
+  any_errors_fatal:                    true
+  vars_files:
+    - vars/ansible-input-api.yaml
+  tasks:
+    - name:                            "SAP Functional Tests: - run check"
+      ansible.builtin.include_role:
+        name:                          "roles-misc/0.10-sap-functional-tests"
+        tasks_from:                    "run_check"
+
+- hosts:                               localhost
+  name:                                "SAP Functional Tests: - Done"
+  gather_facts:                        true
+  vars_files:
+    - vars/ansible-input-api.yaml
+  tasks:
+    - name:                            "SAP Functional Tests: - Create sap-functional-tests-done flag"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress/sap-functional-tests-done"
+        state:                         touch
+        mode:                          0755
+...
+# /*---------------------------------------------------------------------------8
+# |                                    END                                     |
+# +------------------------------------4--------------------------------------*/

@@ -2,6 +2,7 @@ parameters:
   logPath: ""
   qualityAssuranceResultsPath: ""
   collectQualityChecks: false
+  runSapFunctionalTests: false
 steps:
   - script: |
       #!/bin/bash
@@ -120,7 +121,7 @@ steps:
       fi
     displayName: Store quality assurance files in repository
     enabled: true
-    condition: ${{ eq(parameters.collectQualityChecks, true) }}
+    condition: ${{ or(eq(parameters.collectQualityChecks, true), eq(parameters.runSapFunctionalTests, true)) }}
     env:
       USER_EMAIL: $(Build.RequestedForEmail)
       USER_NAME: $(Build.RequestedFor)

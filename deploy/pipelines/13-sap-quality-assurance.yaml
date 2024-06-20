@@ -31,14 +31,10 @@ parameters:
   - name:                              sap_functional_tests_type
     displayName:                       SAP Functional Tests Type
     type:                              string
-    default:                           ""
-    ${{ if eq(parameters.sap_functional_tests, true) }}:
-      multiSelect:                     true
-      options:
-        - option:                       Database High Availability (currently only for SLES)
-        - option:                       ASCS High Availability  (currently only for SLES)
-    ${{ else }}:
-      multiSelect:                     false
+    default:                           DatabaseHighAvailability
+    values:
+      - DatabaseHighAvailability
+      - CentralServerHighAvailability
 
   - name:                              extra_params
     displayName:                       Extra Parameters

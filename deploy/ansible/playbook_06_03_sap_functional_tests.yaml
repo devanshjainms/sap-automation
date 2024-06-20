@@ -25,7 +25,6 @@
     - name:                            "SAP Functional Tests: - setup prerequisites"
       ansible.builtin.include_role:
         name:                          "roles-misc/0.10-sap-functional-tests"
-        tasks_from:                    "setup"
 
 - hosts: "{{ sap_sid | upper }}_DB  :
     {{ sap_sid | upper }}_SCS :
@@ -42,7 +41,6 @@
     - name:                            "SAP Functional Tests: - run check"
       ansible.builtin.include_role:
         name:                          "roles-misc/0.10-sap-functional-tests"
-        tasks_from:                    "run_check"
 
 - hosts:                               localhost
   name:                                "SAP Functional Tests: - Done"

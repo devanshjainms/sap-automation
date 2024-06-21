@@ -24,8 +24,6 @@
     repo:                           "https://{{ github_pat }}@github.com/devanshjainms/sap-automation-qa.git"
     dest:                           "/opt/microsoft/sap_functional_tests"
     version:                        "{{sap_qa_branch_name}}"
-    force:                          true
     clone:                          true
-    update:                         true
-    recursive:                      true
+    single_branch:                  true
 ...

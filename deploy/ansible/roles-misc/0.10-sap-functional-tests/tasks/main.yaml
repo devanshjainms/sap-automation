@@ -23,7 +23,7 @@
   ansible.builtin.git:
     repo:                           "https://{{ github_pat }}@github.com/devanshjainms/sap-automation-qa.git"
     dest:                           "/opt/microsoft/sap_functional_tests"
-    reference:                      "refs/heads/{{sap_qa_branch_name}}"
+    reference:                      "{{sap_qa_branch_name}}"
     force:                          true
     clone:                          true
     update:                         true

@@ -21,9 +21,9 @@
   become:                          true
   become_user:                     root
   ansible.builtin.git:
-    repo:                           https://github.com/devanshjainms/sap-automation-qa.git
+    repo:                           "https://{{ github_pat }}@github.com/devanshjainms/sap-automation-qa.git"
     dest:                           "/opt/microsoft/sap_functional_tests"
-    refs:                           refs/heads/experimental
+    reference:                      "refs/heads/{{sap_qa_branch_name}}"
     force:                          true
     clone:                          true
     update:                         true

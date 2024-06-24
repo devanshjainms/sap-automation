@@ -27,10 +27,11 @@
         name:                          "roles-misc/0.10-sap-functional-tests"
         tasks_from:                    setup.yaml
 
-- name:                                SAP Functional Tests run checks
+- name:                                "SAP Functional: Tests run checks"
   when:                                sap_functional_tests_type == "DatabaseHighAvailability"
-  ansible.builtin.import_playbook:
-    name:                              "/opt/microsoft/sap_functional_tests/ansible/playbook_00_ha_functional_tests.yml"
+  ansible.builtin.import_playbook:     "/opt/microsoft/sap_functional_tests/ansible/playbook_00_ha_functional_tests.yml"
+  vars:
+    vars/ansible-input-api.yaml
 
 - hosts:                               localhost
   name:                                "SAP Functional Tests: - Done"

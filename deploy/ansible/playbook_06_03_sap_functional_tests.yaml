@@ -28,10 +28,7 @@
         tasks_from:                    setup.yaml
 
 - name:                                "SAP Functional: Tests run checks"
-  when:                                sap_functional_tests_type == "HA_DB_HANA_SLES"
   ansible.builtin.import_playbook:     "/opt/microsoft/sap_functional_tests/ansible/playbook_00_ha_functional_tests.yml"
-  vars:
-    - sap_functional_tests_type:       "{{ sap_functional_tests_type }}"
 
 - hosts:                               localhost
   name:                                "SAP Functional Tests: - Done"

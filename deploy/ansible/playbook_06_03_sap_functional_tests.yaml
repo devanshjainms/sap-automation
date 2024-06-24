@@ -28,10 +28,7 @@
         tasks_from:                    setup.yaml
 
 - name:                                "SAP Functional: Tests run checks"
-  when:                                sap_functional_tests_type == "DatabaseHighAvailability"
   ansible.builtin.import_playbook:     "/opt/microsoft/sap_functional_tests/ansible/playbook_00_ha_functional_tests.yml"
-  vars_files:
-    - vars/ansible-input-api.yaml
 
 - hosts:                               localhost
   name:                                "SAP Functional Tests: - Done"

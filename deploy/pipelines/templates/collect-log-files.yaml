@@ -12,7 +12,7 @@ steps:
 
       echo "Collecting log files from ${{ parameters.logPath }}"
 
-      if [ -d ${LOG_PATH} ] && [ $(ls ${LOG_PATH}/*.zip | wc -l ) -gt 0 ]; then
+      if [ -d ${LOG_PATH} ] && [ $(ls ${LOG_PATH}/*.zip | wc -l ) -gt 0 ] && [ $(ls ${LOG_PATH}/*.log | wc -l ) -gt 0 ]; then
         echo "Found log files in ${LOG_PATH}"
 
         cd ${LOG_PATH}

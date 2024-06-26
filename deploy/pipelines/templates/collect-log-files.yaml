@@ -27,7 +27,12 @@ steps:
         git pull
 
         echo "Adding new logs..."
-        git add --ignore-errors ${LOG_PATH}/*.log ${LOG_PATH}/*.zip
+        if [ $(ls ${LOG_PATH}/*.zip | wc -l ) -gt 0 ]; then
+          git add --ignore-errors ${LOG_PATH}/*.zip
+        fi
+        if [ $(ls ${LOG_PATH}/*.log | wc -l ) -gt 0 ]; then
+          git add --ignore-errors ${LOG_PATH}/*.log
+        fi
         if [ $(git diff --name-only --cached | wc -l) -gt 0 ]; then
             echo "Committing changes..."
             git commit -m "Adding new logs"

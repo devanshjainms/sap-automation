@@ -31,18 +31,18 @@ parameters:
   - name:                              sap_functional_test_type
     displayName:                       SAP Functional Tests Type
     type:                              string
-    default:                           Database High Availability
+    default:                           "Database High Availability"
     values:
-      - Database High Availability
-      - Central Server High Availability
+      - "Database High Availability"
+      - "Central Server High Availability"
   
   - name:                              telemetry_data_destination
     displayName:                       Telemetry Data Destination (Provide connection settings in Extra Parameters)
     type:                              string
     default:                           ""
     values:
-      - Log Analytics
-      - Azure Data Explorer
+      - "Log Analytics"
+      - "Azure Data Explorer"
 
   - name:                              extra_params
     displayName:                       Extra Parameters

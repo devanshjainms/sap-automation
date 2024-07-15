@@ -41,8 +41,8 @@ parameters:
     type:                              string
     default:                           ""
     values:
-      - "Log Analytics"
-      - "Azure Data Explorer"
+      - "AzureLogAnalytics"
+      - "AzureDataExplorer"
 
   - name:                              extra_params
     displayName:                       Extra Parameters

@@ -33,20 +33,16 @@ parameters:
     type:                              string
     default:                           Database High Availability
     values:
-      - display:                       Database High Availability
-        value:                         HA_DB
-      - display:                       Central Server High Availability
-        value:                         HA_SCS
+      - Database High Availability
+      - Central Server High Availability
   
   - name:                              telemetry_data_destination
     displayName:                       Telemetry Data Destination (Provide connection settings in Extra Parameters)
     type:                              string
     default:                           ""
     values:
-      - display:                       Log Analytics
-        value:                         loganalytics
-      - display:                       Azure Data Explorer
-        value:                         dataexplorer
+      - Log Analytics
+      - Azure Data Explorer
 
   - name:                              extra_params
     displayName:                       Extra Parameters

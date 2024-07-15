@@ -31,10 +31,22 @@ parameters:
   - name:                              sap_functional_tests_type
     displayName:                       SAP Functional Tests Type
     type:                              string
-    default:                           DatabaseHighAvailability
+    default:                           Database High Availability
     values:
-      - DatabaseHighAvailability
-      - CentralServerHighAvailability
+      - display:                       Database High Availability
+        value:                         HA_DB
+      - display:                       Central Server High Availability
+        value:                         HA_SCS
+  
+  - name:                              telemetry_data_destination
+    displayName:                       Telemetry Data Destination (Provide connection settings in Extra Parameters)
+    type:                              string
+    default:                           ""
+    values:
+      - display:                       Log Analytics
+        value:                         loganalytics
+      - display:                       Azure Data Explorer
+        value:                         dataexplorer
 
   - name:                              extra_params
     displayName:                       Extra Parameters
@@ -137,8 +149,6 @@ stages:
                     exit 2
                 fi
 
-                echo "##vso[build.updatebuildnumber]Deploying ${SAP_SYSTEM_CONFIGURATION_NAME} using BoM ${BOM_BASE_NAME}"
-
                 echo "##vso[task.setvariable variable=SID;isOutput=true]${SID}"
                 echo "##vso[task.setvariable variable=SAP_PARAMETERS;isOutput=true]sap-parameters.yaml"
                 echo "##vso[task.setvariable variable=FOLDER;isOutput=true]$HOME/SYSTEM/${SAP_SYSTEM_CONFIGURATION_NAME}"
@@ -147,14 +157,6 @@ stages:
               echo -e "$green--- Get Files from the DevOps Repository ---$reset"
                 cd ${CONFIG_REPO_PATH}/$(Deployment_Configuration_Path)/SYSTEM/${SAP_SYSTEM_CONFIGURATION_NAME}
                 sap_params_updated=0
-
-              echo -e "$green--- Add BOM Base Name and SAP FQDN to sap-parameters.yaml ---$reset"
-                sed -i 's|bom_base_name:.*|bom_base_name:                 '"$BOM_BASE_NAME"'|'  sap-parameters.yaml
-
-                fqdn="$(grep -m1 "$sap_fqdn:" sap-parameters.yaml | cut -d':' -f2-  | tr -d ' ' | tr -d '"')"
-                if [ -z $fqdn ] ; then
-                  sed -i 's|sap_fqdn:.*|sap_fqdn:                      '"$(sap_fqdn)"'|'  sap-parameters.yaml
-                fi
 
               echo -e "$green--- Get connection details ---$reset"
                 mkdir -p artifacts
@@ -294,6 +296,7 @@ stages:
                   azureSubscriptionId:       $(ARM_SUBSCRIPTION_ID)
                   USE_MSI:                   $(USE_MSI)
                   sapFunctionalTestType:     ${{ parameters.sap_functional_tests_type }}
+                  telemetryDataDestination:  ${{ parameters.telemetry_data_destination }}
           - template:                        templates\collect-log-files.yaml
             parameters:
               logPath:                       ${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)/SYSTEM/${{ parameters.sap_system_configuration_name }}/logs

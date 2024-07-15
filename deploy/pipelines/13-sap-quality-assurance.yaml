@@ -31,9 +31,9 @@ parameters:
   - name:                              sap_functional_test_type
     displayName:                       SAP Functional Tests Type
     type:                              string
-    default:                           "Database High Availability"
+    default:                           "DatabaseHighAvailability"
     values:
-      - "Database High Availability"
+      - "DatabaseHighAvailability"
       - "Central Server High Availability"
   
   - name:                              telemetry_data_destination

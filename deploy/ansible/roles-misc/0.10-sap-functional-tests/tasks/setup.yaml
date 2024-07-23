@@ -26,4 +26,5 @@
     version:                        "{{sap_qa_branch_name}}"
     clone:                          true
     single_branch:                  true
+    force:                          true
 ...

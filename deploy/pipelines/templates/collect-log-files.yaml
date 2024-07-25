@@ -12,7 +12,7 @@ steps:
 
       echo "Collecting log files from ${{ parameters.logPath }}"
 
-      if [ -d ${LOG_PATH} ] && [ $(ls ${LOG_PATH}/*.log ${LOG_PATH}/*.zip ${LOG_PATH}/cluster_report/*.tar.bz2 | wc -l ) -gt 0 ] ; then
+      if [ -d ${LOG_PATH} ] && [ $(ls ${LOG_PATH}/*.log ${LOG_PATH}/*.zip ${LOG_PATH}/cluster_report/*.tar.bz2 ${LOG_PATH}/cluster_report/*.tar.gz | wc -l ) -gt 0 ] ; then
         echo "Found log files in ${LOG_PATH}"
 
         cd ${LOG_PATH}
@@ -35,6 +35,9 @@ steps:
         fi
         if [ $(ls ${LOG_PATH}/*.log | wc -l ) -gt 0 ]; then
           git add --ignore-errors ${LOG_PATH}/cluster_report/*.tar.bz2
+        fi
+        if [ $(ls ${LOG_PATH}/*.log | wc -l ) -gt 0 ]; then
+          git add --ignore-errors ${LOG_PATH}/cluster_report/*.tar.gz
         fi
         if [ $(git diff --name-only --cached | wc -l) -gt 0 ]; then
             echo "Committing changes..."

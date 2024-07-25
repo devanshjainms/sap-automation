@@ -33,10 +33,10 @@ steps:
         if [ $(ls ${LOG_PATH}/*.log | wc -l ) -gt 0 ]; then
           git add --ignore-errors ${LOG_PATH}/*.log
         fi
-        if [ $(ls ${LOG_PATH}/*.log | wc -l ) -gt 0 ]; then
+        if [ $(ls ${LOG_PATH}/cluster_report/*.tar.bz2 | wc -l ) -gt 0 ]; then
           git add --ignore-errors ${LOG_PATH}/cluster_report/*.tar.bz2
         fi
-        if [ $(ls ${LOG_PATH}/*.log | wc -l ) -gt 0 ]; then
+        if [ $(ls ${LOG_PATH}/cluster_report/*.tar.gz | wc -l ) -gt 0 ]; then
           git add --ignore-errors ${LOG_PATH}/cluster_report/*.tar.gz
         fi
         if [ $(git diff --name-only --cached | wc -l) -gt 0 ]; then

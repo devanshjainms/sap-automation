@@ -1,4 +1,5 @@
 # Write-Host "<Experimental>..............." -ForegroundColor Cyan
+Write-Host "In the main setup script now. "
 
 function Show-Menu($data) {
   Write-Host "================ $Title ================"
@@ -40,7 +41,7 @@ $versionLabel = "v3.11.0.3"
 
 # Check if access to the Azure DevOps organization is available and prompt for PAT if needed
 # Exact permissions required, to be validated, and included in the Read-Host text.
-
+Write-Host "pat: $Env:AZURE_DEVOPS_EXT_PAT"
 if ($Env:AZURE_DEVOPS_EXT_PAT.Length -gt 0) {
   Write-Host "Using the provided Personal Access Token (PAT) to authenticate to the Azure DevOps organization $ADO_Organization" -ForegroundColor Yellow
 }

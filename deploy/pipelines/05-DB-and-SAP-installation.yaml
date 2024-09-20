@@ -328,7 +328,7 @@ stages:
               EXTRA_PARAMETERS:              $(EXTRA_PARAMETERS)
               PIPELINE_EXTRA_PARAMETERS:     ${{ parameters.extra_params }}
               USE_MSI:                       $(USE_MSI)
-          - template:                        templates\run-ansible.yaml
+          - template:                        templates\run-ansible-2.yaml
             parameters:
               displayName:                   "Parameter validation"
               ansibleFilePath:               ${{ parameters.sap_automation_repo_path }}/deploy/ansible/playbook_00_validate_parameters.yaml
@@ -345,6 +345,8 @@ stages:
               azureTenantId:                 $(ARM_TENANT_ID)
               azureSubscriptionId:           $(ARM_SUBSCRIPTION_ID)
               USE_MSI:                       $(USE_MSI)
+              OPENAI_KEY:                    $(OPENAI_KEY)
+              OPENAI_ENDPOINT:               $(OPENAI_ENDPOINT)
           - ${{ if eq(parameters.base_os_configuration, true) }}:
               - template:                    templates\run-ansible.yaml
                 parameters:

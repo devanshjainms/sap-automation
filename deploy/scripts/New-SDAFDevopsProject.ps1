@@ -547,7 +547,7 @@ $SPassword = 'Enter your S user password'
 if ($Env.SUSER_DETAILS.Length -eq 0) {
   $provideSUser = Read-Host "Do you want to provide the S user details y/n?"
 } else {
-  $provideSUser = $Env:provideSUser
+  $provideSUser = $Env:SUSER_DETAILS
 }
 if ($provideSUser -eq 'y') {
   if ($Env:SUserName.Length -eq 0) {

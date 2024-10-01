@@ -564,11 +564,11 @@ $pipelines = New-Object System.Collections.Generic.List[System.Object]
 
 Write-Host "Creating the variable group SDAF-General" -ForegroundColor Green
 
-$general_group_id = (az pipelines variable-group list --query "[?name=='SDAF-General'].id | [0]" --only-show-errors)
+$general_group_id = (az pipelines variable-group list --query "[?name=='SDAF-General'].id | [0]" --only-show-errors --project "$ADO_Project")
 if ($general_group_id.Length -eq 0) {
-  az pipelines variable-group create --name SDAF-General --variables ANSIBLE_HOST_KEY_CHECKING=false Deployment_Configuration_Path=WORKSPACES Branch=main tf_version="1.9.5" ansible_core_version="2.15" S-Username=$SUserName S-Password=$SPassword --output yaml --authorize true --output none
-  $general_group_id = (az pipelines variable-group list --query "[?name=='SDAF-General'].id | [0]" --only-show-errors)
-  az pipelines variable-group variable update --group-id $general_group_id --name "S-Password" --value $SPassword --secret true --output none --only-show-errors
+  az pipelines variable-group create --name SDAF-General --variables ANSIBLE_HOST_KEY_CHECKING=false Deployment_Configuration_Path=WORKSPACES Branch=main tf_version="1.9.5" ansible_core_version="2.15" S-Username=$SUserName S-Password=$SPassword --output yaml --authorize true --output none --project "$ADO_Project"
+  $general_group_id = (az pipelines variable-group list --query "[?name=='SDAF-General'].id | [0]" --only-show-errors --project "$ADO_Project")
+  az pipelines variable-group variable update --group-id $general_group_id --name "S-Password" --value $SPassword --secret true --output none --only-show-errors --project "$ADO_Project"
 }
 
 $groups.Add($general_group_id)
@@ -884,23 +884,23 @@ if ($authenticationMethod -eq "Service Principal") {
 
   az role assignment create --assignee $CP_ARM_CLIENT_ID --role "User Access Administrator" --subscription $Control_plane_subscriptionID --scope /subscriptions/$Control_plane_subscriptionID --output none
 
-  $Control_plane_groupID = (az pipelines variable-group list --query "[?name=='$ControlPlanePrefix'].id | [0]" --only-show-errors)
+  $Control_plane_groupID = (az pipelines variable-group list --query "[?name=='$ControlPlanePrefix'].id | [0]" --only-show-errors --project "$ADO_Project")
   if ($Control_plane_groupID.Length -eq 0) {
     Write-Host "Creating the variable group" $ControlPlanePrefix -ForegroundColor Green
 
     if ($WebApp) {
-      az pipelines variable-group create --name $ControlPlanePrefix --variables Agent='Azure Pipelines' APP_REGISTRATION_APP_ID=$APP_REGISTRATION_ID APP_REGISTRATION_OBJECTID=$APP_REGISTRATION_OBJECTID APP_TENANT_ID=$ARM_TENANT_ID CP_ARM_CLIENT_ID=$CP_ARM_CLIENT_ID CP_ARM_OBJECT_ID=$CP_ARM_OBJECT_ID CP_ARM_CLIENT_SECRET='Enter your SPN password here' PAT='Enter your personal access token here' CP_ARM_SUBSCRIPTION_ID=$Control_plane_subscriptionID CP_ARM_TENANT_ID=$CP_ARM_TENANT_ID POOL=$Pool_Name AZURE_CONNECTION_NAME='Control_Plane_Service_Connection' WORKLOADZONE_PIPELINE_ID=$wz_pipeline_id SYSTEM_PIPELINE_ID=$system_pipeline_id SDAF_GENERAL_GROUP_ID=$general_group_id SAP_INSTALL_PIPELINE_ID=$installation_pipeline_id TF_LOG=OFF --output none --authorize true
+      az pipelines variable-group create --name $ControlPlanePrefix --variables Agent='Azure Pipelines' APP_REGISTRATION_APP_ID=$APP_REGISTRATION_ID APP_REGISTRATION_OBJECTID=$APP_REGISTRATION_OBJECTID APP_TENANT_ID=$ARM_TENANT_ID CP_ARM_CLIENT_ID=$CP_ARM_CLIENT_ID CP_ARM_OBJECT_ID=$CP_ARM_OBJECT_ID CP_ARM_CLIENT_SECRET='Enter your SPN password here' PAT='Enter your personal access token here' CP_ARM_SUBSCRIPTION_ID=$Control_plane_subscriptionID CP_ARM_TENANT_ID=$CP_ARM_TENANT_ID POOL=$Pool_Name AZURE_CONNECTION_NAME='Control_Plane_Service_Connection' WORKLOADZONE_PIPELINE_ID=$wz_pipeline_id SYSTEM_PIPELINE_ID=$system_pipeline_id SDAF_GENERAL_GROUP_ID=$general_group_id SAP_INSTALL_PIPELINE_ID=$installation_pipeline_id TF_LOG=OFF --output none --authorize true --project "$ADO_Project"
     }
     else {
-      az pipelines variable-group create --name $ControlPlanePrefix --variables Agent='Azure Pipelines' CP_ARM_CLIENT_ID=$CP_ARM_CLIENT_ID CP_ARM_OBJECT_ID=$CP_ARM_OBJECT_ID CP_ARM_CLIENT_SECRET='Enter your SPN password here' CP_ARM_SUBSCRIPTION_ID=$Control_plane_subscriptionID CP_ARM_TENANT_ID=$CP_ARM_TENANT_ID PAT='Enter your personal access token here' POOL=$Pool_Name AZURE_CONNECTION_NAME='Control_Plane_Service_Connection' WORKLOADZONE_PIPELINE_ID=$wz_pipeline_id SYSTEM_PIPELINE_ID=$system_pipeline_id SDAF_GENERAL_GROUP_ID=$general_group_id SAP_INSTALL_PIPELINE_ID=$installation_pipeline_id TF_LOG=OFF --output none --authorize true
+      az pipelines variable-group create --name $ControlPlanePrefix --variables Agent='Azure Pipelines' CP_ARM_CLIENT_ID=$CP_ARM_CLIENT_ID CP_ARM_OBJECT_ID=$CP_ARM_OBJECT_ID CP_ARM_CLIENT_SECRET='Enter your SPN password here' CP_ARM_SUBSCRIPTION_ID=$Control_plane_subscriptionID CP_ARM_TENANT_ID=$CP_ARM_TENANT_ID PAT='Enter your personal access token here' POOL=$Pool_Name AZURE_CONNECTION_NAME='Control_Plane_Service_Connection' WORKLOADZONE_PIPELINE_ID=$wz_pipeline_id SYSTEM_PIPELINE_ID=$system_pipeline_id SDAF_GENERAL_GROUP_ID=$general_group_id SAP_INSTALL_PIPELINE_ID=$installation_pipeline_id TF_LOG=OFF --output none --authorize true --project "$ADO_Project"
     }
-    $Control_plane_groupID = (az pipelines variable-group list --query "[?name=='$ControlPlanePrefix'].id | [0]" --only-show-errors)
+    $Control_plane_groupID = (az pipelines variable-group list --query "[?name=='$ControlPlanePrefix'].id | [0]" --only-show-errors --project "$ADO_Project")
   }
 
   if ($CP_ARM_CLIENT_SECRET -ne "Please update") {
-    az pipelines variable-group variable update --group-id $Control_plane_groupID --name "CP_ARM_CLIENT_SECRET" --value $CP_ARM_CLIENT_SECRET --secret true --output none --only-show-errors
-    az pipelines variable-group variable update --group-id $Control_plane_groupID --name "CP_ARM_CLIENT_ID" --value $CP_ARM_CLIENT_ID --output none --only-show-errors
-    az pipelines variable-group variable update --group-id $Control_plane_groupID --name "CP_ARM_OBJECT_ID" --value $CP_ARM_OBJECT_ID --output none --only-show-errors
+    az pipelines variable-group variable update --group-id $Control_plane_groupID --name "CP_ARM_CLIENT_SECRET" --value $CP_ARM_CLIENT_SECRET --secret true --output none --only-show-errors --project "$ADO_Project"
+    az pipelines variable-group variable update --group-id $Control_plane_groupID --name "CP_ARM_CLIENT_ID" --value $CP_ARM_CLIENT_ID --output none --only-show-errors --project "$ADO_Project"
+    az pipelines variable-group variable update --group-id $Control_plane_groupID --name "CP_ARM_OBJECT_ID" --value $CP_ARM_OBJECT_ID --output none --only-show-errors --project "$ADO_Project"
   }
 
   Write-Host "Create the Service Endpoint in Azure for the control plane" -ForegroundColor Green
@@ -908,47 +908,52 @@ if ($authenticationMethod -eq "Service Principal") {
   $Service_Connection_Name = "Control_Plane_Service_Connection"
   $Env:AZURE_DEVOPS_EXT_AZURE_RM_SERVICE_PRINCIPAL_KEY = $CP_ARM_CLIENT_SECRET
 
-  $epExists = (az devops service-endpoint list --query "[?name=='$Service_Connection_Name'].name | [0]")
+  $epExists = (az devops service-endpoint list --query "[?name=='$Service_Connection_Name'].name | [0]" --project "$ADO_Project")
   if ($epExists.Length -eq 0) {
     Write-Host "Creating Service Endpoint" $Service_Connection_Name -ForegroundColor Green
-    az devops service-endpoint azurerm create --azure-rm-service-principal-id $CP_ARM_CLIENT_ID --azure-rm-subscription-id $Control_plane_subscriptionID --azure-rm-subscription-name $ControlPlaneSubscriptionName --azure-rm-tenant-id $CP_ARM_TENANT_ID --name $Service_Connection_Name --output none --only-show-errors
-    $epId = az devops service-endpoint list --query "[?name=='$Service_Connection_Name'].id" -o tsv
-    az devops service-endpoint update --id $epId --enable-for-all true --output none --only-show-errors
+    az devops service-endpoint azurerm create --azure-rm-service-principal-id $CP_ARM_CLIENT_ID --azure-rm-subscription-id $Control_plane_subscriptionID --azure-rm-subscription-name $ControlPlaneSubscriptionName --azure-rm-tenant-id $CP_ARM_TENANT_ID --name $Service_Connection_Name --output none --only-show-errors --project "$ADO_Project"
+    $epId = az devops service-endpoint list --query "[?name=='$Service_Connection_Name'].id" -o tsv --project "$ADO_Project"
+    az devops service-endpoint update --id $epId --enable-for-all true --output none --only-show-errors --project "$ADO_Project"
   }
   else {
     Write-Host "Service Endpoint already exists, recreating it with the updated credentials" -ForegroundColor Green
     $epId = az devops service-endpoint list --query "[?name=='$Service_Connection_Name'].id" -o tsv
     az devops service-endpoint delete --id $epId --yes
-    az devops service-endpoint azurerm create --azure-rm-service-principal-id $CP_ARM_CLIENT_ID --azure-rm-subscription-id $Control_plane_subscriptionID --azure-rm-subscription-name $ControlPlaneSubscriptionName --azure-rm-tenant-id $CP_ARM_TENANT_ID --name $Service_Connection_Name --output none --only-show-errors
-    $epId = az devops service-endpoint list --query "[?name=='$Service_Connection_Name'].id" -o tsv
-    az devops service-endpoint update --id $epId --enable-for-all true --output none --only-show-errors
+    az devops service-endpoint azurerm create --azure-rm-service-principal-id $CP_ARM_CLIENT_ID --azure-rm-subscription-id $Control_plane_subscriptionID --azure-rm-subscription-name $ControlPlaneSubscriptionName --azure-rm-tenant-id $CP_ARM_TENANT_ID --name $Service_Connection_Name --output none --only-show-errors --project "$ADO_Project"
+    $epId = az devops service-endpoint list --query "[?name=='$Service_Connection_Name'].id" -o tsv --project "$ADO_Project"
+    az devops service-endpoint update --id $epId --enable-for-all true --output none --only-show-errors --project "$ADO_Project"
   }
 
 }
 else {
-  $Control_plane_groupID = (az pipelines variable-group list --query "[?name=='$ControlPlanePrefix'].id | [0]" --only-show-errors)
+  $Control_plane_groupID = (az pipelines variable-group list --query "[?name=='$ControlPlanePrefix'].id | [0]" --only-show-errors --project "$ADO_Project")
   if ($Control_plane_groupID.Length -eq 0) {
     Write-Host "Creating the variable group" $ControlPlanePrefix -ForegroundColor Green
     if ($WebApp) {
-      az pipelines variable-group create --name $ControlPlanePrefix --variables Agent='Azure Pipelines' APP_REGISTRATION_APP_ID=$APP_REGISTRATION_ID APP_REGISTRATION_OBJECTID=$APP_REGISTRATION_OBJECTID APP_TENANT_ID=$ARM_TENANT_ID CP_ARM_SUBSCRIPTION_ID=$Control_plane_subscriptionID PAT='Enter your personal access token here' POOL=$Pool_Name AZURE_CONNECTION_NAME='Control_Plane_Service_Connection' WORKLOADZONE_PIPELINE_ID=$wz_pipeline_id SYSTEM_PIPELINE_ID=$system_pipeline_id SDAF_GENERAL_GROUP_ID=$general_group_id SAP_INSTALL_PIPELINE_ID=$installation_pipeline_id TF_LOG=OFF USE_MSI=true --output none --authorize true
+      az pipelines variable-group create --name $ControlPlanePrefix --variables Agent='Azure Pipelines' APP_REGISTRATION_APP_ID=$APP_REGISTRATION_ID APP_REGISTRATION_OBJECTID=$APP_REGISTRATION_OBJECTID APP_TENANT_ID=$ARM_TENANT_ID CP_ARM_SUBSCRIPTION_ID=$Control_plane_subscriptionID PAT='Enter your personal access token here' POOL=$Pool_Name AZURE_CONNECTION_NAME='Control_Plane_Service_Connection' WORKLOADZONE_PIPELINE_ID=$wz_pipeline_id SYSTEM_PIPELINE_ID=$system_pipeline_id SDAF_GENERAL_GROUP_ID=$general_group_id SAP_INSTALL_PIPELINE_ID=$installation_pipeline_id TF_LOG=OFF USE_MSI=true --output none --authorize true --project "$ADO_Project"
     }
     else {
-      az pipelines variable-group create --name $ControlPlanePrefix --variables Agent='Azure Pipelines' CP_ARM_SUBSCRIPTION_ID=$Control_plane_subscriptionID PAT='Enter your personal access token here' POOL=$Pool_Name AZURE_CONNECTION_NAME='Control_Plane_Service_Connection' WORKLOADZONE_PIPELINE_ID=$wz_pipeline_id SYSTEM_PIPELINE_ID=$system_pipeline_id SDAF_GENERAL_GROUP_ID=$general_group_id SAP_INSTALL_PIPELINE_ID=$installation_pipeline_id TF_LOG=OFF USE_MSI=true --output none --authorize true
+      az pipelines variable-group create --name $ControlPlanePrefix --variables Agent='Azure Pipelines' CP_ARM_SUBSCRIPTION_ID=$Control_plane_subscriptionID PAT='Enter your personal access token here' POOL=$Pool_Name AZURE_CONNECTION_NAME='Control_Plane_Service_Connection' WORKLOADZONE_PIPELINE_ID=$wz_pipeline_id SYSTEM_PIPELINE_ID=$system_pipeline_id SDAF_GENERAL_GROUP_ID=$general_group_id SAP_INSTALL_PIPELINE_ID=$installation_pipeline_id TF_LOG=OFF USE_MSI=true --output none --authorize true --project "$ADO_Project"
     }
 
-    $Control_plane_groupID = (az pipelines variable-group list --query "[?name=='$ControlPlanePrefix'].id | [0]" --only-show-errors)
+    $Control_plane_groupID = (az pipelines variable-group list --query "[?name=='$ControlPlanePrefix'].id | [0]" --only-show-error --project "$ADO_Project")
   }
 
   Write-Host
 
   Write-Host ""
-  Write-Host "The browser will now open, Please create an 'Azure Resource Manager' service connection with the name 'Control_Plane_Service_Connection'."
-  $connections_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_settings/adminservices"
-  Write-Host "URL: " $connections_url
 
-
-  Start-Process $connections_url
-  Read-Host -Prompt "Once you have created and validated the connection, Press any key to continue"
+  if ($Env:SUSER_DETAILS.Length -eq 0) {
+    Write-Host "The browser will now open, Please create an 'Azure Resource Manager' service connection with the name 'Control_Plane_Service_Connection'."
+    $connections_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_settings/adminservices"
+    Write-Host "URL: " $connections_url
+  
+  
+    Start-Process $connections_url
+    Read-Host -Prompt "Once you have created and validated the connection, Press any key to continue"
+  } else {
+    az devops service-endpoint azurerm create --azure-rm-service-principal-id $Env:MSI_CLIENT_ID --azure-rm-subscription-id $Control_plane_subscriptionID --azure-rm-subscription-name $ControlPlaneSubscriptionName --azure-rm-tenant-id $ARM_TENANT_ID --name 'Control_Plane_Service_Connection' --output none --only-show-errors --project $ADO_Project
+  }
 
 }
 
@@ -958,7 +963,7 @@ $groups.Add($Control_plane_groupID)
 #endregion
 
 
-$AlreadySet = [Boolean](az pipelines variable-group variable list --group-id $Control_plane_groupID --query PAT.isSecret --only-show-errors)
+$AlreadySet = [Boolean](az pipelines variable-group variable list --group-id $Control_plane_groupID --query PAT.isSecret --only-show-errors --project "$ADO_Project")
 $ResetPAT = $true
 
 if ($AlreadySet) {
@@ -978,14 +983,14 @@ if (!$AlreadySet -or $ResetPAT ) {
   Write-Host "URL: " pat_url
   Start-Process $pat_url
   $PAT = Read-Host -Prompt "Please enter the PAT "
-  az pipelines variable-group variable update --group-id $Control_plane_groupID --name "PAT" --value $PAT --secret true --only-show-errors --output none
+  az pipelines variable-group variable update --group-id $Control_plane_groupID --name "PAT" --value $PAT --secret true --only-show-errors --output none --project "$ADO_Project"
 
   $POOL_ID = 0
-  $POOL_NAME_FOUND = (az pipelines pool list --query "[?name=='$Pool_Name'].name | [0]")
+  $POOL_NAME_FOUND = (az pipelines pool list --query "[?name=='$Pool_Name'].name | [0]" --project "$ADO_Project")
   if ($POOL_NAME_FOUND.Length -gt 0) {
     Write-Host "Agent pool" $Pool_Name "already exists" -ForegroundColor Yellow
-    $POOL_ID = (az pipelines pool list --query "[?name=='$Pool_Name'].id | [0]" --output tsv)
-    $queue_id = (az pipelines queue list --query "[?name=='$Pool_Name'].id | [0]" --output tsv)
+    $POOL_ID = (az pipelines pool list --query "[?name=='$Pool_Name'].id | [0]" --output tsv --project "$ADO_Project")
+    $queue_id = (az pipelines queue list --query "[?name=='$Pool_Name'].id | [0]" --output tsv --project "$ADO_Project")
   }
   else {
 
@@ -993,9 +998,9 @@ if (!$AlreadySet -or $ResetPAT ) {
 
     Set-Content -Path pool.json -Value (ConvertTo-Json @{name = $Pool_Name; autoProvision = $true })
     az devops invoke --area distributedtask --resource pools --http-method POST --api-version "7.1-preview" --in-file ".${pathSeparator}pool.json" --query-parameters authorizePipelines=true --query id --output none --only-show-errors --route-parameters project=$ADO_Project
-    $POOL_ID = (az pipelines pool list --query "[?name=='$Pool_Name'].id | [0]" --output tsv)
+    $POOL_ID = (az pipelines pool list --query "[?name=='$Pool_Name'].id | [0]" --output tsv --project "$ADO_Project")
     Write-Host "Agent pool" $Pool_Name "created"
-    $queue_id = (az pipelines queue list --query "[?name=='$Pool_Name'].id | [0]" --output tsv)
+    $queue_id = (az pipelines queue list --query "[?name=='$Pool_Name'].id | [0]" --output tsv --project "$ADO_Project")
 
   }
 

@@ -339,7 +339,7 @@ if ($confirmation -ne 'y') {
     az devops invoke `
       --area git --resource pushes `
       --route-parameters project=$ADO_Project repositoryId=$repo_id `
-      --http-method POST --in-file "SDAF.json" `
+      --http-method POST --in-file $inputfile `
       --api-version "6.0" --output none
 
     Remove-Item $templatename
@@ -393,7 +393,7 @@ if ($confirmation -ne 'y') {
     az devops invoke `
       --area git --resource pushes `
       --route-parameters project=$ADO_Project repositoryId=$repo_id `
-      --http-method POST --in-file "SDAF.json" `
+      --http-method POST --in-file $inputfile `
       --api-version "6.0" --output none
 
     Remove-Item $templatename

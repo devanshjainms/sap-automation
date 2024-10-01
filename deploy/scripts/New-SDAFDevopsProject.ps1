@@ -334,7 +334,8 @@ if ($confirmation -ne 'y') {
     }
 
     Set-Content -Path $inputfile -Value ($postBody | ConvertTo-Json -Depth 6)
-
+    $lsoutput = $(ls -latr)
+    Write-Host "ls output: " $lsoutput
     az devops invoke `
       --area git --resource pushes `
       --route-parameters project=$ADO_Project repositoryId=$repo_id `

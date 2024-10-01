@@ -334,8 +334,6 @@ if ($confirmation -ne 'y') {
     }
 
     Set-Content -Path $inputfile -Value ($postBody | ConvertTo-Json -Depth 6)
-    $lsoutput = $(ls -latr)
-    Write-Host "ls output: " $lsoutput
     az devops invoke `
       --area git --resource pushes `
       --route-parameters project=$ADO_Project repositoryId=$repo_id `
@@ -545,7 +543,7 @@ $repo_name = (az repos list --query "[?name=='$ADO_Project'].name | [0]" --out t
 $SUserName = 'Enter your S User'
 $SPassword = 'Enter your S user password'
 
-if ($Env.SUSER_DETAILS.Length -eq 0) {
+if ($Env:SUSER_DETAILS.Length -eq 0) {
   $provideSUser = Read-Host "Do you want to provide the S user details y/n?"
 } else {
   $provideSUser = $Env:SUSER_DETAILS

@@ -202,9 +202,9 @@ if ($Project_ID.Length -eq 0) {
   $repo_id = (az repos list --query "[?name=='$ADO_Project'].id | [0]" --out tsv)
 
   Write-Host "Importing the content from GitHub" -ForegroundColor Green
-  az repos import create --git-url https://github.com/Azure/SAP-automation-bootstrap --repository $repo_id --output none --project $ADO_Project
+  az repos import create --git-url https://github.com/Azure/SAP-automation-bootstrap --repository $repo_id --output none --project "$ADO_Project"
 
-  az repos update --repository $repo_id --default-branch main --output none --project $ADO_Project
+  az repos update --repository $repo_id --default-branch main --output none --project "$ADO_Project"
 
 }
 
@@ -217,12 +217,12 @@ else {
 
   az devops configure --defaults organization=$ADO_ORGANIZATION project=$ADO_PROJECT
 
-  $repo_id = (az repos list --query "[?name=='$ADO_Project'].id | [0]" --output tsv --project $ADO_Project)
+  $repo_id = (az repos list --query "[?name=='$ADO_Project'].id | [0]" --output tsv --project "$ADO_Project")
   if ($repo_id.Length -ne 0) {
     Write-Host "Using repository '$ADO_Project'" -ForegroundColor Green
   }
 
-  $repo_size = (az repos list --query "[?name=='$ADO_Project'].size | [0]" --output tsv  --project $ADO_Project)
+  $repo_size = (az repos list --query "[?name=='$ADO_Project'].size | [0]" --output tsv  --project "$ADO_Project")
 
   if ($repo_size -eq 0) {
     Write-Host "Importing the repository from GitHub" -ForegroundColor Green
@@ -230,12 +230,12 @@ else {
     Add-Content -Path $fname -Value ""
     Add-Content -Path $fname -Value "Terraform and Ansible code repository stored in the DevOps project (sap-automation)"
 
-    az repos import create --git-url https://github.com/Azure/SAP-automation-bootstrap --repository $repo_id --output tsv --project $ADO_Project
+    az repos import create --git-url https://github.com/Azure/SAP-automation-bootstrap --repository $repo_id --output tsv --project "$ADO_Project"
     if ($LastExitCode -eq 1) {
       Write-Host "The repository already exists" -ForegroundColor Yellow
       Write-Host "Creating repository 'SDAF Configuration'" -ForegroundColor Green
-      $repo_id = (az repos create --name "SDAF Configuration" --query id --output tsv  --project $ADO_Project)
-      az repos import create --git-url https://github.com/Azure/SAP-automation-bootstrap --repository $repo_id --output none --project $ADO_Project
+      $repo_id = (az repos create --name "SDAF Configuration" --query id --output tsv  --project "$ADO_Project")
+      az repos import create --git-url https://github.com/Azure/SAP-automation-bootstrap --repository $repo_id --output none --project "$ADO_Project"
     }
 
   }
@@ -248,12 +248,12 @@ else {
     }
     if ($confirmation -ne 'y') {
       Write-Host "Creating repository 'SDAF Configuration'" -ForegroundColor Green
-      $repo_id = (az repos create --name "SDAF Configuration" --query id --output tsv --project $ADO_Project)
-      az repos import create --git-url https://github.com/Azure/SAP-automation-bootstrap --repository $repo_id --output none --project $ADO_Project
+      $repo_id = (az repos create --name "SDAF Configuration" --query id --output tsv --project "$ADO_Project")
+      az repos import create --git-url https://github.com/Azure/SAP-automation-bootstrap --repository $repo_id --output none --project "$ADO_Project"
     }
   }
 
-  az repos update --repository $repo_id --default-branch main --output none --project $ADO_Project
+  az repos update --repository $repo_id --default-branch main --output none --project "$ADO_Project"
 }
 
 if ($Env:github_confirmation.Length -eq 0) {
@@ -269,24 +269,24 @@ if ($confirmation -ne 'y') {
   $import_code = $true
   $repo_name = "sap-automation"
   Write-Host "Creating $repo_name repository" -ForegroundColor Green
-  az repos create --name $repo_name --query id --output none  --project $ADO_Project
-  $code_repo_id = (az repos list --query "[?name=='$repo_name'].id | [0]" --out tsv --project $ADO_Project)
-  az repos import create --git-url https://github.com/Azure/SAP-automation --repository $code_repo_id --output none --project $ADO_Project
-  az repos update --repository $code_repo_id --default-branch main --output none  --project $ADO_Project
+  az repos create --name $repo_name --query id --output none  --project "$ADO_Project"
+  $code_repo_id = (az repos list --query "[?name=='$repo_name'].id | [0]" --out tsv --project "$ADO_Project")
+  az repos import create --git-url https://github.com/Azure/SAP-automation --repository $code_repo_id --output none --project "$ADO_Project"
+  az repos update --repository $code_repo_id --default-branch main --output none  --project "$ADO_Project"
 
   $import_code = $true
   $repo_name = "sap-samples"
   Write-Host "Creating $repo_name repository" -ForegroundColor Green
-  az repos create --name $repo_name --query id --output none --project $ADO_Project
-  $sample_repo_id = (az repos list --query "[?name=='$repo_name'].id | [0]" --out tsv --project $ADO_Project)
-  az repos import create --git-url https://github.com/Azure/SAP-automation-samples --repository $sample_repo_id --output none --project $ADO_Project
-  az repos update --repository $sample_repo_id --default-branch main --output none --project $ADO_Project
+  az repos create --name $repo_name --query id --output none --project "$ADO_Project"
+  $sample_repo_id = (az repos list --query "[?name=='$repo_name'].id | [0]" --out tsv --project "$ADO_Project")
+  az repos import create --git-url https://github.com/Azure/SAP-automation-samples --repository $sample_repo_id --output none --project "$ADO_Project"
+  az repos update --repository $sample_repo_id --default-branch main --output none --project "$ADO_Project"
 
   if ($ADO_Project -ne "SAP Deployment Automation Framework") {
 
     Write-Host "Using a non standard DevOps project name, need to update some of the parameter files" -ForegroundColor Green
 
-    $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] --project $ADO_Project | ConvertFrom-Json).objectId
+    $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] --project "$ADO_Project" | ConvertFrom-Json).objectId
 
 
     $templatename = "resources.yml"
@@ -339,7 +339,7 @@ if ($confirmation -ne 'y') {
       --area git --resource pushes `
       --route-parameters project=$ADO_Project repositoryId=$repo_id `
       --http-method POST --in-file "SDAF.json" `
-      --api-version "6.0" --output none --project $ADO_Project
+      --api-version "6.0" --output none --project "$ADO_Project"
 
     Remove-Item $templatename
     $templatename = "resources_including_samples.yml"
@@ -364,7 +364,7 @@ if ($confirmation -ne 'y') {
     Add-Content -Path $templatename "      name: $ADO_Project/sap-samples"
     Add-Content -Path $templatename "      ref: refs/heads/main"
 
-    $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] --project $ADO_Project | ConvertFrom-Json).objectId
+    $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] --project "$ADO_Project" | ConvertFrom-Json).objectId
 
     Remove-Item "sdaf.json"
     $cont = Get-Content -Path $templatename -Raw
@@ -393,7 +393,7 @@ if ($confirmation -ne 'y') {
       --area git --resource pushes `
       --route-parameters project=$ADO_Project repositoryId=$repo_id `
       --http-method POST --in-file "SDAF.json" `
-      --api-version "6.0" --output none --project $ADO_Project
+      --api-version "6.0" --output none --project "$ADO_Project"
 
     Remove-Item $templatename
   }
@@ -418,9 +418,9 @@ else {
   Start-Process $gh_connection_url
   Read-Host "Please press enter when you have created the connection"
 
-  $ghConn = (az devops service-endpoint list --query "[?type=='github'].name | [0]" --out tsv --project $ADO_Project)
+  $ghConn = (az devops service-endpoint list --query "[?type=='github'].name | [0]" --out tsv --project "$ADO_Project")
 
-  $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] --project $ADO_Project | ConvertFrom-Json).objectId
+  $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] --project "$ADO_Project" | ConvertFrom-Json).objectId
 
   $templatename = "resources.yml"
   if (Test-Path $templatename) {
@@ -1130,7 +1130,7 @@ if (Test-Path ".${pathSeparator}start.md") { Write-Host "Removing start.md" ; Re
 
 Write-Host "Adding the Build Service user to the Build Administrators group for thge Project" -ForegroundColor Green
 $SecurityServiceGroupId = $(az devops security group list --scope organization --query "graphGroups | [?displayName=='Security Service Group'].descriptor | [0]" --output tsv)
-$ProjectBuildAdminGroupId = $(az devops security group list --project $ADO_Project --query "graphGroups | [?displayName=='Build Administrators'].descriptor | [0]" --output tsv)
+$ProjectBuildAdminGroupId = $(az devops security group list --project "$ADO_Project" --query "graphGroups | [?displayName=='Build Administrators'].descriptor | [0]" --output tsv)
 $GroupItems = $(az devops security group membership list --id $SecurityServiceGroupId --output table )
 
 $Service_Name = $ADO_Project + " Build Service"

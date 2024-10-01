@@ -1109,7 +1109,7 @@ if ($Env:SUSER_DETAILS.Length -eq 0) {
   $namespaceId = az devops security permission namespace list --output json | ConvertFrom-Json | Where-Object { $_.name -eq "Build" } | Select-Object -ExpandProperty namespaceId
 
   # Get the subject ID for the "Build Service" user
-  $subjectId = az devops security group list --output json | ConvertFrom-Json | Where-Object { $_.principalName -eq "SDAF Release Project Build Service*" } | Select-Object -ExpandProperty
+  $subjectId = az devops security group list --output json | ConvertFrom-Json | Where-Object { $_.principalName -eq "*Build Service*" } | Select-Object -ExpandProperty
 
   # Define the token and permission
   $token = "vstfs:///Classification/TeamProject/" + $Project_ID

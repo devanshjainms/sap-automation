@@ -964,8 +964,11 @@ $AlreadySet = [Boolean](az pipelines variable-group variable list --group-id $Co
 $ResetPAT = $true
 
 if ($AlreadySet) {
-
-  $confirmation = Read-Host "The PAT is already set. Do you want to reset it y/n"
+  if ($Env:SUSEAR_DETAILS.Length -eq 0) {
+    $confirmation = Read-Host "The PAT is already set. Do you want to reset it y/n"
+  } else {
+    $confirmation = "n"
+  }
   if ($confirmation -eq 'n') {
     $ResetPAT = $false
   }
@@ -1091,15 +1094,30 @@ if (!$AlreadySet -or $ResetPAT ) {
 Write-Host ""
 Write-Host "The browser will now open, Select the '"$ADO_PROJECT "Build Service' user and ensure that it has 'Allow' in the Contribute section."
 
-$permissions_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_settings/repositories?_a=permissions"
-Write-Host "URL: " $permissions_url
+if ($Env:SUSER_DETAILS.Length -eq 0) {
+  $permissions_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_settings/repositories?_a=permissions"
+  Write-Host "URL: " $permissions_url
 
-Start-Process $permissions_url
-Read-Host -Prompt "Once you have verified the permission, Press any key to continue"
+  Start-Process $permissions_url
+  Read-Host -Prompt "Once you have verified the permission, Press any key to continue"
 
-$pipeline_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_build?definitionId=" + $sample_pipeline_id
+  $pipeline_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_build?definitionId=" + $sample_pipeline_id
 
-$control_plane_pipeline_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_build?definitionId=" + $control_plane_pipeline_id
+  $control_plane_pipeline_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_build?definitionId=" + $control_plane_pipeline_id
+} else {
+  $namespaceId = az devops security permission namespace list --output json --project "$ADO_Project" | ConvertFrom-Json | Where-Object { $_.name -eq "Build" } | Select-Object -ExpandProperty id
+
+  # Get the subject ID for the "Build Service" user
+  $subjectId = az devops security group list --output json  --project "$ADO_Project"| ConvertFrom-Json | Where-Object { $_.principalName -like "*Build Service*" } | Select-Object -ExpandProperty principalId
+
+  # Define the token and permission
+  $token = "vstfs:///Classification/TeamProject/" + $Project_ID
+  $permission = "Contribute"
+
+  # Set the permission for the "Build Service" user
+  az devops security permission update --id $namespaceId --subject $subjectId --token $token --allow $permission
+
+}
 
 Add-Content -Path $fname -Value "## Next steps"
 Add-Content -Path $fname -Value ""

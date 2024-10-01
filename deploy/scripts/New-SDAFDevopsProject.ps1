@@ -286,7 +286,7 @@ if ($confirmation -ne 'y') {
 
     Write-Host "Using a non standard DevOps project name, need to update some of the parameter files" -ForegroundColor Green
 
-    $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] --project "$ADO_Project" | ConvertFrom-Json).objectId
+    $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] | ConvertFrom-Json).objectId
 
 
     $templatename = "resources.yml"
@@ -339,7 +339,7 @@ if ($confirmation -ne 'y') {
       --area git --resource pushes `
       --route-parameters project=$ADO_Project repositoryId=$repo_id `
       --http-method POST --in-file "SDAF.json" `
-      --api-version "6.0" --output none --project "$ADO_Project"
+      --api-version "6.0" --output none
 
     Remove-Item $templatename
     $templatename = "resources_including_samples.yml"
@@ -364,7 +364,7 @@ if ($confirmation -ne 'y') {
     Add-Content -Path $templatename "      name: $ADO_Project/sap-samples"
     Add-Content -Path $templatename "      ref: refs/heads/main"
 
-    $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] --project "$ADO_Project" | ConvertFrom-Json).objectId
+    $objectId = (az devops invoke --area git --resource refs --route-parameters project=$ADO_Project repositoryId=$repo_id --query-parameters filter=heads/main --query value[0] | ConvertFrom-Json).objectId
 
     Remove-Item "sdaf.json"
     $cont = Get-Content -Path $templatename -Raw
@@ -393,7 +393,7 @@ if ($confirmation -ne 'y') {
       --area git --resource pushes `
       --route-parameters project=$ADO_Project repositoryId=$repo_id `
       --http-method POST --in-file "SDAF.json" `
-      --api-version "6.0" --output none --project "$ADO_Project"
+      --api-version "6.0" --output none
 
     Remove-Item $templatename
   }

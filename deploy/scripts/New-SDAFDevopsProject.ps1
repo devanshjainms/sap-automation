@@ -964,7 +964,7 @@ $AlreadySet = [Boolean](az pipelines variable-group variable list --group-id $Co
 $ResetPAT = $true
 
 if ($AlreadySet) {
-  if ($Env:SUSEAR_DETAILS.Length -eq 0) {
+  if ($Env:SUSER_DETAILS.Length -eq 0) {
     $confirmation = Read-Host "The PAT is already set. Do you want to reset it y/n"
   } else {
     $confirmation = "n"

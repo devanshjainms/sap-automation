@@ -251,7 +251,14 @@ else {
   az repos update --repository $repo_id --default-branch main --output none
 }
 
-$confirmation = Read-Host "You can optionally import the Terraform and Ansible code from GitHub into Azure DevOps, however, this should only be done if you cannot access github from the Azure DevOps agent or if you intend to customize the code. Do you want to run the code from GitHub y/n?"
+$Env:github_confirmation = "n"
+
+if ($Env:github_confirmation.Length -eq 0) {
+  $confirmation = Read-Host "You can optionally import the Terraform and Ansible code from GitHub into Azure DevOps, however, this should only be done if you cannot access github from the Azure DevOps agent or if you intend to customize the code. Do you want to run the code from GitHub y/n?"
+  }
+else {
+  $confirmation = $Env:github_confirmation
+}
 if ($confirmation -ne 'y') {
   Add-Content -Path $fname -Value ""
   Add-Content -Path $fname -Value "Using the code from the sap-automation repository"
@@ -534,10 +541,20 @@ $repo_name = (az repos list --query "[?name=='$ADO_Project'].name | [0]" --out t
 $SUserName = 'Enter your S User'
 $SPassword = 'Enter your S user password'
 
-$provideSUser = Read-Host "Do you want to provide the S user details y/n?"
+if ($Env:provideSUser.Length -eq 0) {
+  $provideSUser = Read-Host "Do you want to provide the S user details y/n?"
+} else {
+  $provideSUser = $Env:provideSUser
+}
 if ($provideSUser -eq 'y') {
-  $SUserName = Read-Host "Enter your S User ID"
-  $SPassword = Read-Host "Enter your S user password"
+  if ($Env:SUserName.Length -eq 0) {
+    $SUserName = Read-Host "Enter your S User ID"
+    $SPassword = Read-Host "Enter your S user password"
+  }
+  else {
+    $SUserName = $Env:SUserName
+    $SPassword = $Env:SPassword
+  }
 }
 
 $groups = New-Object System.Collections.Generic.List[System.Object]

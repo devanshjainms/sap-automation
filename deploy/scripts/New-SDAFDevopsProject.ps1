@@ -537,8 +537,8 @@ else {
 
 #endregion
 
-$repo_id = (az repos list --query "[?name=='$ADO_Project'].id | [0]" --out tsv)
-$repo_name = (az repos list --query "[?name=='$ADO_Project'].name | [0]" --out tsv)
+$repo_id = (az repos list --query "[?name=='$ADO_Project'].id | [0]" --out tsv --project "$ADO_Project")
+$repo_name = (az repos list --query "[?name=='$ADO_Project'].name | [0]" --out tsv --project "$ADO_Project")
 
 $SUserName = 'Enter your S User'
 $SPassword = 'Enter your S user password'

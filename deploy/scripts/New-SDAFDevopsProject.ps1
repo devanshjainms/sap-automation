@@ -135,6 +135,7 @@ if ($Env:SDAF_POOL_NAME.Length -eq 0) {
 else {
   $Pool_Name = $Env:SDAF_POOL_NAME
 }
+$Env:Pool_Name = $Pool_Name
 
 $WebApp = $true
 if ($Env:SDAF_WEBAPP -eq "true") {
@@ -148,9 +149,14 @@ else {
   $WebApp = $false
 }
 
-$confirmation = Read-Host "Use Agent pool with name '$Pool_Name' y/n?"
-if ($confirmation -ne 'y') {
-  $Pool_Name = Read-Host "Enter the name of the agent pool"
+if ($Env:Pool_Name.Length -ne 0) {
+  $Pool_Name = $ControlPlanePrefix + "-POOL"
+}
+else {
+  $confirmation = Read-Host "Use Agent pool with name '$Pool_Name' y/n?"
+  if ($confirmation -ne 'y') {
+    $Pool_Name = Read-Host "Enter the name of the agent pool"
+  }
 }
 
 $pipeline_permission_url = ""

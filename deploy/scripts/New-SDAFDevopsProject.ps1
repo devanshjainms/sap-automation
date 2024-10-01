@@ -217,12 +217,12 @@ else {
 
   az devops configure --defaults organization=$ADO_ORGANIZATION project=$ADO_PROJECT
 
-  $repo_id = (az repos list --query "[?name=='$ADO_Project'].id | [0]" --output tsv)
+  $repo_id = (az repos list --query "[?name=='$ADO_Project'].id | [0]" --output tsv --project $ADO_Project)
   if ($repo_id.Length -ne 0) {
     Write-Host "Using repository '$ADO_Project'" -ForegroundColor Green
   }
 
-  $repo_size = (az repos list --query "[?name=='$ADO_Project'].size | [0]" --output tsv)
+  $repo_size = (az repos list --query "[?name=='$ADO_Project'].size | [0]" --output tsv  --project $ADO_Project)
 
   if ($repo_size -eq 0) {
     Write-Host "Importing the repository from GitHub" -ForegroundColor Green
@@ -544,7 +544,7 @@ $repo_name = (az repos list --query "[?name=='$ADO_Project'].name | [0]" --out t
 $SUserName = 'Enter your S User'
 $SPassword = 'Enter your S user password'
 
-if ($Env:provideSUser.Length -eq 0) {
+if ($Env.SUSER_DETAILS.Length -eq 0) {
   $provideSUser = Read-Host "Do you want to provide the S user details y/n?"
 } else {
   $provideSUser = $Env:provideSUser

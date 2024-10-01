@@ -240,7 +240,12 @@ else {
 
   }
   else {
-    $confirmation = Read-Host "The repository already exists, use it? y/n"
+    if ($Env:SDAF_REPO_CONFIRMATION.Length -eq 0) {
+      $confirmation = Read-Host "The repository already exists, use it? y/n"
+    }
+    else {
+      $confirmation = $Env:SDAF_REPO_CONFIRMATION
+    }
     if ($confirmation -ne 'y') {
       Write-Host "Creating repository 'SDAF Configuration'" -ForegroundColor Green
       $repo_id = (az repos create --name "SDAF Configuration" --query id --output tsv)
@@ -250,8 +255,6 @@ else {
 
   az repos update --repository $repo_id --default-branch main --output none
 }
-
-$Env:github_confirmation = "n"
 
 if ($Env:github_confirmation.Length -eq 0) {
   $confirmation = Read-Host "You can optionally import the Terraform and Ansible code from GitHub into Azure DevOps, however, this should only be done if you cannot access github from the Azure DevOps agent or if you intend to customize the code. Do you want to run the code from GitHub y/n?"

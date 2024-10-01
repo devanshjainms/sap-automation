@@ -1106,10 +1106,10 @@ if ($Env:SUSER_DETAILS.Length -eq 0) {
 
   $control_plane_pipeline_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_build?definitionId=" + $control_plane_pipeline_id
 } else {
-  $namespaceId = az devops security permission namespace list --output json | ConvertFrom-Json | Where-Object { $_.name -eq "Build" } | Select-Object -ExpandProperty id
+  $namespaceId = az devops security permission namespace list --output json | ConvertFrom-Json | Where-Object { $_.name -eq "Build" } | Select-Object -ExpandProperty namespaceId
 
   # Get the subject ID for the "Build Service" user
-  $subjectId = az devops security group list --output json | ConvertFrom-Json | Where-Object { $_.principalName -like "*Build Service*" } | Select-Object -ExpandProperty principalId
+  $subjectId = az devops security group list --output json | ConvertFrom-Json | Where-Object { $_.principalName -eq "SDAF Release Project Build Service*" } | Select-Object -ExpandProperty
 
   # Define the token and permission
   $token = "vstfs:///Classification/TeamProject/" + $Project_ID
@@ -1119,7 +1119,7 @@ if ($Env:SUSER_DETAILS.Length -eq 0) {
   az devops security permission update --id $namespaceId --subject $subjectId --token $token --allow $permission
 
 }
-
+ 
 Add-Content -Path $fname -Value "## Next steps"
 Add-Content -Path $fname -Value ""
 Add-Content -Path $fname -Value ( "Use the [Create Control Plane Configuration Sample](" + $pipeline_url + ") to create the control plane configuration in the region you select." )

@@ -969,6 +969,7 @@ if ($AlreadySet) {
   } else {
     $confirmation = "n"
   }
+
   if ($confirmation -eq 'n') {
     $ResetPAT = $false
   }

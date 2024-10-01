@@ -951,10 +951,7 @@ else {
   
     Start-Process $connections_url
     Read-Host -Prompt "Once you have created and validated the connection, Press any key to continue"
-  } else {
-    az devops service-endpoint azurerm create --azure-rm-service-principal-id $Env:MSI_CLIENT_ID --azure-rm-subscription-id $Control_plane_subscriptionID --azure-rm-subscription-name $ControlPlaneSubscriptionName --azure-rm-tenant-id $ARM_TENANT_ID --name 'Control_Plane_Service_Connection' --output none --only-show-errors --project $ADO_Project
-  }
-
+  } 
 }
 
 $groups.Add($Control_plane_groupID)

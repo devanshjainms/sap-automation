@@ -1106,10 +1106,10 @@ if ($Env:SUSER_DETAILS.Length -eq 0) {
 
   $control_plane_pipeline_url = $ADO_ORGANIZATION + "/" + [uri]::EscapeDataString($ADO_Project) + "/_build?definitionId=" + $control_plane_pipeline_id
 } else {
-  $namespaceId = az devops security permission namespace list --output json --project "$ADO_Project" | ConvertFrom-Json | Where-Object { $_.name -eq "Build" } | Select-Object -ExpandProperty id
+  $namespaceId = az devops security permission namespace list --output json | ConvertFrom-Json | Where-Object { $_.name -eq "Build" } | Select-Object -ExpandProperty id
 
   # Get the subject ID for the "Build Service" user
-  $subjectId = az devops security group list --output json  --project "$ADO_Project"| ConvertFrom-Json | Where-Object { $_.principalName -like "*Build Service*" } | Select-Object -ExpandProperty principalId
+  $subjectId = az devops security group list --output json | ConvertFrom-Json | Where-Object { $_.principalName -like "*Build Service*" } | Select-Object -ExpandProperty principalId
 
   # Define the token and permission
   $token = "vstfs:///Classification/TeamProject/" + $Project_ID

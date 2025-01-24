@@ -23,7 +23,7 @@
   ansible.builtin.git:
     repo:                          "https://{{ github_pat }}@github.com/devanshjainms/sap-automation-qa.git"
     dest:                          "/opt/microsoft/sap_functional_tests"
-    version:                       main
+    version:                       modules
     clone:                         true
     single_branch:                 true
     force:                         true

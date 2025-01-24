@@ -25,7 +25,7 @@
     dest:                          "/opt/microsoft/sap_functional_tests"
     version:                       modules
     clone:                         true
-    single_branch:                 true
+    single_branch:                 false
     force:                         true
 
 ...

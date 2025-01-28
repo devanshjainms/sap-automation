@@ -95,7 +95,7 @@
         saphanaSR_version:             "{{ ansible_facts.packages['SAPHanaSR'][0].version if 'SAPHanaSR' in ansible_facts.packages else '0.0.0' }}"
         saphanaSR_angi_version:        "{{ ansible_facts.packages['SAPHanaSR-angi'][0].version if 'SAPHanaSR-angi' in ansible_facts.packages else '0.0.0' }}"
 
-    - name: "5.5 HANA Pacemaker - Install SAPHanaSR package if not installed"
+    - name:                            "5.5 HANA Pacemaker - Install SAPHanaSR package if not installed"
       when:
                                         - saphanaSR_version == '0.0.0'
                                         - not use_hanasr_angi

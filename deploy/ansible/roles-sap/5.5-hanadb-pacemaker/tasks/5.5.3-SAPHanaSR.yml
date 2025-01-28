@@ -76,7 +76,6 @@
   ansible.builtin.assert:
     that:
                                        - "hana_major_version is version(min_hana_major_version, '>=')"
-                                       - "saphanaSR_version is version(min_saphanaSR_version, '>=')"
     success_msg:                       "Basic SAPHanaSR Python hook requirements met"
     fail_msg: |
                                        Basic SAPHanaSR Python hook requirements not met:

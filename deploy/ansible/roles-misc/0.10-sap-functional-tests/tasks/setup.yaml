@@ -23,7 +23,6 @@
     dest:                          "/opt/microsoft/sap_functional_tests"
     version:                       devanshjain
     clone:                         true
-    single_branch:                 true
     force:                         true
 
 ...

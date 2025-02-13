@@ -22,6 +22,5 @@
     repo:                          "https://{{ github_pat }}@github.com/devanshjainms/sap-automation-qa.git"
     dest:                          "/opt/microsoft/sap_functional_tests"
     version:                       devanshjain
-    refspec:                       '+refs/heads/devanshjain:refs/remotes/origin/devanshjain'
 
 ...

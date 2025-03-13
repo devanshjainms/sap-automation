@@ -25,10 +25,12 @@
         path:                          "{{ _workspace_directory }}/.progress/sap-functional-tests-done"
         state:                          absent
 
+# noqa syntax-check[missing-file]
 - name:                                "SAP Functional DB: Tests run checks"
   ansible.builtin.import_playbook:     "/opt/microsoft/sap_functional_tests/src/playbook_00_ha_db_functional_tests.yml"
   when:                                sap_functional_test_type == "DatabaseHighAvailability"
 
+# noqa syntax-check[missing-file]
 - name:                                "SAP Functional Central Services: Tests run checks"
   ansible.builtin.import_playbook:     "/opt/microsoft/sap_functional_tests/src/playbook_00_ha_scs_functional_tests.yml"
   when:                                sap_functional_test_type == "CentralServicesHighAvailability"

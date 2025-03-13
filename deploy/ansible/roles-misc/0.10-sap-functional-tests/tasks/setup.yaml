@@ -19,7 +19,7 @@
 - name:                            "SAP Functional Tests - fetch sap-automation-qa"
   become:                          true
   ansible.builtin.git:
-    repo:                          "https://{{ github_pat }}@github.com/devanshjainms/sap-automation-qa.git"
+    repo:                          "https://{{ github_pat }}@github.com/Azure/sap-automation-qa.git"
     dest:                          "/opt/microsoft/sap_functional_tests"
     version:                       main
     clone:                         true

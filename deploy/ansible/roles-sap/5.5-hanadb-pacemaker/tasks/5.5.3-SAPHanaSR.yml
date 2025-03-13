@@ -76,6 +76,7 @@
   ansible.builtin.assert:
     that:
                                        - "hana_major_version is version(min_hana_major_version, '>=')"
+                                       - "saphanaSR_version is version(min_saphanaSR_version, '>=')"
     success_msg:                       "Basic SAPHanaSR Python hook requirements met"
     fail_msg: |
                                        Basic SAPHanaSR Python hook requirements not met:
@@ -177,11 +178,11 @@
         - ansible_os_family | upper == "REDHAT"
         - not my_hooks_stat.stat.exists
       ansible.builtin.copy:
-        src:                           /usr/share/SAPHanaSR/srHook/
+        src:                           /usr/share/SAPHanaSR/srHook/SAPHanaSR.py
         dest:                          /hana/shared/myHooks/
         remote_src:                    true
-        owner:                         "{{ db_sid | lower }}adm"
-        group:                         sapsys      # TODO - check the correct group once the python hook package is installed
+        owner:                         root
+        group:                         root      # TODO - check the correct group once the python hook package is installed
         mode:                          '0644'
 
     - name:                            "5.5 HANA Pacemaker - Change ownership of the directory"

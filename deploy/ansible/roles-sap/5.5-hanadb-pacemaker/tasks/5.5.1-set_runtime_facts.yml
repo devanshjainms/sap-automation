@@ -97,20 +97,11 @@
 
     - name:                            "5.5 HANA Pacemaker - Install SAPHanaSR package if not installed"
       when:
-                                        - saphanaSR_version == '0.0.0'
-                                        - not use_hanasr_angi
-      block:
-        - name:                         "Install SAPHanaSR package on SUSE"
-          when:                         ansible_os_family | upper == "SUSE"
-          community.general.zypper:
-            name:                       "SAPHanaSR>=0.161.1_BF"
-            state:                      present
-
-        - name:                         "Install SAPHanaSR package on Red Hat"
-          when:                         ansible_os_family | upper == "REDHAT"
-          yum:
-            name:                       "resource-agents-sap-hana"
-            state:                      present
+        - saphanaSR_version == '0.0.0'
+        - not use_hanasr_angi
+      community.general.zypper:
+        name:                          "SAPHanaSR>=0.161.1_BF"
+        state:                         present
 
     - name:                            "5.5 HANA Pacemaker - Uninstall the old-style packages before we install SAPHanaSR-angi"
       when:

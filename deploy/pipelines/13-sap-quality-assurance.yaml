@@ -35,6 +35,7 @@ parameters:
     values:
       - "DatabaseHighAvailability"
       - "CentralServicesHighAvailability"
+      - "ConfigurationChecks"
 
   - name:                              telemetry_data_destination
     displayName:                       Telemetry Data Destination (Provide connection settings in Extra Parameters)

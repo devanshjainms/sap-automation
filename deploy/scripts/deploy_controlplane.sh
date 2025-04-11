@@ -580,10 +580,8 @@ if [ 2 -eq $step ]; then
 	if [ $force == 1 ]; then
 		rm -Rf .terraform terraform.tfstate*
 	fi
-	
 
 	echo "Calling install_library.sh with: --parameterfile ${library_file_parametername} --deployer_statefile_foldername ${relative_path} --keyvault ${keyvault} ${autoApproveParameter}"
-	unset ARM_CLIENT_ID
 
 	if [ "$ado_flag" == "--ado" ] || [ "$approve" == "--auto-approve" ]; then
 

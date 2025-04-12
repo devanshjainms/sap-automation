@@ -289,7 +289,9 @@ if [ ! -d ./.terraform/ ]; then
 else
 	if [ -f ./.terraform/terraform.tfstate ]; then
 		azure_backend=$(grep "\"type\": \"azurerm\"" .terraform/terraform.tfstate || true)
-		if [ -n "$azure_backend" ]; then
+		echo -e "${cyan}Azure Backend:                        ${azure_backend}${reset_formatting}"
+
+		if [[ -n "$azure_backend" ]]; then
 			echo "#########################################################################################"
 			echo "#                                                                                       #"
 			echo "#                     The state is already migrated to Azure!!!                         #"
@@ -349,7 +351,7 @@ else
 				echo ""
 				echo -e "${bold_red}Terraform init:                        succeeded$reset_formatting"
 				echo ""
-				return 10
+				exit 10
 			fi
 
 		fi

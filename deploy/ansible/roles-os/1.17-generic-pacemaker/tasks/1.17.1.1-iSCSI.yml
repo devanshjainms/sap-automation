@@ -54,6 +54,10 @@
                                        {%- endif -%}
                                        {{- _clusterType -}}
 
+- name:                                "1.17.1 iSCSI packages - Get the iSCSI servers"
+  ansible.builtin.debug:
+    msg:                               "iscsi_servers: {{ iscsi_servers | default([]) }}"
+
 - name:                                "1.17.1 iSCSI packages - Get initiator name"
   ansible.builtin.set_fact:
     iscsi_initiator_name:              "{{ iscsi_servers |

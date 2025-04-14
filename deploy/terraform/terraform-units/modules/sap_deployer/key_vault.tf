@@ -466,9 +466,6 @@ data "azurerm_key_vault_secret" "pk" {
   count                                = (local.enable_key && local.key_exist) ? 1 : 0
   name                                 = local.pk_secret_name
   key_vault_id                         = try(azurerm_key_vault.kv_user[0].id, var.key_vault.kv_user_id)
-  lifecycle {
-    ignore_changes = [name]
-  }
  }
 
 data "azurerm_key_vault_secret" "ppk" {

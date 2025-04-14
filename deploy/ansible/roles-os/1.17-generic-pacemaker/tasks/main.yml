@@ -15,8 +15,8 @@
   ansible.builtin.import_tasks:             1.17.1.1-iSCSI.yml
   when:
                                             - ansible_os_family | upper == "SUSE" and
-                                              (scs_cluster_type == 'ISCSI') or
-                                              (database_cluster_type == 'ISCSI')
+                                              (scs_cluster_type == 'ISCSI' and 'scs' in supported_tiers) or
+                                              (database_cluster_type == 'ISCSI' and 'db' in supported_tiers)
 
 - name:                                     "1.17 Generic Pacemaker - SBD Devices"
   ansible.builtin.import_tasks:             1.17.1.2-sbd.yaml

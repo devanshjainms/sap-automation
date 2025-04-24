@@ -100,6 +100,7 @@ if printenv OBJECT_ID; then
 	fi
 fi
 
+echo "Subscription: $ARM_SUBSCRIPTION_ID"
 az account set --subscription "$ARM_SUBSCRIPTION_ID"
 
 ENVIRONMENT=$(grep -m1 "^environment" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"')

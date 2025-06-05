@@ -596,7 +596,8 @@ if [ ! -f .terraform/terraform.tfstate ]; then
 		--backend-config "resource_group_name=${REMOTE_STATE_RG}" \
 		--backend-config "storage_account_name=${REMOTE_STATE_SA}" \
 		--backend-config "container_name=tfstate" \
-		--backend-config "key=${key}.terraform.tfstate"; then
+		--backend-config "key=${key}.terraform.tfstate" \
+		--backend-config "use_azuread_auth=true"; then
 		return_value=$?
 		echo ""
 		echo -e "${bold_red}Terraform init:                        failed$reset_formatting"
@@ -624,7 +625,8 @@ else
 
 		terraform_module_directory="${SAP_AUTOMATION_REPO_PATH}/deploy/terraform/bootstrap/${deployment_system}"/
 
-		if ! terraform -chdir="${terraform_module_directory}" init -force-copy --backend-config "path=${param_dirname}/terraform.tfstate"; then
+		if ! terraform -chdir="${terraform_module_directory}" init -force-copy \
+		--backend-config "path=${param_dirname}/terraform.tfstate"; then
 			return_value=$?
 			echo ""
 			echo -e "${bold_red}Terraform local init:                  failed$reset_formatting"

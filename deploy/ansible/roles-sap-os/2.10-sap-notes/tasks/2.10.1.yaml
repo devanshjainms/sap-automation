@@ -39,10 +39,10 @@
     - processor.max_cstate:            '1'
     - intel_idle.max_cstate:           '1'
 
-- name:                                "2.10.1 sap-notes: - Update GRUB config for UEFI systems"
-  ansible.builtin.command:             grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
-  changed_when:                        false
-  when:                                "'/boot/efi' in ansible_mounts | map(attribute='mount') | list"
+# - name:                                "2.10.1 sap-notes: - Update GRUB config for UEFI systems"
+#   ansible.builtin.command:             grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
+#   changed_when:                        false
+#   when:                                "'/boot/efi' in ansible_mounts | map(attribute='mount') | list"
 
 - name:                                "2.10.1 sap-notes: - Update GRUB config for non UEFI systems"
   ansible.builtin.command:             grub2-mkconfig -o /boot/grub2/grub.cfg

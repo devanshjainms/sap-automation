@@ -29,6 +29,7 @@
     - open-iscsi
     - sbd
   when:                                (ansible_os_family | upper) == "REDHAT"
+  ignore_errors:                        true
 
 
 - name:                                "1.17.1 iSCSI packages"

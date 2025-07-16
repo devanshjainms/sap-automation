@@ -65,3 +65,10 @@ variable "dns_label"                   {
                                          description = "DNS label"
                                          default     = ""
                                        }
+
+variable "backup_services"            {
+                                         description = "Configuration for backup services"
+                                         default     = {
+                                                        enable_backup_services_vault = false
+                                                      }
+                                      }

@@ -1242,6 +1242,7 @@ variable "dns_zone_names"                       {
                                                               "file_dns_zone_name"  = "privatelink.file.core.windows.net"
                                                               "blob_dns_zone_name"  = "privatelink.blob.core.windows.net"
                                                               "vault_dns_zone_name" = "privatelink.vaultcore.azure.net"
+                                                              "backup_dns_zone_name"= "privatelink.backup.windowsazure.com"
                                                             }
                                                 }
 
@@ -1655,4 +1656,20 @@ variable "calapi_kv"                            {
 variable "sap_cal_product_name"                 {
                                                   description = "If defined, will use SAP CAL for system installation"
                                                   default     = ""
+                                                }
+
+##########################################################################################
+#                                                                                       #
+#  SAP HANA Backup variables                                                            #
+#                                                                                       #
+##########################################################################################
+
+variable "enable_hana_backup"                   {
+                                                  description = "If true, will enable SAP HANA backup configuration"
+                                                  default = false
+                                                }
+
+variable "enable_hsr_backup"                    {
+                                                  description = "If true, will enable SAP HSR backup configuration"
+                                                  default = false
                                                 }

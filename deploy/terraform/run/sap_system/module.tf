@@ -177,6 +177,8 @@ module "hdb_node" {
   use_private_endpoint                          = var.use_private_endpoint
   use_scalesets_for_deployment                  = var.use_scalesets_for_deployment
   use_secondary_ips                             = var.use_secondary_ips
+  enable_hana_backup                            = var.enable_hana_backup
+  enable_hsr_backup                             = var.enable_hsr_backup
 }
 
 #########################################################################################

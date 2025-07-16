@@ -166,3 +166,23 @@ variable "Agent_IP"                                  {
                                                      }
 
 variable "random_id"                                 { description = "Random hex string" }
+
+
+##########################################################################################
+#                                                                                       #
+#  Backup Services                                                                      #
+#                                                                                       #
+##########################################################################################
+
+
+variable "enable_hana_backup"          {
+                                          description = "Enable Azure Backup for SAP HANA databases"
+                                          type        = bool
+                                          default     = false
+                                       }
+
+variable "enable_hsr_backup"          {
+                                          description = "Enable Azure Backup for HANA System Replication"
+                                          type        = bool
+                                          default     = false
+                                        }

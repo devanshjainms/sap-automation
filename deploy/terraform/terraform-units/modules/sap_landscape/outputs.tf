@@ -344,6 +344,15 @@ output "privatelink_keyvault_id"                {
 
                                                 }
 
+output "privatelink_backup_id"                {
+                                                   description = "Private DNS Zone ID for the backup resources"
+                                                   value = local.privatelink_backup_defined ? (
+                                                             var.dns_settings.privatelink_backup_id) : (
+                                                             (try(data.azurerm_private_dns_zone.backup[0].id, ""))
+                                                            )
+
+                                                }
+
 ###############################################################################
 #                                                                             #
 #                   Azure NetApp Files output                                 #
@@ -595,4 +604,26 @@ output "ams_resource_id"                        {
 output "ng_resource_id"                        {
                                                   description = "Azure resource identifier for the NAT Gateway"
                                                   value       = local.create_nat_gateway ? azurerm_nat_gateway.ng[0].id : ""
+                                                }
+
+
+output "recovery_services_vault_id"              {
+                                                  description = "Azure resource identifier for the Recovery Services Vault"
+                                                  value       = var.enable_backup_services_vault ? (
+                                                                  azurerm_recovery_services_vault.sap_backup[0].id
+                                                                ) : ""
+                                                }
+
+output "recovery_services_vault_name"            {
+                                                  description = "Name of the Recovery Services Vault"
+                                                  value       = var.enable_backup_services_vault ? (
+                                                                  azurerm_recovery_services_vault.sap_backup[0].name
+                                                                ) : ""
+                                                }
+
+output "backup_policy_hana_id"                   {
+                                                  description = "Azure resource identifier for the HANA backup policy"
+                                                  value       = var.enable_backup_services_vault ? (
+                                                                  azurerm_backup_policy_vm.sap_hana[0].id
+                                                                ) : ""
                                                 }

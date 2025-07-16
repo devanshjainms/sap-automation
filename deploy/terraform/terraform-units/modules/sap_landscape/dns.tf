@@ -250,3 +250,10 @@ data "azurerm_private_dns_zone" "keyvault" {
   name                                 = var.dns_settings.dns_zone_names.vault_dns_zone_name
   resource_group_name                  = var.dns_settings.privatelink_dns_resourcegroup_name
 }
+
+data "azurerm_private_dns_zone" "backup" {
+  provider                             = azurerm.privatelinkdnsmanagement
+  count                                = !local.privatelink_backup_defined && var.dns_settings.register_backup_with_dns ? 1 : 0
+  name                                 = var.dns_settings.dns_zone_names.backup_dns_zone_name
+  resource_group_name                  = var.dns_settings.privatelink_dns_resourcegroup_name
+}

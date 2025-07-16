@@ -282,3 +282,9 @@ variable "data_plane_available"                          {
                                                            default     = true
                                                            type        = bool
                                                          }
+
+variable "enable_backup_services_vault"                 {
+                                                           description = "Boolean value indicating if SAP HANA backup should be enabled"
+                                                           default     = false
+                                                           type        = bool
+                                                         }

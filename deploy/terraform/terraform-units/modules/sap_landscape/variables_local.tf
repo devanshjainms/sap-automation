@@ -470,6 +470,7 @@ locals {
   privatelink_file_defined                        = length(try(var.dns_settings.privatelink_file_id, "")) > 0
   privatelink_keyvault_defined                    = length(try(var.dns_settings.privatelink_keyvault_id, "")) > 0
   privatelink_storage_defined                     = length(try(var.dns_settings.privatelink_storage_id, "")) > 0
+  privatelink_backup_defined                      = length(try(var.dns_settings.privatelink_backup_id, "")) > 0
 
 
   #########################################################################################

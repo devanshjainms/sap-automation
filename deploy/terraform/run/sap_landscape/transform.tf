@@ -52,6 +52,10 @@ locals {
                                            user_assigned_identity_id     = var.user_assigned_identity_id
                                          }
 
+  backup_services                       = {
+                                            enable_backup_services_vault = var.enable_backup_services_vault
+                                          }
+
   authentication                       = {
                                            username            = coalesce(var.automation_username,  "azureadm")
                                            password            = var.automation_password

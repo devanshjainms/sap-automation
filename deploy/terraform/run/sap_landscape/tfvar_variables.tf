@@ -778,6 +778,7 @@ variable "dns_zone_names"                          {
                                                                   "blob_dns_zone_name"      = "privatelink.blob.core.windows.net"
                                                                   "table_dns_zone_name"     = "privatelink.table.core.windows.net"
                                                                   "vault_dns_zone_name"     = "privatelink.vaultcore.azure.net"
+                                                                  "backup_dns_zone_name"    = "privatelink.backup.windowsazure.com"
                                                                   "appconfig_dns_zone_name" = "privatelink.azconfig.io"
                                                                }
                                                    }
@@ -1237,4 +1238,16 @@ variable "spn_id"                                     {
 variable "platform_updates"                           {
                                                         description = "Specifies whether VMAgent Platform Updates is enabled"
                                                         default     = "true"
+                                                      }
+
+#########################################################################################
+#                                                                                       #
+#  Backup Settings                                                                      #
+#                                                                                       #
+#########################################################################################
+
+variable "enable_backup_services_vault"               {
+                                                        description = "Enable Azure Backup infrastructure for SAP HANA databases"
+                                                        type        = bool
+                                                        default     = false
                                                       }

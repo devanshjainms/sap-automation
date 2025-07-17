@@ -87,6 +87,11 @@ fi
 
 key_vault=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "Deployer_Key_Vault" "${environment_file_name}" "keyvault")
 
+if [[ "$key_vault" == *'$('* ]]; then
+  echo "Warning: Variable reference detected. Trying alternative approach..."
+  key_vault=$(az pipelines variable-group variable list --group-id "${VARIABLE_GROUP_ID}" --query "[?name=='Deployer_Key_Vault'].value | [0]" -o tsv)
+fi
+
 echo "Keyvault: $key_vault"
 echo " ##vso[task.setvariable variable=KV_NAME;isOutput=true]$key_vault"
 

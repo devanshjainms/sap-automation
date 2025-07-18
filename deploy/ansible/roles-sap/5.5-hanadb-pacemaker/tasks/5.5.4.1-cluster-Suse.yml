@@ -97,13 +97,24 @@
       register:                        sap_hana_topology_rsc
       failed_when:                     sap_hana_topology_rsc.rc > 1
 
-    - name:                            "5.5.4.1 HANA Pacemaker configuration - Ensure SAP HANA master-slave resource is configured"
+    - name:                            "5.5.4.1 HANA Pacemaker configuration - Ensure SAP HANA master-slave resource is configured SLES 12 SP05"
       ansible.builtin.shell: >
                                        crm configure ms msl_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}
                                        rsc_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}
                                        meta notify="true" clone-max="2" clone-node-max="1"
                                        target-role="Started" interleave="true"
+      when:                            ansible_distribution_major_version == "12"
       register:                        sap_hana_msl
+      failed_when:                     sap_hana_msl.rc > 1
+
+    - name:                            "5.5.4.1 HANA Pacemaker configuration - Ensure SAP HANA master-slave resource is configured SLES 15 SP03 or later"
+      ansible.builtin.shell: >
+                                       crm configure clone msl_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}
+                                       rsc_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}
+                                       meta notify="true" clone-max="2" clone-node-max="1"
+                                       target-role="Started" interleave="true"
+      register:                        sap_hana_msl
+      when:                            ansible_distribution_major_version >= "15"
       failed_when:                     sap_hana_msl.rc > 1
 
     - name:                            "5.5.4.1 HANA Pacemaker configuration - Set priority for SAP HANA ms resource"

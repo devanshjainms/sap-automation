@@ -156,7 +156,7 @@
                                        crm configure colocation col_saphana_ip_{{ db_sid | upper }}_HDB{{ db_instance_number }}
                                        4000:
                                        g_ip_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Started
-                                       msl_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Master
+                                       msl_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Master -y
       register:                        sap_hana_g_col_ip
       failed_when:                     sap_hana_g_col_ip.rc > 1
 

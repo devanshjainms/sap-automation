@@ -156,7 +156,7 @@
                                        crm configure colocation col_saphana_ip_{{ db_sid | upper }}_HDB{{ db_instance_number }}
                                        4000:
                                        g_ip_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Started
-                                       msl_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Master -y
+                                       msl_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Promoted
       register:                        sap_hana_g_col_ip
       failed_when:                     sap_hana_g_col_ip.rc > 1
 
@@ -206,7 +206,7 @@
         - name:                        "5.5.4.1 HANA Cluster configuration - Ensure the Active/Active co-Location constraint is configured"
           ansible.builtin.shell: >
                                        crm configure colocation col_saphana_secip_{{ db_sid | upper }}_HDB{{ db_instance_number }} 4000: g_secip_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Started
-                                       msl_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Slave
+                                       msl_SAPHana_{{ db_sid | upper }}_HDB{{ db_instance_number }}:Unpromoted
           register:                    sec_colocation
           failed_when:                 sec_colocation.rc > 1
 

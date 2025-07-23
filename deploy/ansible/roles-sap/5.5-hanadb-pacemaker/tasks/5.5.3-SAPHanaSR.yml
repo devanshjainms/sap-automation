@@ -434,7 +434,7 @@
                                        ha_dr_sushanasr = info
                                        ha_dr_suschksrv = info
 
-    - name:                            "5.5 HANA Pacemaker - Create sudoers file for SLES"
+    - name:                            "5.5 HANA Pacemaker - Create sudoers file for SLES for SAPHanaSR-angi"
       ansible.builtin.template:
         src:                           "20-saphana-suse-angi.j2"
         dest:                          "/etc/sudoers.d/20-saphana"

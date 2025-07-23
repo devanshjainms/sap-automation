@@ -238,10 +238,7 @@
                                        ha_dr_saphanasr = info
 
     - name:                            "5.5 HANA Pacemaker - Create sudoers file 20-saphana for SLES"
-      when:
-                                        - ansible_os_family | upper == "SUSE"
-                                        - not is_certified_for_hanasr_angi | default(false)
-                                        - not angi_hook_check is success
+      when:                            ansible_os_family | upper == "SUSE"
       ansible.builtin.template:
         src:                           "20-saphana-suse.j2"
         dest:                          "/etc/sudoers.d/20-saphana"
@@ -249,17 +246,6 @@
         owner:                         root
         group:                         root
 
-    - name:                            "5.5 HANA Pacemaker - Create sudoers file 20-saphana for SLES for SAPHanaSR-angi"
-      when:
-                                        - ansible_os_family | upper == "SUSE"
-                                        - is_certified_for_hanasr_angi | default(false)
-                                        - angi_hook_check is success
-      ansible.builtin.template:
-        src:                           "20-saphana-suse-angi.j2"
-        dest:                          "/etc/sudoers.d/20-saphana"
-        mode:                          "0440"
-        owner:                         root
-        group:                         root
 
     - name:                            "5.5 HANA Pacemaker - Create sudoers file 20-saphana for RHEL"
       when:                            ansible_os_family | upper == "REDHAT"
@@ -450,7 +436,7 @@
 
     - name:                            "5.5 HANA Pacemaker - Create sudoers file for SLES"
       ansible.builtin.template:
-        src:                           "20-saphana-suse.j2"
+        src:                           "20-saphana-suse-angi.j2"
         dest:                          "/etc/sudoers.d/20-saphana"
         mode:                          "0440"
         owner:                         root

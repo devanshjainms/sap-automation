@@ -210,7 +210,7 @@ stages:
               azureTenantId:                 $(ARM_TENANT_ID)
               azureSubscriptionId:           $(ARM_SUBSCRIPTION_ID)
               USE_MSI:                       $(USE_MSI)
-              CONTROL_PLANE_SUBSCRIPTION_ID: $(Terraform_Remote_Storage_Subscription)
+              CONTROL_PLANE_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
           - ${{ if eq(parameters.base_os_configuration, true) }}:
               - template:                    templates\run-ansible.yaml
                 parameters:

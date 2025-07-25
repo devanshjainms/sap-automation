@@ -128,6 +128,27 @@ resource "azurerm_key_vault_access_policy" "kv_user_systemidentity" {
                                          ]
 }
 
+# Add access policy for the system-assigned identity that is running Terraform
+resource "azurerm_key_vault_access_policy" "kv_user_terraform_executor" {
+  provider                             = azurerm.main
+  count                                = !var.key_vault.enable_rbac_authorization && !var.key_vault.exists ? 1 : 0
+
+  key_vault_id                         = azurerm_key_vault.kv_user[0].id
+  tenant_id                            = data.azurerm_client_config.deployer.tenant_id
+  object_id                            = data.azurerm_client_config.deployer.object_id
+
+  secret_permissions                   = [
+                                            "Get",
+                                            "List",
+                                            "Set",
+                                            "Delete",
+                                            "Recover",
+                                            "Backup",
+                                            "Restore",
+                                            "Purge"
+                                          ]
+}
+
 
 
 resource "azurerm_key_vault_access_policy" "kv_user_pre_deployer" {
@@ -213,14 +234,21 @@ resource "azurerm_management_lock" "keyvault" {
 resource "azurerm_key_vault_secret" "subscription" {
   count                                = !var.key_vault.exists ? (1) : (0)
 
-  depends_on                           = [
+  depends_on                           = concat([
+                                           time_sleep.wait_for_keyvault,
+                                           azurerm_virtual_network_peering.peering_management_agent,
+                                           azurerm_private_endpoint.kv_user
+                                         ],
+                                         var.key_vault.enable_rbac_authorization ? [
+                                           azurerm_role_assignment.role_assignment_msi,
+                                           azurerm_role_assignment.role_assignment_spn,
+                                           azurerm_role_assignment.role_assignment_terraform_executor
+                                         ] : [
                                            azurerm_key_vault_access_policy.kv_user_pre_deployer[0],
                                            azurerm_key_vault_access_policy.kv_user_msi,
                                            azurerm_key_vault_access_policy.kv_user_additional_users,
-                                           azurerm_role_assignment.role_assignment_msi,
-                                           azurerm_virtual_network_peering.peering_management_agent,
-                                           azurerm_private_endpoint.kv_user
-                                         ]
+                                           azurerm_key_vault_access_policy.kv_user_terraform_executor
+                                         ])
 
   name                                 = format("%s-subscription-id", upper(var.naming.prefix.DEPLOYER))
   value                                = data.azurerm_client_config.deployer.subscription_id
@@ -237,14 +265,21 @@ resource "azurerm_key_vault_secret" "subscription" {
 }
 resource "azurerm_key_vault_secret" "ppk" {
   count                                = (local.enable_key && length(var.key_vault.private_key_secret_name) == 0 && !var.key_vault.exists ) ? 1 : 0
-  depends_on                           = [
+  depends_on                           = concat([
+                                           time_sleep.wait_for_keyvault,
+                                           azurerm_virtual_network_peering.peering_management_agent,
+                                           azurerm_private_endpoint.kv_user
+                                         ],
+                                         var.key_vault.enable_rbac_authorization ? [
+                                           azurerm_role_assignment.role_assignment_msi,
+                                           azurerm_role_assignment.role_assignment_spn,
+                                           azurerm_role_assignment.role_assignment_terraform_executor
+                                         ] : [
                                            azurerm_key_vault_access_policy.kv_user_pre_deployer[0],
                                            azurerm_key_vault_access_policy.kv_user_msi,
                                            azurerm_key_vault_access_policy.kv_user_additional_users,
-                                           azurerm_role_assignment.role_assignment_msi,
-                                           azurerm_virtual_network_peering.peering_management_agent,
-                                           azurerm_private_endpoint.kv_user
-                                         ]
+                                           azurerm_key_vault_access_policy.kv_user_terraform_executor
+                                         ])
   name                                 = local.private_key_secret_name
   value                                = local.private_key
   key_vault_id                         = var.key_vault.exists ? (
@@ -262,14 +297,21 @@ resource "azurerm_key_vault_secret" "ppk" {
 
 resource "azurerm_key_vault_secret" "pk" {
   count                                = local.enable_key && (length(var.key_vault.public_key_secret_name)  == 0 ) && !var.key_vault.exists ? 1 : 0
-  depends_on                           = [
+  depends_on                           = concat([
+                                           time_sleep.wait_for_keyvault,
+                                           azurerm_virtual_network_peering.peering_management_agent,
+                                           azurerm_private_endpoint.kv_user
+                                         ],
+                                         var.key_vault.enable_rbac_authorization ? [
+                                           azurerm_role_assignment.role_assignment_msi,
+                                           azurerm_role_assignment.role_assignment_spn,
+                                           azurerm_role_assignment.role_assignment_terraform_executor
+                                         ] : [
                                            azurerm_key_vault_access_policy.kv_user_pre_deployer[0],
                                            azurerm_key_vault_access_policy.kv_user_msi,
                                            azurerm_key_vault_access_policy.kv_user_additional_users,
-                                           azurerm_role_assignment.role_assignment_msi,
-                                           azurerm_virtual_network_peering.peering_management_agent,
-                                           azurerm_private_endpoint.kv_user
-                                         ]
+                                           azurerm_key_vault_access_policy.kv_user_terraform_executor
+                                         ])
   name                                 = local.public_key_secret_name
   value                                = local.public_key
   key_vault_id                         = var.key_vault.exists ? (
@@ -286,14 +328,21 @@ resource "azurerm_key_vault_secret" "pk" {
 }
 resource "azurerm_key_vault_secret" "username" {
   count                                = local.enable_key && (length(var.key_vault.username_secret_name) == 0 ) && !var.key_vault.exists ? 1 : 0
-  depends_on                           = [
+  depends_on                           = concat([
+                                           time_sleep.wait_for_keyvault,
+                                           azurerm_virtual_network_peering.peering_management_agent,
+                                           azurerm_private_endpoint.kv_user
+                                         ],
+                                         var.key_vault.enable_rbac_authorization ? [
+                                           azurerm_role_assignment.role_assignment_msi,
+                                           azurerm_role_assignment.role_assignment_spn,
+                                           azurerm_role_assignment.role_assignment_terraform_executor
+                                         ] : [
                                            azurerm_key_vault_access_policy.kv_user_pre_deployer[0],
                                            azurerm_key_vault_access_policy.kv_user_msi,
                                            azurerm_key_vault_access_policy.kv_user_additional_users,
-                                           azurerm_role_assignment.role_assignment_msi,
-                                           azurerm_virtual_network_peering.peering_management_agent,
-                                           azurerm_private_endpoint.kv_user
-                                         ]
+                                           azurerm_key_vault_access_policy.kv_user_terraform_executor
+                                         ])
 
   name                                 = local.username_secret_name
   value                                = try(var.authentication.username, "azureadm")
@@ -313,14 +362,21 @@ resource "azurerm_key_vault_secret" "username" {
 resource "azurerm_key_vault_secret" "pat" {
   count                                = local.enable_key && (length(var.infrastructure.devops.agent_pat)> 0 ) && !var.key_vault.exists  ? 1 : 0
 
-  depends_on                           = [
+  depends_on                           = concat([
+                                           time_sleep.wait_for_keyvault,
+                                           azurerm_virtual_network_peering.peering_management_agent,
+                                           azurerm_private_endpoint.kv_user
+                                         ],
+                                         var.key_vault.enable_rbac_authorization ? [
+                                           azurerm_role_assignment.role_assignment_msi,
+                                           azurerm_role_assignment.role_assignment_spn,
+                                           azurerm_role_assignment.role_assignment_terraform_executor
+                                         ] : [
                                            azurerm_key_vault_access_policy.kv_user_pre_deployer[0],
                                            azurerm_key_vault_access_policy.kv_user_msi,
                                            azurerm_key_vault_access_policy.kv_user_additional_users,
-                                           azurerm_role_assignment.role_assignment_msi,
-                                           azurerm_virtual_network_peering.peering_management_agent,
-                                           azurerm_private_endpoint.kv_user
-                                         ]
+                                           azurerm_key_vault_access_policy.kv_user_terraform_executor
+                                         ])
   name                                 = "PAT"
   value                                = var.infrastructure.devops.agent_pat
   key_vault_id                         = var.key_vault.exists ? (
@@ -366,14 +422,21 @@ resource "azurerm_key_vault_secret" "pat" {
 
 resource "azurerm_key_vault_secret" "pwd" {
   count                                = local.enable_password && (length(var.key_vault.username_secret_name) == 0 ) && !var.key_vault.exists  ? 1 : 0
-  depends_on                           = [
+  depends_on                           = concat([
+                                           time_sleep.wait_for_keyvault,
+                                           azurerm_virtual_network_peering.peering_management_agent,
+                                           azurerm_private_endpoint.kv_user
+                                         ],
+                                         var.key_vault.enable_rbac_authorization ? [
+                                           azurerm_role_assignment.role_assignment_msi,
+                                           azurerm_role_assignment.role_assignment_spn,
+                                           azurerm_role_assignment.role_assignment_terraform_executor
+                                         ] : [
                                            azurerm_key_vault_access_policy.kv_user_pre_deployer[0],
                                            azurerm_key_vault_access_policy.kv_user_msi,
                                            azurerm_key_vault_access_policy.kv_user_additional_users,
-                                           azurerm_role_assignment.role_assignment_msi,
-                                           azurerm_virtual_network_peering.peering_management_agent,
-                                           azurerm_private_endpoint.kv_user
-                                         ]
+                                           azurerm_key_vault_access_policy.kv_user_terraform_executor
+                                         ])
   name                                 = local.pwd_secret_name
   value                                = local.password
   key_vault_id                         = var.key_vault.exists ? (

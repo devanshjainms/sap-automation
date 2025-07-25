@@ -23,14 +23,14 @@ resource "azurerm_network_security_group" "nsg_mgmt" {
 }
 
 data "azurerm_network_security_group" "nsg_mgmt" {
-  count                                = var.infrastructure.virtual_network.management.subnet_mgmt.exists ? 1 : 0
-  name                                 = split("/", var.infrastructure.virtual_network.management.subnet_mgmt.id)[8]
-  resource_group_name                  = split("/", var.infrastructure.virtual_network.management.subnet_mgmt.id)[4]
+  count                                = var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? 1 : 0
+  name                                 = split("/", var.infrastructure.virtual_network.management.subnet_mgmt.nsg.id)[8]
+  resource_group_name                  = split("/", var.infrastructure.virtual_network.management.subnet_mgmt.nsg.id)[4]
 }
 
 // Link management nsg with management vnet
 resource "azurerm_subnet_network_security_group_association" "associate_nsg_mgmt" {
-  count                                = (!var.infrastructure.virtual_network.management.subnet_mgmt.exists) ? 1 : 0
+  count                                = (!var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists) ? 1 : 0
   depends_on                           = [
                                            azurerm_network_security_rule.nsr_ssh,
                                            azurerm_network_security_rule.nsr_rdp,
@@ -40,7 +40,7 @@ resource "azurerm_subnet_network_security_group_association" "associate_nsg_mgmt
                                            data.azurerm_subnet.subnet_mgmt[0].id) : (
                                            azurerm_subnet.subnet_mgmt[0].id
                                          )
-  network_security_group_id            = var.infrastructure.virtual_network.management.subnet_mgmt.exists ? (
+  network_security_group_id            = var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? (
                                            data.azurerm_network_security_group.nsg_mgmt[0].id) : (
                                            azurerm_network_security_group.nsg_mgmt[0].id
                                          )
@@ -54,11 +54,11 @@ resource "azurerm_network_security_rule" "nsr_ssh" {
                                            azurerm_network_security_group.nsg_mgmt
                                          ]
   name                                 = "ssh"
-  resource_group_name                  = var.infrastructure.virtual_network.management.subnet_mgmt.exists ? (
+  resource_group_name                  = var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? (
                                            data.azurerm_network_security_group.nsg_mgmt[0].resource_group_name) : (
                                            azurerm_network_security_group.nsg_mgmt[0].resource_group_name
                                          )
-  network_security_group_name          = var.infrastructure.virtual_network.management.subnet_mgmt.exists ? (
+  network_security_group_name          = var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? (
                                           data.azurerm_network_security_group.nsg_mgmt[0].name) : (
                                           azurerm_network_security_group.nsg_mgmt[0].name
                                         )
@@ -87,11 +87,11 @@ resource "azurerm_network_security_rule" "nsr_rdp" {
                                            azurerm_network_security_group.nsg_mgmt
                                          ]
   name                                 = "rdp"
-  resource_group_name                  = var.infrastructure.virtual_network.management.subnet_mgmt.exists ? (
+  resource_group_name                  = var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? (
                                            data.azurerm_network_security_group.nsg_mgmt[0].resource_group_name) : (
                                            azurerm_network_security_group.nsg_mgmt[0].resource_group_name
                                          )
-  network_security_group_name          = var.infrastructure.virtual_network.management.subnet_mgmt.exists ? (
+  network_security_group_name          = var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? (
                                           data.azurerm_network_security_group.nsg_mgmt[0].name) : (
                                           azurerm_network_security_group.nsg_mgmt[0].name
                                         )
@@ -120,11 +120,11 @@ resource "azurerm_network_security_rule" "nsr_winrm" {
                                            azurerm_network_security_group.nsg_mgmt
                                          ]
   name                                 = "winrm"
-  resource_group_name                  = var.infrastructure.virtual_network.management.subnet_mgmt.exists ? (
+  resource_group_name                  = var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? (
                                            data.azurerm_network_security_group.nsg_mgmt[0].resource_group_name) : (
                                            azurerm_network_security_group.nsg_mgmt[0].resource_group_name
                                          )
-  network_security_group_name          = var.infrastructure.virtual_network.management.subnet_mgmt.exists ? (
+  network_security_group_name          = var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? (
                                           data.azurerm_network_security_group.nsg_mgmt[0].name) : (
                                           azurerm_network_security_group.nsg_mgmt[0].name
                                         )

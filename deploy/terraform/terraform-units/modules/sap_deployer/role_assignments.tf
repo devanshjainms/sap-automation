@@ -13,6 +13,10 @@ resource "azurerm_role_assignment" "deployer" {
   role_definition_name                 = "Storage Blob Data Contributor"
   principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_role_assignment" "deployer_msi" {
@@ -22,6 +26,10 @@ resource "azurerm_role_assignment" "deployer_msi" {
   role_definition_name                 = "Storage Blob Data Contributor"
   principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
@@ -32,6 +40,10 @@ resource "azurerm_role_assignment" "resource_group_contributor" {
   role_definition_name                 = "Contributor"
   principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_role_assignment" "resource_group_contributor_contributor_msi" {
@@ -41,6 +53,10 @@ resource "azurerm_role_assignment" "resource_group_contributor_contributor_msi" 
   role_definition_name                 = "Contributor"
   principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_role_assignment" "resource_group_user_access_admin_msi" {
@@ -71,6 +87,10 @@ resource "azurerm_role_assignment" "resource_group_user_access_admin_msi" {
   #                                            )
   #                                           )
   #                                           EOT
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
@@ -82,6 +102,10 @@ resource "azurerm_role_assignment" "resource_group_user_access_admin_spn" {
   principal_type                       = "ServicePrincipal"
   principal_id                         = var.spn_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
   # condition_version                    = "2.0"
   # condition                            = <<-EOT
   #                                           (
@@ -113,6 +137,10 @@ resource "azurerm_role_assignment" "role_assignment_msi" {
   role_definition_name                 = "Key Vault Administrator"
   principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_role_assignment" "role_assignment_spn" {
@@ -123,6 +151,10 @@ resource "azurerm_role_assignment" "role_assignment_spn" {
   principal_type                       = "ServicePrincipal"
   principal_id                         = var.spn_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_role_assignment" "role_assignment_terraform_executor" {
@@ -132,6 +164,10 @@ resource "azurerm_role_assignment" "role_assignment_terraform_executor" {
   role_definition_name                 = "Key Vault Administrator"
   principal_id                         = data.azurerm_client_config.deployer.object_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_role_assignment" "role_assignment_msi_officer" {
@@ -141,6 +177,10 @@ resource "azurerm_role_assignment" "role_assignment_msi_officer" {
   role_definition_name                 = "Key Vault Secrets Officer"
   principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
 }
 
@@ -165,6 +205,10 @@ resource "azurerm_role_assignment" "role_assignment_additional_users" {
   role_definition_name                 = "Key Vault Secrets Officer"
   principal_id                         = var.additional_users_to_add_to_keyvault_policies[count.index]
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_role_assignment" "role_assignment_webapp" {
@@ -174,6 +218,10 @@ resource "azurerm_role_assignment" "role_assignment_webapp" {
   role_definition_name                 = "Key Vault Secrets User"
   principal_id                         = azurerm_windows_web_app.webapp[0].identity[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # // Add role to be able to deploy resources
@@ -184,6 +232,10 @@ resource "azurerm_role_assignment" "subscription_contributor_system_identity" {
   role_definition_name                 = "Reader"
   principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_role_assignment" "subscription_contributor_msi" {
@@ -193,6 +245,10 @@ resource "azurerm_role_assignment" "subscription_contributor_msi" {
   role_definition_name                 = "Contributor"
   principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
   skip_service_principal_aad_check     = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 #######################################4#######################################8

@@ -75,6 +75,10 @@ while :; do
 		parameterfile_name="$2"
 		shift 2
 		;;
+	-d | --deployer_tfstate_key)
+		deployer_tfstate_key="$2"
+		shift 2
+		;;
 	-d | --deployer_statefile_foldername)
 		deployer_statefile_foldername="$2"
 		shift 2
@@ -323,9 +327,7 @@ else
 					--backend-config "container_name=tfstate" \
 					--backend-config "key=${key}.terraform.tfstate"; then
 					print_banner "$banner_title" "Terraform init succeeded." "success"
-					key=$(basename "${deployer_parameter_file}" | cut -d. -f1)
-					deployer_tfstate_key="${deployer_statefile_foldername}.terraform.tfstate"
-					echo "Deployer tfstate key $deployer_tfstate_key"
+					echo "deployer_tfstate_key $deployer_tfstate_key"
 					terraform -chdir="${terraform_module_directory}" refresh -var-file="${var_file}" -input=false \
 						-var deployer_tfstate_key="${deployer_tfstate_key}"
 				else

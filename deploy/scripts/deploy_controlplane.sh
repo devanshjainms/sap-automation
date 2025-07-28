@@ -631,6 +631,7 @@ if [ 2 -eq $step ]; then
 			--parameterfile "${library_file_parametername}" \
 			--deployer_statefile_foldername "${deployer_dirname}" \
 			--keyvault "${keyvault}" --auto-approve; then
+			--deployer_tfstate_key "${deployer_tfstate_key}"
 			echo "Bootstrapping of the SAP Library failed"
 			step=2
 			save_config_var "step" "${deployer_config_information}"

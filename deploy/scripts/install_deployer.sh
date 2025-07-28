@@ -206,6 +206,7 @@ else
 			REINSTALL_RESOURCE_GROUP=$(grep -m1 "resource_group_name" "${param_dirname}/.terraform/terraform.tfstate" | cut -d ':' -f2 | tr -d ' ",\r' | xargs || true)
 
 			tfstate_resource_id=$(az resource list --name "$REINSTALL_ACCOUNTNAME" --subscription "$REINSTALL_SUBSCRIPTION" --resource-type Microsoft.Storage/storageAccounts --query "[].id | [0]" -o tsv)
+			echo "Terraform state resource ID: $tfstate_resource_id"
 			if [ -n "${tfstate_resource_id}" ]; then
 				echo "Reinitializing against remote state"
 				this_ip=$(curl -s ipinfo.io/ip) >/dev/null 2>&1

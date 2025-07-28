@@ -73,15 +73,6 @@ resource "azurerm_role_assignment" "deployer_msi" {
   principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
 }
 
-resource "azurerm_role_assignment" "resource_group_contributor_contributor_msi" {
-  provider                             = azurerm.main
-  count                                = var.options.assign_resource_permissions && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
-  scope                                = var.infrastructure.resource_group.exists ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
-  role_definition_name                 = "Contributor"
-  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
-}
-
-
 resource "azurerm_role_assignment" "role_assignment_msi" {
   provider                             = azurerm.main
   count                                = var.options.assign_resource_permissions && var.key_vault.enable_rbac_authorization && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
@@ -98,37 +89,6 @@ resource "azurerm_role_assignment" "role_assignment_msi_officer" {
   role_definition_name                 = "Key Vault Secrets Officer"
   principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
 
-}
-
-resource "azurerm_role_assignment" "resource_group_user_access_admin_msi" {
-  provider                             = azurerm.main
-  count                                = var.options.assign_resource_permissions && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
-  scope                                = var.infrastructure.resource_group.exists ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
-  role_definition_name                 = "User Access Administrator"
-  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
-
-  # condition_version                    = "2.0"
-  # condition                            = <<-EOT
-  #                                           (
-  #                                            (
-  #                                             !(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})
-  #                                            )
-  #                                            OR
-  #                                            (
-  #                                             @Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidNotEquals {8e3af657-a8ff-443c-a75c-2fe8c4bcb635, 18d7d88d-d35e-4fb5-a5c3-7773c20a72d9, f58310d9-a9f6-439a-9e8d-f62e7b41a168}
-  #                                            )
-  #                                           )
-  #                                           AND
-  #                                           (
-  #                                            (
-  #                                             !(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})
-  #                                            )
-  #                                            OR
-  #                                            (
-  #                                             @Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidNotEquals {8e3af657-a8ff-443c-a75c-2fe8c4bcb635, 18d7d88d-d35e-4fb5-a5c3-7773c20a72d9, f58310d9-a9f6-439a-9e8d-f62e7b41a168}
-  #                                            )
-  #                                           )
-  #                                           EOT
 }
 
 ###############################################################################

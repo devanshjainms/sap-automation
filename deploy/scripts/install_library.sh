@@ -323,7 +323,7 @@ else
 					--backend-config "container_name=tfstate" \
 					--backend-config "key=${key}.terraform.tfstate"; then
 					print_banner "$banner_title" "Terraform init succeeded." "success"
-
+					echo "Deployer tfstate key $deployer_tfstate_key"
 					terraform -chdir="${terraform_module_directory}" refresh -var-file="${var_file}" -input=false \
 						-var deployer_tfstate_key="${deployer_tfstate_key}"
 				else

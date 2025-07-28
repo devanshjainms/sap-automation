@@ -6,65 +6,107 @@
 #                                                                              #
 #######################################4#######################################8
 
+resource "azurerm_role_assignment" "subscription_contributor_msi" {
+  count                                = var.options.assign_subscription_permissions && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
+  provider                             = azurerm.main
+  scope                                = data.azurerm_subscription.primary.id
+  role_definition_name                 = "Contributor"
+  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
+}
+
+resource "azurerm_role_assignment" "subscription_useraccessadmin_msi" {
+  count                                = var.options.assign_subscription_permissions && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
+  provider                             = azurerm.main
+  scope                                = data.azurerm_subscription.primary.id
+  role_definition_name                 = "User Access Administrator"
+  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
+}
+
+###############################################################################
+#                                                                             #
+#                            System Assigned Identity                         #
+#                                                                             #
+###############################################################################
 resource "azurerm_role_assignment" "deployer" {
   provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions && var.deployer.add_system_assigned_identity ? var.deployer_vm_count : 0
+  count                                = var.options.assign_resource_permissions && var.deployer.add_system_assigned_identity ? var.deployer_vm_count : 0
   scope                                = length(var.deployer.deployer_diagnostics_account_arm_id) > 0 ? var.deployer.deployer_diagnostics_account_arm_id : azurerm_storage_account.deployer[0].id
   role_definition_name                 = "Storage Blob Data Contributor"
   principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
-
-resource "azurerm_role_assignment" "deployer_msi" {
-  provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions  ? 1 : 0
-  scope                                = length(var.deployer.deployer_diagnostics_account_arm_id) > 0 ? var.deployer.deployer_diagnostics_account_arm_id : azurerm_storage_account.deployer[0].id
-  role_definition_name                 = "Storage Blob Data Contributor"
-  principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
 
 resource "azurerm_role_assignment" "resource_group_contributor" {
   provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions && var.deployer.add_system_assigned_identity ? var.deployer_vm_count : 0
+  count                                = var.options.assign_resource_permissions && var.deployer.add_system_assigned_identity ? var.deployer_vm_count : 0
   scope                                = var.infrastructure.resource_group.exists  ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
   role_definition_name                 = "Contributor"
   principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
-  skip_service_principal_aad_check     = true
+}
 
-  lifecycle {
-    create_before_destroy = true
-  }
+resource "azurerm_role_assignment" "role_assignment_system_identity" {
+  provider                             = azurerm.main
+  count                                = var.options.assign_resource_permissions && var.deployer.add_system_assigned_identity && var.key_vault.enable_rbac_authorization ? var.deployer_vm_count : 0
+  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
+  role_definition_name                 = "Key Vault Secrets Officer"
+  principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "subscription_contributor_system_identity" {
+  count                                = var.options.assign_subscription_permissions && var.deployer.add_system_assigned_identity ? var.deployer_vm_count : 0
+  provider                             = azurerm.main
+  scope                                = data.azurerm_subscription.primary.id
+  role_definition_name                 = "Reader"
+  principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
+}
+
+###############################################################################
+#                                                                             #
+#                            Managed Identity                                 #
+#                                                                             #
+###############################################################################
+
+resource "azurerm_role_assignment" "deployer_msi" {
+  provider                             = azurerm.main
+  count                                = var.options.assign_resource_permissions && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
+  scope                                = length(var.deployer.deployer_diagnostics_account_arm_id) > 0 ? var.deployer.deployer_diagnostics_account_arm_id : azurerm_storage_account.deployer[0].id
+  role_definition_name                 = "Storage Blob Data Contributor"
+  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
 }
 
 resource "azurerm_role_assignment" "resource_group_contributor_contributor_msi" {
   provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions ? 1 : 0
+  count                                = var.options.assign_resource_permissions && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
   scope                                = var.infrastructure.resource_group.exists ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
   role_definition_name                 = "Contributor"
-  principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
-  skip_service_principal_aad_check     = true
+  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
+}
 
-  lifecycle {
-    create_before_destroy = true
-  }
+
+resource "azurerm_role_assignment" "role_assignment_msi" {
+  provider                             = azurerm.main
+  count                                = var.options.assign_resource_permissions && var.key_vault.enable_rbac_authorization && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
+  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
+  role_definition_name                 = "Key Vault Administrator"
+  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
+}
+
+
+resource "azurerm_role_assignment" "role_assignment_msi_officer" {
+  provider                             = azurerm.main
+  count                                = var.options.assign_resource_permissions && var.key_vault.enable_rbac_authorization && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
+  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
+  role_definition_name                 = "Key Vault Secrets Officer"
+  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
+
 }
 
 resource "azurerm_role_assignment" "resource_group_user_access_admin_msi" {
   provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions ? 1 : 0
+  count                                = var.options.assign_resource_permissions && length(var.deployer.user_assigned_identity_id) == 0 ? 1 : 0
   scope                                = var.infrastructure.resource_group.exists ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
   role_definition_name                 = "User Access Administrator"
-  principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
+  principal_id                         = azurerm_user_assigned_identity.deployer[0].principal_id
+
   # condition_version                    = "2.0"
   # condition                            = <<-EOT
   #                                           (
@@ -87,26 +129,22 @@ resource "azurerm_role_assignment" "resource_group_user_access_admin_msi" {
   #                                            )
   #                                           )
   #                                           EOT
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
+###############################################################################
+#                                                                             #
+#                            Service Principal                                #
+#                                                                             #
+###############################################################################
 
 resource "azurerm_role_assignment" "resource_group_user_access_admin_spn" {
   provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions ? 0 : 0
+  count                                = var.options.assign_resource_permissions && !local.run_as_msi ? 0 : 1
   scope                                = var.infrastructure.resource_group.exists ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
   role_definition_name                 = "User Access Administrator"
   principal_type                       = "ServicePrincipal"
-  principal_id                         = var.spn_id
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
-  # condition_version                    = "2.0"
+  principal_id                         = data.azurerm_client_config.current.object_id
+   # condition_version                    = "2.0"
   # condition                            = <<-EOT
   #                                           (
   #                                            (
@@ -128,34 +166,44 @@ resource "azurerm_role_assignment" "resource_group_user_access_admin_spn" {
   #                                            )
   #                                           )
   #                                           EOT
-}
-
-resource "azurerm_role_assignment" "role_assignment_msi" {
-  provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions && var.key_vault.enable_rbac_authorization ? 1 : 0
-  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
-  role_definition_name                 = "Key Vault Administrator"
-  principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "azurerm_role_assignment" "role_assignment_spn" {
   provider                             = azurerm.main
-  count                                = length(var.spn_id) > 0 && var.assign_subscription_permissions && var.key_vault.enable_rbac_authorization ? 1 : 0
+  count                                = var.options.assign_resource_permissions && var.key_vault.enable_rbac_authorization  && !local.run_as_msi ?  1 : 0
   scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
   role_definition_name                 = "Key Vault Administrator"
   principal_type                       = "ServicePrincipal"
-  principal_id                         = var.spn_id
-  skip_service_principal_aad_check     = true
+  principal_id                         = data.azurerm_client_config.current.object_id
 
-  lifecycle {
-    create_before_destroy = true
-  }
 }
+
+resource "azurerm_role_assignment" "role_assignment_additional_users" {
+  provider                             = azurerm.main
+  count                                = var.options.assign_resource_permissions && var.key_vault.enable_rbac_authorization && !var.key_vault.exists && length(compact(var.additional_users_to_add_to_keyvault_policies)) > 0 ? (
+                                           length(compact(var.additional_users_to_add_to_keyvault_policies))) : (
+                                           0
+                                         )
+  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
+  role_definition_name                 = "Key Vault Secrets Officer"
+  principal_id                         = var.additional_users_to_add_to_keyvault_policies[count.index]
+}
+
+resource "azurerm_role_assignment" "role_assignment_webapp" {
+  provider                             = azurerm.main
+  count                                = var.options.assign_resource_permissions && var.key_vault.enable_rbac_authorization && !var.key_vault.exists  && var.app_service.use ? 1 : 0
+  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
+  role_definition_name                 = "Key Vault Secrets User"
+  principal_id                         = azurerm_windows_web_app.webapp[0].identity[0].principal_id
+}
+
+locals {
+  run_as_msi                           = length(var.deployer.user_assigned_identity_id) == 0 ? (
+                                           var.bootstrap || var.options.use_spn ? false : azurerm_user_assigned_identity.deployer[0].principal_id == data.azurerm_client_config.current.object_id ) : (
+                                           data.azurerm_user_assigned_identity.deployer[0].principal_id == data.azurerm_client_config.current.object_id
+                                         )
+}
+
 
 resource "azurerm_role_assignment" "role_assignment_terraform_executor" {
   provider                             = azurerm.main
@@ -168,108 +216,4 @@ resource "azurerm_role_assignment" "role_assignment_terraform_executor" {
   lifecycle {
     create_before_destroy = true
   }
-}
-
-resource "azurerm_role_assignment" "role_assignment_msi_officer" {
-  provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions && var.key_vault.enable_rbac_authorization ? 1 : 0
-  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
-  role_definition_name                 = "Key Vault Secrets Officer"
-  principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-}
-
-resource "azurerm_role_assignment" "role_assignment_system_identity" {
-  provider                             = azurerm.main
-  depends_on                           = [ azurerm_key_vault_secret.pk ]
-  count                                = var.assign_subscription_permissions && var.deployer.add_system_assigned_identity && var.key_vault.enable_rbac_authorization ? var.deployer_vm_count : 0
-  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
-  role_definition_name                 = "Key Vault Secrets Officer"
-  principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
-  skip_service_principal_aad_check     = true
-}
-
-resource "azurerm_role_assignment" "role_assignment_additional_users" {
-  provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions && !var.key_vault.exists && var.key_vault.enable_rbac_authorization && length(compact(var.additional_users_to_add_to_keyvault_policies)) > 0 ? (
-                                           length(compact(var.additional_users_to_add_to_keyvault_policies))) : (
-                                           0
-                                         )
-
-  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
-  role_definition_name                 = "Key Vault Secrets Officer"
-  principal_id                         = var.additional_users_to_add_to_keyvault_policies[count.index]
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "azurerm_role_assignment" "role_assignment_webapp" {
-  provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions && !var.key_vault.exists && !var.key_vault.enable_rbac_authorization && var.app_service.use ? 1 : 0
-  scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
-  role_definition_name                 = "Key Vault Secrets User"
-  principal_id                         = azurerm_windows_web_app.webapp[0].identity[0].principal_id
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-# // Add role to be able to deploy resources
-resource "azurerm_role_assignment" "subscription_contributor_system_identity" {
-  count                                = var.assign_subscription_permissions && var.deployer.add_system_assigned_identity ? var.deployer_vm_count : 0
-  provider                             = azurerm.main
-  scope                                = data.azurerm_subscription.primary.id
-  role_definition_name                 = "Reader"
-  principal_id                         = azurerm_linux_virtual_machine.deployer[count.index].identity[0].principal_id
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "azurerm_role_assignment" "subscription_contributor_msi" {
-  count                                = var.assign_subscription_permissions ? 1 : 0
-  provider                             = azurerm.main
-  scope                                = data.azurerm_subscription.primary.id
-  role_definition_name                 = "Contributor"
-  principal_id                         = length(var.deployer.user_assigned_identity_id) == 0 ? azurerm_user_assigned_identity.deployer[0].principal_id : data.azurerm_user_assigned_identity.deployer[0].principal_id
-  skip_service_principal_aad_check     = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-#######################################4#######################################8
-#                                                                              #
-#                              Managed DevOps Pool                             #
-#                                                                              #
-#######################################4#######################################8
-
-
-resource "azurerm_role_assignment" "dev_center_reader" {
-  count                                         = var.infrastructure.dev_center_deployment && var.infrastructure.devops.DevOpsInfrastructure_object_id != "" ? 1 : 0
-  scope                                         = var.infrastructure.resource_group.exists ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
-  role_definition_name                          = "Reader"
-  principal_id                                  = var.infrastructure.devops.DevOpsInfrastructure_object_id
-  skip_service_principal_aad_check              = true
-}
-
-resource "azurerm_role_assignment" "dev_center_network_contributor" {
-  count                                         = var.infrastructure.dev_center_deployment && var.infrastructure.devops.DevOpsInfrastructure_object_id != "" ? 1 : 0
-  scope                                         = var.infrastructure.resource_group.exists ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
-  role_definition_name                          = "Network Contributor"
-  principal_id                                  = var.infrastructure.devops.DevOpsInfrastructure_object_id
-  skip_service_principal_aad_check              = true
 }

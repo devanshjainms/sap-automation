@@ -187,13 +187,6 @@ if [ true == "$use_deployer" ]; then
 		echo "#########################################################################################"
 		exit
 	fi
-	
-	# Extract deployer resource group name from the folder path and construct the tfstate key
-	deployer_rg_name=$(basename "${deployer_statefile_foldername}")
-	deployer_tfstate_key="${deployer_rg_name}.terraform.tfstate"
-	echo "Deployer folder:                     ${deployer_statefile_foldername}"
-	echo "Deployer resource group:             ${deployer_rg_name}"
-	echo "Deployer tfstate key:                ${deployer_tfstate_key}"
 fi
 
 #Persisting the parameters across executions
@@ -331,7 +324,7 @@ else
 					print_banner "$banner_title" "Terraform init succeeded." "success"
 
 					terraform -chdir="${terraform_module_directory}" refresh -var-file="${var_file}" -input=false \
-						-var deployer_tfstate_key="${deployer_tfstate_key}"
+						-var deployer_statefile_foldername="${deployer_statefile_foldername}"
 				else
 					print_banner "$banner_title" "Terraform init failed." "error" "Terraform init return code: $return_value"
 					exit 10
@@ -384,10 +377,9 @@ install_library_return_value=0
 
 if [ -n "${deployer_statefile_foldername}" ]; then
 	echo "Deployer folder specified:           ${deployer_statefile_foldername}"
-	
 	terraform -chdir="${terraform_module_directory}" plan -no-color -detailed-exitcode \
 		-var-file="${var_file}" -input=false \
-		-var deployer_tfstate_key="${deployer_tfstate_key}" | tee -a plan_output.log
+		-var deployer_statefile_foldername="${deployer_statefile_foldername}" | tee -a plan_output.log
 	install_library_return_value=${PIPESTATUS[0]}
 	if [ $install_library_return_value -eq 1 ]; then
 		print_banner "$banner_title" "Error when running plan" "error" "Terraform plan return code: $return_value"
@@ -398,8 +390,8 @@ if [ -n "${deployer_statefile_foldername}" ]; then
 	else
 		print_banner "$banner_title" "Terraform plan succeeded." "success" "Terraform plan return code: $return_value"
 	fi
-	allParameters=$(printf " -var-file=%s -var deployer_tfstate_key=%s %s " "${var_file}" "${deployer_tfstate_key}" "${extra_vars}")
-	allImportParameters=$(printf " -var-file=%s -var deployer_tfstate_key=%s %s " "${var_file}" "${deployer_tfstate_key}" "${extra_vars}")
+	allParameters=$(printf " -var-file=%s -var deployer_statefile_foldername=%s %s " "${var_file}" "${deployer_statefile_foldername}" "${extra_vars}")
+	allImportParameters=$(printf " -var-file=%s -var deployer_statefile_foldername=%s %s " "${var_file}" "${deployer_statefile_foldername}" "${extra_vars}")
 
 else
 	terraform -chdir="${terraform_module_directory}" plan -no-color -detailed-exitcode \

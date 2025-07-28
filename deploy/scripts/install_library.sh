@@ -325,9 +325,9 @@ else
 					print_banner "$banner_title" "Terraform init succeeded." "success"
 					key=$(basename "${deployer_parameter_file}" | cut -d. -f1)
 					deployer_tfstate_key="${deployer_statefile_foldername}.terraform.tfstate"
-					echo "Deployer tfstate key $deployer_statefile_foldername"
+					echo "Deployer tfstate key $deployer_tfstate_key"
 					terraform -chdir="${terraform_module_directory}" refresh -var-file="${var_file}" -input=false \
-						-var deployer_tfstate_key="${deployer_statefile_foldername}"
+						-var deployer_tfstate_key="${deployer_tfstate_key}"
 				else
 					print_banner "$banner_title" "Terraform init failed." "error" "Terraform init return code: $return_value"
 					exit 10

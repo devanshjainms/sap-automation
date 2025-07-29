@@ -56,6 +56,31 @@ resource "azurerm_private_dns_zone_virtual_network_link" "vnet_mgmt" {
   tags                                 = var.infrastructure.tags
 }
 
+resource "azurerm_private_dns_zone_virtual_network_link" "vnet_agent" {
+  provider                             = azurerm.dnsmanagement
+  count                                = var.dns_settings.register_storage_accounts_keyvaults_with_dns && length(var.dns_settings.dns_label) > 0 && !var.use_custom_dns_a_registration && length(var.dns_settings.additional_network_id) > 0 ? 1 : 0
+  depends_on                           = [
+                                            azurerm_private_dns_zone.dns
+                                         ]
+
+  name                                 = format("%s%s%s%s",
+                                           var.naming.resource_prefixes.dns_link,
+                                           local.prefix,
+                                           var.naming.separator,
+                                           "dns-agent"
+                                         )
+  resource_group_name                  = coalesce(var.dns_settings.management_dns_resourcegroup_name,
+                                           var.infrastructure.resource_group.exists ? (
+                                             split("/", var.infrastructure.resource_group.id)[4]) : (
+                                             azurerm_resource_group.library[0].name
+                                           )
+                                         )
+  private_dns_zone_name                = var.dns_settings.dns_label
+  virtual_network_id                   = var.dns_settings.additional_network_id
+  registration_enabled                 = true
+  tags                                 = var.infrastructure.tags
+}
+
 resource "azurerm_private_dns_zone_virtual_network_link" "vnet_mgmt_blob" {
   provider                             = azurerm.dnsmanagement
   count                                = var.dns_settings.register_storage_accounts_keyvaults_with_dns && !var.use_custom_dns_a_registration ? 1 : 0

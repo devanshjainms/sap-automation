@@ -630,8 +630,7 @@ if [ 2 -eq $step ]; then
 		if ! "${SAP_AUTOMATION_REPO_PATH}/deploy/scripts/install_library.sh" \
 			--parameterfile "${library_file_parametername}" \
 			--deployer_statefile_foldername "${deployer_dirname}" \
-			--keyvault "${keyvault}" --auto-approve \
-			--deployer_tfstate_key "${deployer_tfstate_key}"; then
+			--keyvault "${keyvault}" --auto-approve; then
 			echo "Bootstrapping of the SAP Library failed"
 			step=2
 			save_config_var "step" "${deployer_config_information}"

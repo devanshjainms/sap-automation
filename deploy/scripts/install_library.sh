@@ -75,10 +75,6 @@ while :; do
 		parameterfile_name="$2"
 		shift 2
 		;;
-	-d | --deployer_tfstate_key)
-		deployer_tfstate_key="$2"
-		shift 2
-		;;
 	-d | --deployer_statefile_foldername)
 		deployer_statefile_foldername="$2"
 		shift 2
@@ -151,6 +147,7 @@ else
 	exit 2
 fi
 key=$(echo "${parameterfile_name}" | cut -d. -f1)
+deployer_tf_state="${key}.terraform.tfstate"
 
 if [ -z "${environment}" ]; then
 	echo "#########################################################################################"
@@ -326,10 +323,10 @@ else
 					--backend-config "storage_account_name=$REINSTALL_ACCOUNTNAME" \
 					--backend-config "container_name=tfstate" \
 					--backend-config "key=${key}.terraform.tfstate"; then
-					print_banner "$banner_title" "Terraform init succeeded." "success"
-					echo "deployer_tfstate_key $deployer_statefile_foldername"
+
+					echo "deployer_tfstate_key $deployer_tf_state"
 					terraform -chdir="${terraform_module_directory}" refresh -var-file="${var_file}" -input=false \
-						-var deployer_tfstate_key="${deployer_statefile_foldername}"
+						-var deployer_tfstate_key="${deployer_tf_state}"
 				else
 					print_banner "$banner_title" "Terraform init failed." "error" "Terraform init return code: $return_value"
 					exit 10

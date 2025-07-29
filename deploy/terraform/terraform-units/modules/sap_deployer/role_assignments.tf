@@ -99,7 +99,7 @@ resource "azurerm_role_assignment" "role_assignment_msi_officer" {
 
 resource "azurerm_role_assignment" "resource_group_user_access_admin_spn" {
   provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions && !local.run_as_msi ? 0 : 1
+  count                                = var.assign_subscription_permissions && (var.bootstrap || var.options.use_spn) ? 1 : 0
   scope                                = var.infrastructure.resource_group.exists ? data.azurerm_resource_group.deployer[0].id : azurerm_resource_group.deployer[0].id
   role_definition_name                 = "User Access Administrator"
   principal_type                       = "ServicePrincipal"
@@ -130,7 +130,7 @@ resource "azurerm_role_assignment" "resource_group_user_access_admin_spn" {
 
 resource "azurerm_role_assignment" "role_assignment_spn" {
   provider                             = azurerm.main
-  count                                = var.assign_subscription_permissions && var.key_vault.enable_rbac_authorization  && !local.run_as_msi ?  1 : 0
+  count                                = var.assign_subscription_permissions && var.key_vault.enable_rbac_authorization && (var.bootstrap || var.options.use_spn) ? 1 : 0
   scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
   role_definition_name                 = "Key Vault Administrator"
   principal_type                       = "ServicePrincipal"
@@ -155,13 +155,6 @@ resource "azurerm_role_assignment" "role_assignment_webapp" {
   scope                                = var.key_vault.exists ? data.azurerm_key_vault.kv_user[0].id : azurerm_key_vault.kv_user[0].id
   role_definition_name                 = "Key Vault Secrets User"
   principal_id                         = azurerm_windows_web_app.webapp[0].identity[0].principal_id
-}
-
-locals {
-  run_as_msi                           = length(var.deployer.user_assigned_identity_id) == 0 ? (
-                                           var.bootstrap || var.options.use_spn ? false : azurerm_user_assigned_identity.deployer[0].principal_id == data.azurerm_client_config.current.object_id ) : (
-                                           data.azurerm_user_assigned_identity.deployer[0].principal_id == data.azurerm_client_config.current.object_id
-                                         )
 }
 
 

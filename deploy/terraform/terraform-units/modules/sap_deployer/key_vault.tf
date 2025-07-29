@@ -466,11 +466,9 @@ resource "azurerm_private_endpoint" "kv_user_agent" {
                                           "-agent",
                                           var.naming.resource_suffixes.keyvault_private_link
                                         )
-  resource_group_name                  = coalesce(
-                                           var.dns_settings.privatelink_dns_resourcegroup_name,
-                                           var.dns_settings.management_dns_resourcegroup_name,
-                                           var.dns_settings.local_dns_resourcegroup_name,
-                                           split("/", var.additional_network_id)[4]
+  resource_group_name                  = var.infrastructure.resource_group.exists ? (
+                                           data.azurerm_resource_group.deployer[0].name) : (
+                                           azurerm_resource_group.deployer[0].name
                                          )
   location                             = data.azurerm_resource_group.agent_rg[0].location
   subnet_id                            = data.azurerm_subnet.agent_subnet[0].id

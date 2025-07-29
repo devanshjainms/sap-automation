@@ -463,7 +463,6 @@ resource "azurerm_private_endpoint" "kv_user_agent" {
   name                                 = format("%s%s%s%s",
                                           var.naming.resource_prefixes.keyvault_private_link,
                                           local.prefix,
-                                          "-agent",
                                           var.naming.resource_suffixes.keyvault_private_link
                                         )
   resource_group_name                  = var.infrastructure.resource_group.exists ? (

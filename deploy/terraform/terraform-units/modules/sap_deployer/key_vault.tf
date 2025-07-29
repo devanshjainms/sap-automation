@@ -470,7 +470,10 @@ resource "azurerm_private_endpoint" "kv_user_agent" {
                                            data.azurerm_resource_group.deployer[0].name) : (
                                            azurerm_resource_group.deployer[0].name
                                          )
-  location                             = data.azurerm_resource_group.agent_rg[0].location
+  location                             = var.infrastructure.resource_group.exists ? (
+                                           data.azurerm_resource_group.deployer[0].location) : (
+                                           azurerm_resource_group.deployer[0].location
+                                         )
   subnet_id                            = data.azurerm_subnet.agent_subnet[0].id
 
   custom_network_interface_name        = format("%s%s%s%s%s",

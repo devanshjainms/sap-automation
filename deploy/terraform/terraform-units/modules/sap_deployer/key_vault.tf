@@ -460,7 +460,7 @@ data "azurerm_resource_group" "agent_rg" {
 resource "azurerm_private_endpoint" "kv_user_agent" {
   provider                             = azurerm.main
   count                                = length(var.additional_network_id) > 0 && !var.bootstrap && var.use_private_endpoint ? 1 : 0
-  name                                 = format("%s%s%s%s",
+  name                                 = format("%s%s%s",
                                           var.naming.resource_prefixes.keyvault_private_link,
                                           local.prefix,
                                           var.naming.resource_suffixes.keyvault_private_link

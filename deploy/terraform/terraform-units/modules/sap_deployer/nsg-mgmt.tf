@@ -9,7 +9,7 @@ Description:
 
 // Create/Import management nsg
 resource "azurerm_network_security_group" "nsg_mgmt" {
-  count                                = !var.infrastructure.virtual_network.management.subnet_mgmt.exists ? 1 : 0
+  count                                = !var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists ? 1 : 0
   name                                 = local.management_subnet_nsg_name
   resource_group_name                  = var.infrastructure.resource_group.exists ? (
                                            data.azurerm_resource_group.deployer[0].name) : (
@@ -48,7 +48,7 @@ resource "azurerm_subnet_network_security_group_association" "associate_nsg_mgmt
 
 // Add SSH network security rule
 resource "azurerm_network_security_rule" "nsr_ssh" {
-  count                                = !var.infrastructure.virtual_network.management.subnet_mgmt.exists && local.enable_deployer_public_ip ? 1 : 0
+  count                                = !var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists && local.enable_deployer_public_ip ? 1 : 0
   depends_on                           = [
                                            data.azurerm_network_security_group.nsg_mgmt,
                                            azurerm_network_security_group.nsg_mgmt
@@ -81,7 +81,7 @@ resource "azurerm_network_security_rule" "nsr_ssh" {
 
 // Add RDP network security rule
 resource "azurerm_network_security_rule" "nsr_rdp" {
-  count                                = !var.infrastructure.virtual_network.management.subnet_mgmt.exists && local.enable_deployer_public_ip ? 1 : 0
+  count                                = !var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists && local.enable_deployer_public_ip ? 1 : 0
   depends_on                           = [
                                            data.azurerm_network_security_group.nsg_mgmt,
                                            azurerm_network_security_group.nsg_mgmt
@@ -114,7 +114,7 @@ resource "azurerm_network_security_rule" "nsr_rdp" {
 
 // Add WinRM network security rule
 resource "azurerm_network_security_rule" "nsr_winrm" {
-  count                                = !var.infrastructure.virtual_network.management.subnet_mgmt.exists && local.enable_deployer_public_ip ? 1 : 0
+  count                                = !var.infrastructure.virtual_network.management.subnet_mgmt.nsg.exists && local.enable_deployer_public_ip ? 1 : 0
   depends_on                           = [
                                            data.azurerm_network_security_group.nsg_mgmt,
                                            azurerm_network_security_group.nsg_mgmt

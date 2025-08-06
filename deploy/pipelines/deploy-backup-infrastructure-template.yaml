@@ -1,0 +1,190 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+parameters:
+  - name: backup_configuration_name
+    type: string
+
+  - name: use_deployer
+    type: boolean
+    default: true
+
+  - name: deployer_environment
+    type: string
+    default: MGMT
+
+  - name: deployer_region
+    type: string
+    default: SECE
+
+  - name: backup_parameter_file
+    type: string
+    default: ""
+
+  - name: backup_configuration_file
+    type: string
+    default: ""
+
+  - name: tf_version
+    type: string
+    default: 1.9.7
+
+  - name: force_deployment
+    type: boolean
+    default: false
+
+variables:
+  - name: backup_configuration_name
+    value: ${{ parameters.backup_configuration_name }}
+
+  - name: deployer_environment
+    value: ${{ parameters.deployer_environment }}
+
+  - name: deployer_region
+    value: ${{ parameters.deployer_region }}
+
+  - name: backup_configuration_path
+    value: $(Agent.BuildDirectory)/s/WORKSPACES/BACKUP/${{ parameters.backup_configuration_name }}
+
+  - name: this_agent
+    value: $[lower(replace(replace(Agent.Name, ' ', '_'), '.', '_'))]
+
+stages:
+  - stage: Deploy_backup_infrastructure
+    displayName: Deploy backup infrastructure
+    jobs:
+      - job: Deploy_backup_infrastructure
+        displayName: Deploy backup infrastructure
+        workspace:
+          clean: all
+        pool:
+          name: ${{ variables.this_agent }}
+
+        steps:
+          - checkout: self
+            persistCredentials: true
+
+          - task: PostBuildCleanup@3
+            displayName: Clean up build agent
+
+          - bash: |
+              #!/bin/bash
+              green="\e[1;32m"; reset_formatting="\e[0m"
+              echo -e "$green--- Deploy backup infrastructure ---$reset_formatting"
+
+              echo "Backup Configuration Name: ${{ parameters.backup_configuration_name }}"
+              echo "Deployer Environment: ${{ parameters.deployer_environment }}"
+              echo "Deployer Region: ${{ parameters.deployer_region }}"
+              echo "Force Deployment: ${{ parameters.force_deployment }}"
+            displayName: Display Configuration
+
+          - template: templates/download-terraform.yaml
+            parameters:
+              tf_version: ${{ parameters.tf_version }}
+
+          - bash: |
+              #!/bin/bash
+              echo "##vso[build.updatebuildnumber]Deploying backup infrastructure for ${{ parameters.backup_configuration_name }}"
+            displayName: Set Build Number
+
+          - bash: |
+              #!/bin/bash
+
+              if [ ! -d "$(backup_configuration_path)" ]; then
+                echo "##vso[task.logissue type=error]Backup configuration directory not found: $(backup_configuration_path)"
+                exit 1
+              fi
+
+              cd "$(backup_configuration_path)"
+
+              if [ -f "${{ parameters.backup_parameter_file }}" ]; then
+                export backup_parameter_file="${{ parameters.backup_parameter_file }}"
+              elif [ -f "backup.tfvars" ]; then
+                export backup_parameter_file="backup.tfvars"
+              elif [ -f "terraform.tfvars" ]; then
+                export backup_parameter_file="terraform.tfvars"
+              else
+                echo "##vso[task.logissue type=error]No parameter file found in $(backup_configuration_path)"
+                exit 1
+              fi
+
+              echo "Using parameter file: ${backup_parameter_file}"
+              echo "##vso[task.setvariable variable=backup_parameter_file]${backup_parameter_file}"
+            displayName: Determine Parameter File
+            workingDirectory: $(Agent.BuildDirectory)/s
+
+          - bash: |
+              #!/bin/bash
+              set -eu
+
+              if [ ${{ parameters.use_deployer }} == True ]; then
+                deployer_prefix="${{ parameters.deployer_environment }}-${{ parameters.deployer_region }}"
+                export deployer_tfstate_key="${deployer_prefix}-DEPLOYER-infrastructure.tfstate"
+                echo "Using deployer state: ${deployer_tfstate_key}"
+                echo "##vso[task.setvariable variable=deployer_tfstate_key]${deployer_tfstate_key}"
+              fi
+
+              cd "$(backup_configuration_path)"
+
+              # Set deployment parameters
+              extra_parameters=""
+              if [ ${{ parameters.force_deployment }} == True ]; then
+                extra_parameters="${extra_parameters} --force"
+              fi
+
+              # Execute backup deployment
+              $(Agent.BuildDirectory)/s/deploy/scripts/install_backup.sh \
+                --parameterfile "${backup_parameter_file}" \
+                --deployer_tfstate_key "${deployer_tfstate_key}" \
+                --deployer_environment "${{ parameters.deployer_environment }}" \
+                --auto-approve \
+                --ado \
+                ${extra_parameters}
+
+              deployment_exit_code=$?
+              echo "Backup deployment exit code: ${deployment_exit_code}"
+
+              if [ 0 != ${deployment_exit_code} ]; then
+                echo "##vso[task.logissue type=error]Backup infrastructure deployment failed with exit code ${deployment_exit_code}"
+                exit ${deployment_exit_code}
+              fi
+
+              echo "##vso[task.complete result=Succeeded;]Backup infrastructure deployed successfully"
+            displayName: Deploy Backup Infrastructure
+            workingDirectory: $(backup_configuration_path)
+            env:
+              TF_VAR_backup_configuration_name: ${{ parameters.backup_configuration_name }}
+
+          - bash: |
+              #!/bin/bash
+
+              if [ -f "backup_outputs.json" ]; then
+                echo "Backup Infrastructure Deployment Summary:"
+                echo "========================================"
+
+                vault_name=$(jq -r '.recovery_services_vault.value.name // "N/A"' backup_outputs.json)
+                policy_name=$(jq -r '.backup_policy.value.name // "N/A"' backup_outputs.json)
+                resource_group=$(jq -r '.backup_infrastructure.value.resource_group.name // "N/A"' backup_outputs.json)
+
+                echo "Recovery Services Vault: ${vault_name}"
+                echo "Backup Policy: ${policy_name}"
+                echo "Resource Group: ${resource_group}"
+                echo "Configuration: ${{ parameters.backup_configuration_name }}"
+
+                # Set pipeline variables for downstream use
+                echo "##vso[task.setvariable variable=backup_vault_name;isOutput=true]${vault_name}"
+                echo "##vso[task.setvariable variable=backup_policy_name;isOutput=true]${policy_name}"
+                echo "##vso[task.setvariable variable=backup_resource_group;isOutput=true]${resource_group}"
+              else
+                echo "##vso[task.logissue type=warning]backup_outputs.json not found"
+              fi
+            displayName: Display Deployment Summary
+            workingDirectory: $(backup_configuration_path)
+            name: backup_deployment
+
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Terraform Outputs
+            inputs:
+              PathtoPublish: $(backup_configuration_path)/backup_outputs.json
+              ArtifactName: backup-outputs
+            condition: always()

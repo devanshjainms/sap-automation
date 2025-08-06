@@ -1,0 +1,51 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+#--------------------------------------+---------------------------------------8
+#                                                                              |
+# Defines the parameters and variables for the SAP Backup Infrastructure      |
+#                                                                              |
+#--------------------------------------+---------------------------------------8
+
+parameters:
+  backup_configuration_name: ''
+  environment: ''
+  test: false
+
+variables:
+  - group:                             "SDAF-General"
+
+  - group:                             SDAF-${{ parameters.environment }}
+
+  - name:                              backup_configuration_foldername
+    value:                             ${{ parameters.backup_configuration_name }}
+
+  - name:                              backup_configuration_tfvars_filename
+    value:                             ${{ parameters.backup_configuration_name }}.tfvars
+
+  - name:                              tf_url
+    value:                             https://releases.hashicorp.com/terraform/$(tf_version)/terraform_$(tf_version)_linux_amd64.zip
+
+  - name:                              variable_group
+    value:                             SDAF-${{ parameters.environment }}
+
+  - name:                              this_agent
+    value:                             $[lower(coalesce(variables['POOL'], variables['AGENT']))]
+
+  - name:                              REMOTE_STATE_SA
+    value:                             $[variables['Terraform_Remote_Storage_Account_Name']]
+
+  - name:                              REMOTE_STATE_RG
+    value:                             $[variables['Terraform_Remote_Storage_Resource_Group_Name']]
+
+  - name:                              STATE_SUBSCRIPTION
+    value:                             $[variables['Terraform_Remote_Storage_Subscription']]
+
+  - name:                              deployer_tfstate_key
+    value:                             $[variables['DEPLOYER_STATE_FILENAME']]
+
+  - name:                              key_vault
+    value:                             $[variables['Deployer_Key_Vault']]
+
+  - name:                              test_only
+    value:                             ${{ parameters.test }}

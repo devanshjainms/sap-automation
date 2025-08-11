@@ -16,20 +16,23 @@ variable "infrastructure" {
       sap = object({
         id                    = string
         name                  = string
-        subnet_backup         = optional(object({
-          name                = string
-          resource_group_name = string
-        }))
+        resource_group_name   = string
         subnet_app = object({
           resource_group_name = string
         })
       })
 
       backup                  = optional(object({
-        address_space         = list(string)
-        subnet_backup         = object({
-          address_prefixes    = list(string)
-        })
+        id                    = optional(string)
+        name                  = optional(string)
+        resource_group_name   = optional(string)
+        address_space         = optional(list(string))
+        subnet_backup         = optional(object({
+          id                  = optional(string)
+          name                = optional(string)
+          resource_group_name = optional(string)
+          address_prefixes    = optional(list(string))
+        }))
       }))
     })
 
@@ -53,8 +56,8 @@ variable "naming" {
 }
 
 variable "backup_configuration" {
-  description = "Configuration for the backup infrastructure"
-  type = object({
+  description                      = "Configuration for the backup infrastructure"
+  type                             = object({
     vault_sku                      = optional(string, "Standard")
     storage_mode_type              = optional(string, "LocallyRedundant")
     cross_region_restore_enabled   = optional(bool, false)

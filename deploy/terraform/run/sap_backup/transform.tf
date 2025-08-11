@@ -52,35 +52,29 @@ locals {
         resource_group_name       = split("/", var.sap_vnet_arm_id)[-3]
       }
 
-      backup                      = var.backup_vnet_arm_id ? {
+      backup = var.backup_vnet_arm_id != "" && var.backup_vnet_arm_id != null ? {
         id                        = var.backup_vnet_arm_id
         name                      = split("/", var.backup_vnet_arm_id)[-1]
         resource_group_name       = split("/", var.backup_vnet_arm_id)[-3]
+        address_space             = null
 
-        subnet                    = var.backup_subnet_arm_id ? {
+        subnet_backup             = var.backup_subnet_arm_id != "" && var.backup_subnet_arm_id != null ? {
           id                      = var.backup_subnet_arm_id
           name                    = split("/", var.backup_subnet_arm_id)[-1]
           resource_group_name     = split("/", var.backup_subnet_arm_id)[-3]
-        } : {
-          address_space           = var.backup_vnet_address_space
-          subnet_backup           = {
-            address_prefixes      = var.backup_subnet_address_prefixes
-          }
-        }
+          address_prefixes        = null
+        } : null
       } : {
         id                        = null
         name                      = null
         resource_group_name       = null
+        address_space             = var.backup_vnet_address_space
 
-        subnet                    = var.backup_subnet_arm_id ? {
-          id                      = var.backup_subnet_arm_id
-          name                    = split("/", var.backup_subnet_arm_id)[-1]
-          resource_group_name     = split("/", var.backup_subnet_arm_id)[-3]
-        } : {
-          address_space           = var.backup_vnet_address_space
-          subnet_backup           = {
-            address_prefixes      = var.backup_subnet_address_prefixes
-          }
+        subnet_backup             = {
+          id                      = null
+          name                    = null
+          resource_group_name     = null
+          address_prefixes        = var.backup_subnet_address_prefixes
         }
       }
     }

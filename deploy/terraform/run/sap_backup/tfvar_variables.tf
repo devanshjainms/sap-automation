@@ -54,6 +54,7 @@ variable "sap_vnet_arm_id" {
 variable "backup_vnet_arm_id" {
   description               = "ID of the existing backup VNet to connect backup infrastructure to"
   type                      = string
+  default                   = ""
 }
 
 variable "backup_subnet_arm_id" {

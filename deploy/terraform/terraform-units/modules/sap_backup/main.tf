@@ -11,25 +11,26 @@ locals {
   location               = var.infrastructure.region
   resource_group_name    = var.infrastructure.resource_group.name
   sap_network_resource_group = var.infrastructure.vnets.sap.resource_group_name
-  backup_network_resource_group = var.infrastructure.vnets.backup.resource_group_name
+  backup_network_resource_group = try(var.infrastructure.vnets.backup.resource_group_name, null)
 
-  use_existing_network   = var.infrastructure.vnets.backup.subnet_backup != null
+  use_existing_network   = var.infrastructure.vnets.backup.subnet_backup != null && var.infrastructure.vnets.backup.subnet_backup.id != null
+  use_existing_backup_vnet = var.infrastructure.vnets.backup != null && var.infrastructure.vnets.backup.id != null
 
-  rsv_name = format("%s%s%s%s",
+  rsv_name                  = format("%s%s%s%s",
     var.naming.resource_prefixes.backup_vault,
     local.backup_prefix,
     local.environment,
     random_id.deployment_id.hex
   )
 
-  backup_policy_name = format("%s%s%s%s",
+  backup_policy_name      = format("%s%s%s%s",
     var.naming.resource_prefixes.backup_policy,
     local.backup_prefix,
     local.environment,
     random_id.deployment_id.hex
   )
 
-  private_endpoint_name = format("%s%s%s%s",
+  private_endpoint_name   = format("%s%s%s%s",
     var.naming.resource_prefixes.backup_private_endpoint,
     local.backup_prefix,
     local.environment,
@@ -47,10 +48,18 @@ locals {
 }
 
 data "azurerm_subnet" "backup" {
-  count               = local.backup_network_resource_group ? 1 : 0
+  count               = local.use_existing_network && local.backup_network_resource_group != null ? 1 : 0
   name                = var.infrastructure.vnets.backup.subnet.name
   virtual_network_name = var.infrastructure.vnets.backup.name
   resource_group_name = local.backup_network_resource_group
+}
+
+resource "azurerm_subnet" "backup" {
+  count                = local.use_existing_network ? 0 : 1
+  name                 = "${local.backup_prefix}-${local.environment}-subnet"
+  resource_group_name  = local.resource_group_name
+  virtual_network_name = azurerm_virtual_network.backup[0].name
+  address_prefixes     = var.infrastructure.vnets.backup.subnet_backup.address_prefixes
 }
 
 resource "azurerm_resource_group" "backup" {
@@ -79,15 +88,14 @@ resource "azurerm_recovery_services_vault" "main" {
   }
 
   dynamic "identity" {
-    for_each = var.backup_configuration.encryption_key_id != null ? [1] : []
+    for_each                  = var.backup_configuration.encryption_key_id != null ? [1] : []
     content {
-      type = "SystemAssigned"
+      type                    = "SystemAssigned"
     }
   }
 
-  tags = local.tags
-
-  depends_on = [azurerm_resource_group.backup]
+  tags                        = local.tags
+  depends_on                  = [azurerm_resource_group.backup]
 }
 
 resource "azurerm_backup_policy_vm_workload" "hana" {
@@ -182,7 +190,16 @@ resource "azurerm_private_endpoint" "backup" {
   name                = local.private_endpoint_name
   location            = local.location
   resource_group_name = local.resource_group_name
-  subnet_id           = local.use_existing_network ? data.azurerm_subnet.backup[0].id : azurerm_subnet.backup[0].id
+  subnet_id           = local.use_existing_network ? (
+    length(data.azurerm_subnet.backup) > 0 ? data.azurerm_subnet.backup[0].id : null
+  ) : (
+    length(azurerm_subnet.backup) > 0 ? azurerm_subnet.backup[0].id : null
+  )
+
+  depends_on = [
+    azurerm_subnet.backup,
+    data.azurerm_subnet.backup
+  ]
 
   private_service_connection {
     name                           = "${local.private_endpoint_name}-connection"
@@ -208,14 +225,6 @@ resource "azurerm_virtual_network" "backup" {
   tags                = local.tags
 
   depends_on = [azurerm_resource_group.backup]
-}
-
-resource "azurerm_subnet" "backup" {
-  count                = local.use_existing_network ? 0 : 1
-  name                 = "${local.backup_prefix}-${local.environment}-subnet"
-  resource_group_name  = local.resource_group_name
-  virtual_network_name = azurerm_virtual_network.backup[0].name
-  address_prefixes     = var.infrastructure.vnets.backup.subnet_backup.address_prefixes
 }
 
 resource "azurerm_network_security_group" "backup" {
@@ -289,3 +298,38 @@ resource "azurerm_key_vault" "backup" {
 }
 
 data "azurerm_client_config" "current" {}
+
+
+resource "azurerm_virtual_network_peering" "backup_to_sap" {
+  count                        = !local.use_existing_network ? 1 : 0
+  name                         = "${local.backup_prefix}-${local.environment}-to-sap-peering"
+  resource_group_name          = local.resource_group_name
+  virtual_network_name         = azurerm_virtual_network.backup[0].name
+  remote_virtual_network_id    = var.infrastructure.vnets.sap.id
+  allow_virtual_network_access = true
+  allow_forwarded_traffic      = true
+  allow_gateway_transit        = false
+  use_remote_gateways          = false
+
+  depends_on                   = [
+                                  azurerm_virtual_network.backup,
+                                  azurerm_subnet.backup
+                                ]
+}
+
+resource "azurerm_virtual_network_peering" "sap_to_backup" {
+  count                        = !local.use_existing_network ? 1 : 0
+  name                         = "sap-to-${local.backup_prefix}-${local.environment}-peering"
+  resource_group_name          = var.infrastructure.vnets.sap.resource_group_name
+  virtual_network_name         = split("/", var.infrastructure.vnets.sap.id)[8]
+  remote_virtual_network_id    = azurerm_virtual_network.backup[0].id
+  allow_virtual_network_access = true
+  allow_forwarded_traffic      = true
+  allow_gateway_transit        = false
+  use_remote_gateways          = false
+
+  depends_on                   = [
+                                  azurerm_virtual_network.backup,
+                                  azurerm_subnet.backup
+                                ]
+}

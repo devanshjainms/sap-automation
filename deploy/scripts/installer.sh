@@ -61,6 +61,7 @@ function showhelp {
 	echo "#                                           sap_library                                 #"
 	echo "#                                           sap_landscape                               #"
 	echo "#                                           sap_system                                  #"
+	echo "#                                           sap_backup                                  #"
 	echo "#                                                                                       #"
 	echo "#   Optional parameters                                                                 #"
 	echo "#                                                                                       #"
@@ -203,6 +204,7 @@ if [ -z "${deployment_system}" ]; then
 	echo "#       sap_library                                                                     #"
 	echo "#       sap_landscape                                                                   #"
 	echo "#       sap_system                                                                      #"
+	echo "#       sap_backup                                                                      #"
 	echo "#                                                                                       #"
 	echo "#########################################################################################"
 	echo ""
@@ -247,6 +249,12 @@ network_logical_name=""
 
 if [ "${deployment_system}" == sap_system ]; then
 	banner_title="Install SAP System Infrastructure"
+	load_config_vars "$parameterfile_name" "network_logical_name"
+	network_logical_name=$(echo "${network_logical_name}" | tr "[:lower:]" "[:upper:]")
+fi
+
+if [ "${deployment_system}" == sap_backup ]; then
+	banner_title="Install SAP Backup Infrastructure"
 	load_config_vars "$parameterfile_name" "network_logical_name"
 	network_logical_name=$(echo "${network_logical_name}" | tr "[:lower:]" "[:upper:]")
 fi
@@ -511,6 +519,7 @@ if [ ! -d "${terraform_module_directory}" ]; then
 	echo "#       sap_library                                                                     #"
 	echo "#       sap_landscape                                                                   #"
 	echo "#       sap_system                                                                      #"
+	echo "#       sap_backup                                                                      #"
 	echo "#                                                                                       #"
 	echo "#########################################################################################"
 	echo ""
@@ -794,6 +803,12 @@ if [ 1 != $return_value ]; then
 		fi
 	fi
 
+	if [ "${deployment_system}" == sap_backup ]; then
+		state_path="BACKUP"
+		if [ $backup_tfstate_key_exists == false ]; then
+			save_config_vars "${system_config_information}" \
+				backup_tfstate_key
+		fi
 	apply_needed=1
 
 fi
@@ -908,6 +923,10 @@ if ! testIfResourceWouldBeRecreated "module.app_tier.azurerm_windows_virtual_mac
 fi
 
 if ! testIfResourceWouldBeRecreated "module.app_tier.azurerm_linux_virtual_machine.web" "plan_output.log" "Web server(s)"; then
+	fatal_errors=1
+fi
+
+if ! testIfResourceWouldBeRecreated "module.sap_backup.azurerm_recovery_services_vault.main" "plan_output.log" "SAP Backup Recovery Services Vault"; then
 	fatal_errors=1
 fi
 
@@ -1161,6 +1180,17 @@ if [ "${deployment_system}" == sap_library ]; then
 
 	getAndStoreTerraformStateStorageAccountDetails "${REMOTE_STATE_SA}" "${system_config_information}"
 
+fi
+
+if [ "${deployment_system}" == sap_backup ]; then
+    if ! terraform -chdir="${terraform_module_directory}" output | grep "No outputs"; then
+        backup_random_id=$(terraform -chdir="${terraform_module_directory}" output -no-color -raw random_id | tr -d \")
+        if [ -n "${backup_random_id}" ]; then
+            save_config_var "backup_random_id" "${system_config_information}"
+            custom_random_id="${backup_random_id:0:3}"
+            sed -i -e /"custom_random_id"/d "${parameterfile}"
+        fi
+    fi
 fi
 
 if [ -f "${system_config_information}".err ]; then

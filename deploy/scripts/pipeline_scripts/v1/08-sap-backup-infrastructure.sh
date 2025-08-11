@@ -196,10 +196,28 @@ echo "  Parameter file: $BACKUP_CONFIGURATION_TFVARS_FILENAME"
 echo "  Extra parameters: $extra_params"
 echo ""
 
+# Add deployer tfstate key retrieval
+deployer_tfstate_key=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "DEPLOYER_STATE_FILENAME" "${backup_config_information}" "deployer_tfstate_key")
+export deployer_tfstate_key
+
+# Add terraform storage account details
+Terraform_Remote_Storage_Account_Name=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "TERRAFORM_STATE_STORAGE_ACCOUNT" "${backup_config_information}" "REMOTE_STATE_SA")
+terraform_storage_account_subscription_id=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "ARM_SUBSCRIPTION_ID" "${backup_config_information}" "STATE_SUBSCRIPTION")
+
 # Call the install_backup.sh script
-"${SAP_AUTOMATION_REPO_PATH}/deploy/scripts/install_backup.sh" \
-	-p "$BACKUP_CONFIGURATION_TFVARS_FILENAME" \
-	$extra_params
+if "$SAP_AUTOMATION_REPO_PATH/deploy/scripts/installer.sh" --parameterfile "$BACKUP_CONFIGURATION_TFVARS_FILENAME" --type sap_backup \
+    --deployer_tfstate_key "${deployer_tfstate_key}" --storageaccountname "$terraform_storage_account_name"  \
+    --state_subscription "${terraform_storage_account_subscription_id}" \
+    --ado --auto-approve ; then
+	return_code=$?
+	print_banner "$banner_title" "Deployment of $BACKUP_CONFIGURATION_NAME completed successfully" "success"
+else
+	return_code=$?
+	print_banner "$banner_title" "Deployment of $BACKUP_CONFIGURATION_NAME failed" "error"
+	echo -e "$bold_red--- Deployment failed ---$reset"
+	echo "##vso[task.logissue type=error]Deployment failed."
+fi
+echo "Return code from deployment:         ${return_code}"
 
 return_code=$?
 

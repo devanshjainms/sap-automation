@@ -47,23 +47,40 @@ locals {
 
     vnets = {
       sap = {
-        id                        = var.sap_vnet_id
-        name                      = var.sap_vnet_name
-
-        subnet_backup              = var.use_existing_sap_network ? {
-          name                     = var.existing_backup_subnet_name
-          resource_group_name      = var.existing_backup_subnet_resource_group
-        } : null
-
-        subnet_app = {
-          resource_group_name      = var.sap_network_resource_group
-        }
+        id                        = var.sap_vnet_arm_id
+        name                      = split("/", var.sap_vnet_arm_id)[-1]
+        resource_group_name       = split("/", var.sap_vnet_arm_id)[-3]
       }
 
-      backup                      = var.use_existing_sap_network ? null : {
-        address_space             = var.backup_vnet_address_space
-        subnet_backup             = {
-          address_prefixes        = var.backup_subnet_address_prefixes
+      backup                      = var.backup_vnet_arm_id ? {
+        id                        = var.backup_vnet_arm_id
+        name                      = split("/", var.backup_vnet_arm_id)[-1]
+        resource_group_name       = split("/", var.backup_vnet_arm_id)[-3]
+
+        subnet                    = var.backup_subnet_arm_id ? {
+          id                      = var.backup_subnet_arm_id
+          name                    = split("/", var.backup_subnet_arm_id)[-1]
+          resource_group_name     = split("/", var.backup_subnet_arm_id)[-3]
+        } : {
+          address_space           = var.backup_vnet_address_space
+          subnet_backup           = {
+            address_prefixes      = var.backup_subnet_address_prefixes
+          }
+        }
+      } : {
+        id                        = null
+        name                      = null
+        resource_group_name       = null
+
+        subnet                    = var.backup_subnet_arm_id ? {
+          id                      = var.backup_subnet_arm_id
+          name                    = split("/", var.backup_subnet_arm_id)[-1]
+          resource_group_name     = split("/", var.backup_subnet_arm_id)[-3]
+        } : {
+          address_space           = var.backup_vnet_address_space
+          subnet_backup           = {
+            address_prefixes      = var.backup_subnet_address_prefixes
+          }
         }
       }
     }

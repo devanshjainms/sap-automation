@@ -38,43 +38,26 @@ variable "infrastructure" {
       use_existing          = bool
     }))
   })
-  default = {
-    resource_group = {
-      name         = ""
-      use_existing = false
+  default                   = {
+    resource_group          = {
+      name                  = ""
+      use_existing          = false
     }
   }
 }
 
-variable "sap_vnet_id" {
+variable "sap_vnet_arm_id" {
   description               = "ID of the SAP VNet to connect backup infrastructure to"
   type                      = string
 }
 
-variable "sap_vnet_name" {
-  description               = "Name of the SAP VNet"
+variable "backup_vnet_arm_id" {
+  description               = "ID of the existing backup VNet to connect backup infrastructure to"
   type                      = string
 }
 
-variable "sap_network_resource_group" {
-  description               = "Resource group name of the SAP network"
-  type                      = string
-}
-
-variable "use_existing_sap_network" {
-  description               = "Whether to use existing SAP network infrastructure for backup"
-  type                      = bool
-  default                   = false
-}
-
-variable "existing_backup_subnet_name" {
+variable "backup_subnet_arm_id" {
   description               = "Name of existing backup subnet (if use_existing_sap_network is true)"
-  type                      = string
-  default                   = ""
-}
-
-variable "existing_backup_subnet_resource_group" {
-  description               = "Resource group of existing backup subnet (if use_existing_sap_network is true)"
   type                      = string
   default                   = ""
 }
@@ -94,8 +77,8 @@ variable "backup_subnet_address_prefixes" {
 variable "backup_configuration" {
   description = "Backup infrastructure configuration"
   type = object({
-    vault_sku                        = optional(string)
-    storage_mode_type               = optional(string)
+    vault_sku                      = optional(string)
+    storage_mode_type              = optional(string)
     cross_region_restore_enabled   = optional(bool)
     soft_delete_enabled            = optional(bool)
     public_network_access_enabled  = optional(bool)

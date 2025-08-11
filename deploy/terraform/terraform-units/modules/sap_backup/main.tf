@@ -10,9 +10,10 @@ locals {
   environment            = var.infrastructure.environment
   location               = var.infrastructure.region
   resource_group_name    = var.infrastructure.resource_group.name
-  network_resource_group = var.infrastructure.vnets.sap.subnet_app.resource_group_name
+  sap_network_resource_group = var.infrastructure.vnets.sap.resource_group_name
+  backup_network_resource_group = var.infrastructure.vnets.backup.resource_group_name
 
-  use_existing_network   = var.infrastructure.vnets.sap.subnet_backup != null
+  use_existing_network   = var.infrastructure.vnets.backup.subnet_backup != null
 
   rsv_name = format("%s%s%s%s",
     var.naming.resource_prefixes.backup_vault,
@@ -46,10 +47,10 @@ locals {
 }
 
 data "azurerm_subnet" "backup" {
-  count               = local.use_existing_network ? 1 : 0
-  name                = var.infrastructure.vnets.sap.subnet_backup.name
-  virtual_network_name = var.infrastructure.vnets.sap.name
-  resource_group_name = local.network_resource_group
+  count               = local.backup_network_resource_group ? 1 : 0
+  name                = var.infrastructure.vnets.backup.subnet.name
+  virtual_network_name = var.infrastructure.vnets.backup.name
+  resource_group_name = local.backup_network_resource_group
 }
 
 resource "azurerm_resource_group" "backup" {

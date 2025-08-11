@@ -2,14 +2,14 @@
 # Licensed under the MIT License.
 
 variable "infrastructure" {
-  description = "Details of the Azure infrastructure to deploy the backup solution into"
+  description                 = "Details of the Azure infrastructure to deploy the backup solution into"
   type = object({
-    environment = string
-    region      = string
+    environment               = string
+    region                    = string
 
-    resource_group = object({
-      name         = string
-      use_existing = bool
+    resource_group            = object({
+      name                    = string
+      use_existing            = bool
     })
 
     vnets = object({
@@ -25,27 +25,27 @@ variable "infrastructure" {
         })
       })
 
-      backup = optional(object({
-        address_space = list(string)
-        subnet_backup = object({
-          address_prefixes = list(string)
+      backup                  = optional(object({
+        address_space         = list(string)
+        subnet_backup         = object({
+          address_prefixes    = list(string)
         })
       }))
     })
 
-    tags = map(string)
+    tags                      = map(string)
   })
 }
 
 variable "naming" {
-  description = "Defines the names for the resources"
-  type = object({
-    prefix = object({
-      BACKUP = string
+  description                 = "Defines the names for the resources"
+  type                        = object({
+    prefix                    = object({
+      BACKUP                  = string
     })
 
-    resource_prefixes = object({
-      backup_vault             = string
+    resource_prefixes         = object({
+      backup_vault            = string
       backup_policy           = string
       backup_private_endpoint = string
     })
@@ -55,8 +55,8 @@ variable "naming" {
 variable "backup_configuration" {
   description = "Configuration for the backup infrastructure"
   type = object({
-    vault_sku                        = optional(string, "Standard")
-    storage_mode_type               = optional(string, "LocallyRedundant")
+    vault_sku                      = optional(string, "Standard")
+    storage_mode_type              = optional(string, "LocallyRedundant")
     cross_region_restore_enabled   = optional(bool, false)
     soft_delete_enabled            = optional(bool, true)
     public_network_access_enabled  = optional(bool, false)
@@ -67,8 +67,8 @@ variable "backup_configuration" {
   })
 
   default = {
-    vault_sku                        = "Standard"
-    storage_mode_type               = "LocallyRedundant"
+    vault_sku                      = "Standard"
+    storage_mode_type              = "LocallyRedundant"
     cross_region_restore_enabled   = false
     soft_delete_enabled            = true
     public_network_access_enabled  = false
@@ -80,109 +80,109 @@ variable "backup_configuration" {
 }
 
 variable "backup_policy" {
-  description = "Configuration for SAP HANA backup policies"
+  description                       = "Configuration for SAP HANA backup policies"
   type = object({
-    time_zone           = optional(string, "UTC")
-    compression_enabled = optional(bool, false)
+    time_zone                       = optional(string, "UTC")
+    compression_enabled             = optional(bool, false)
 
-    full_backup = object({
-      frequency = string  # "Daily" or "Weekly"
-      time      = string  # "23:00"
-      weekdays  = optional(list(string), ["Sunday"])
+    full_backup                     = object({
+      frequency                     = string
+      time                          = string
+      weekdays                      = optional(list(string), ["Sunday"])
 
-      retention_weekly = object({
-        count    = number
-        weekdays = list(string)
+      retention_weekly              = object({
+        count                       = number
+        weekdays                    = list(string)
       })
 
-      retention_monthly = object({
-        count    = number
-        weekdays = list(string)
-        weeks    = list(string)
+      retention_monthly             = object({
+        count                       = number
+        weekdays                    = list(string)
+        weeks                       = list(string)
       })
 
-      retention_yearly = object({
-        count    = number
-        weekdays = list(string)
-        weeks    = list(string)
-        months   = list(string)
+      retention_yearly              = object({
+        count                       = number
+        weekdays                    = list(string)
+        weeks                       = list(string)
+        months                      = list(string)
       })
     })
 
-    incremental_backup = object({
-      frequency       = string  # "Daily"
-      time           = string  # "01:00"
-      weekdays       = list(string)
-      retention_days = number
+    incremental_backup              = object({
+      frequency                     = string  # "Daily"
+      time                          = string  # "01:00"
+      weekdays                      = list(string)
+      retention_days                = number
     })
 
     log_backup = object({
-      frequency_in_minutes = number
-      retention_days      = number
+      frequency_in_minutes          = number
+      retention_days                = number
     })
   })
 
   default = {
-    time_zone           = "UTC"
-    compression_enabled = false
+    time_zone                       = "UTC"
+    compression_enabled             = false
 
-    full_backup = {
-      frequency = "Weekly"
-      time      = "23:00"
-      weekdays  = ["Sunday"]
+    full_backup                     = {
+      frequency                     = "Weekly"
+      time                          = "23:00"
+      weekdays                      = ["Sunday"]
 
       retention_weekly = {
-        count    = 12
-        weekdays = ["Sunday"]
+        count                       = 12
+        weekdays                    = ["Sunday"]
       }
 
       retention_monthly = {
-        count    = 12
-        weekdays = ["Sunday"]
-        weeks    = ["First"]
+        count                       = 12
+        weekdays                    = ["Sunday"]
+        weeks                       = ["First"]
       }
 
       retention_yearly = {
-        count    = 7
-        weekdays = ["Sunday"]
-        weeks    = ["First"]
-        months   = ["January"]
+        count                       = 7
+        weekdays                    = ["Sunday"]
+        weeks                       = ["First"]
+        months                      = ["January"]
       }
     }
 
     incremental_backup = {
-      frequency       = "Daily"
-      time           = "01:00"
-      weekdays       = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-      retention_days = 30
+      frequency                     = "Daily"
+      time                          = "01:00"
+      weekdays                      = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+      retention_days                = 30
     }
 
     log_backup = {
-      frequency_in_minutes = 15
-      retention_days      = 7
+      frequency_in_minutes          = 15
+      retention_days                = 7
     }
   }
 }
 
 variable "sap_systems" {
-  description = "List of SAP systems to be backed up"
+  description                     = "List of SAP systems to be backed up"
   type = list(object({
-    sid                    = string
-    environment           = string
-    resource_group_name   = string
-    hana_instance_number  = string
-    database_names        = optional(list(string), [])
-    exclude_from_backup   = optional(bool, false)
+    sid                           = string
+    environment                   = string
+    resource_group_name           = string
+    hana_instance_number          = string
+    database_names                = optional(list(string), [])
+    exclude_from_backup           = optional(bool, false)
   }))
   default = []
 }
 
 variable "target_workload_zones" {
-  description = "List of workload zone configurations to discover SAP systems from"
-  type = list(object({
-    code        = string
-    environment = string
-    region      = string
+  description                     = "List of workload zone configurations to discover SAP systems from"
+  type                            = list(object({
+    code                          = string
+    environment                   = string
+    region                        = string
   }))
-  default = []
+  default                         = []
 }

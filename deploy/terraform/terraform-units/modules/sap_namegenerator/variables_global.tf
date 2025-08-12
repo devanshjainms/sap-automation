@@ -21,6 +21,11 @@ variable "landscape_environment" {
   default     = ""
 }
 
+variable "backup_environment" {
+  description = "Backup environment type (Prod, Test, Sand, QA)"
+  default     = ""
+}
+
 variable "location" {
   description = "Azure region"
 }
@@ -587,4 +592,9 @@ variable "utility_vm_count" {
 variable "scale_out" {
   type    = bool
   default = false
+}
+
+variable "backup_vnet_name" {
+  description = "Name of the backup virtual network"
+  default     = ""
 }

@@ -8,6 +8,5 @@ Description:
 */
 terraform {
   backend "local" {
-    use_azuread_auth     = true # Use Azure AD authentication
   }
 }

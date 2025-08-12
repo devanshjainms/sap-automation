@@ -16,13 +16,17 @@ locals {
   // If no library environment provided use environment
   library_environment_temp = length(var.library_environment) > 0 ? var.library_environment : var.environment
 
+  backup_environment_temp = length(var.backup_environment) > 0 ? var.backup_environment : var.environment
+
   deployer_env_verified  = upper(substr(local.deployer_environment_temp, 0, var.sapautomation_name_limits.environment_variable_length))
   env_verified           = upper(substr(var.environment, 0, var.sapautomation_name_limits.environment_variable_length))
   landscape_env_verified = upper(substr(local.landscape_environment_temp, 0, var.sapautomation_name_limits.environment_variable_length))
   library_env_verified   = upper(substr(local.library_environment_temp, 0, var.sapautomation_name_limits.environment_variable_length))
+  backup_env_verified = upper(substr(local.backup_environment_temp, 0, var.sapautomation_name_limits.environment_variable_length))
 
   sap_vnet_verified = upper(trim(substr(replace(var.sap_vnet_name, "/[^A-Za-z0-9]/", ""), 0, var.sapautomation_name_limits.sap_vnet_length), "-_"))
   dep_vnet_verified = upper(trim(substr(replace(var.management_vnet_name, "/[^A-Za-z0-9]/", ""), 0, var.sapautomation_name_limits.sap_vnet_length), "-_"))
+  backup_vnet_verified = upper(trim(substr(replace(var.backup_vnet_name, "/[^A-Za-z0-9]/", ""), 0, var.sapautomation_name_limits.sap_vnet_length), "-_"))
 
   random_id_verified    = upper(substr(var.random_id, 0, var.sapautomation_name_limits.random_id_length))
   random_id_vm_verified = lower(substr(var.random_id, 0, var.sapautomation_name_limits.random_id_length))

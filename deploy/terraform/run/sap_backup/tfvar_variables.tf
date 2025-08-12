@@ -19,9 +19,9 @@ variable "codename"                             {
                                                 }
 
 variable "location"                             {
-                                                 description = "The Azure region for the resources"
-                                                 type        = string
-                                                 default     = ""
+                                                  description = "The Azure region for the resources"
+                                                  type        = string
+                                                  default     = ""
                                                 }
 
 variable "name_override_file"                   {
@@ -38,6 +38,46 @@ variable "management_subscription_id"           {
                                                   description = "This is the management subscription used by the deployment"
                                                   type        = string
                                                   default     = ""
+                                                }
+
+variable "management_dns_subscription_id"        {
+                                                  description = "This is the management subscription used by the deployment"
+                                                  type        = string
+                                                  default     = ""
+                                                }
+
+variable "privatelink_dns_subscription_id" {
+                                                  description = "This is the subscription used for private link DNS management"
+                                                  type        = string
+                                                  default     = ""
+                                                }
+
+variable "use_deployer"                         {
+                                                  description = "Use deployer to deploy the resources"
+                                                  default     = true
+                                                }
+
+variable "place_delete_lock_on_resources"       {
+                                                  description = "If defined, a delete lock will be placed on the key resources"
+                                                  default     = false
+                                                }
+
+variable "prevent_deletion_if_contains_resources" {
+                                                    description = "Controls if resource groups are deleted even if they contain resources"
+                                                    type        = bool
+                                                    default     = true
+                                                  }
+
+variable "data_plane_available"                 {
+                                                  description = "Boolean value indicating if storage account access is via data plane"
+                                                  default     = true
+                                                  type        = bool
+                                                }
+
+variable "enable_purge_control_for_keyvaults" {
+                                                  description = "If defined, enables purge protection for key vaults"
+                                                  default     = false
+                                                  type        = bool
                                                 }
 
 #########################################################################################
@@ -115,7 +155,7 @@ variable "backup_resourcegroup_tags"                   {
 #                                                                              #
 #######################################4#######################################8
 
-variable "backup_network_name"                         {
+variable "backup_network_name"                  {
                                                   description = "If provided, the name of the Virtual network"
                                                   default     = ""
                                                 }
@@ -333,3 +373,29 @@ variable "spn_id"                 {
                                     description = "Service Principal Id to be used for the deployment"
                                     default     = ""
                                   }
+
+#######################################4#######################################8
+#                                                                              #
+#                             Terraform variables                              #
+#                                                                              #
+#######################################4#######################################8
+
+variable "custom_random_id"                     {
+                                                  description = "If provided, the value of the custom random id"
+                                                  default     = ""
+                                                }
+
+variable "tfstate_resource_id"                   {
+                                                    description = "Resource id of tfstate storage account"
+                                                    validation {
+                                                                condition = can(provider::azurerm::parse_resource_id(var.tfstate_resource_id)
+                                                                )
+                                                                error_message = "The Azure Resource ID for the storage account containing the Terraform state files must be provided and be in correct format."
+                                                              }
+                                                  }
+
+variable "deployer_tfstate_key"                   {
+                                                    description = "The name of deployer's remote tfstate file"
+                                                    type    = string
+                                                    default = ""
+                                                  }

@@ -28,6 +28,11 @@ output "naming" {
                                                                                             private_access = local.landscape_private_keyvault_name
                                                                                             user_access    = local.landscape_user_keyvault_name
                                                                                    }
+
+                                                                          BACKUP        = {
+                                                                                            private_access = local.backup_unit_private_keyvault_name
+                                                                                            user_access    = local.backup_unit_user_keyvault_name
+                                                                          }
                                                                     }
 
                          ppg_names = local.ppg_names
@@ -36,6 +41,7 @@ output "naming" {
                            SDU           = trimspace(length(var.custom_prefix) > 0 ? var.custom_prefix : local.sdu_name)
                            WORKLOAD_ZONE = trimspace(length(var.custom_prefix) > 0 ? var.custom_prefix : local.landscape_name)
                            LIBRARY       = trimspace(length(var.custom_prefix) > 0 ? var.custom_prefix : local.library_name)
+                           BACKUP        = trimspace(length(var.custom_prefix) > 0 ? var.custom_prefix : local.backup_unit_name)
                          }
 
                          resource_prefixes = var.resource_prefixes
@@ -55,6 +61,9 @@ output "naming" {
                            LIBRARY = {
                              library_storageaccount_name        = local.library_storageaccount_name
                              terraformstate_storageaccount_name = local.terraformstate_storageaccount_name
+                           }
+                           BACKUP = {
+                             backup_terraformstate_storageaccount_name = local.backup_tfstate_storageaccount_name
                            }
                          }
                          virtualmachine_names = {

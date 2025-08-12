@@ -2,5 +2,7 @@
 # Licensed under the MIT License.
 
 terraform {
-  backend "azurerm" {}
+  backend "azurerm" {
+    use_azuread_auth     = true
+  }
 }

@@ -1,35 +1,85 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+data "azurerm_client_config" "current" {}
+
+data "azurerm_client_config" "current_main" {
+  provider = azurerm.workload
+
+}
+
 data "terraform_remote_state" "deployer" {
-  count   = 1
   backend = "azurerm"
+
+  count = var.use_deployer && length(try(var.deployer_tfstate_key, "")) > 0 ? 1 : 0
   config = {
-    resource_group_name  = local.deployer_remote_state_resource_group_name
-    storage_account_name = local.deployer_remote_state_storage_account_name
-    container_name       = "tfstate"
-    key                  = local.deployer_tfstate_key
+    resource_group_name  = local.SAPLibrary_resource_group_name
+    storage_account_name = local.tfstate_storage_account_name
+    container_name       = local.tfstate_container_name
+    key                  = trimspace(var.deployer_tfstate_key)
+    subscription_id      = local.SAPLibrary_subscription_id
+
   }
 }
 
-data "terraform_remote_state" "landscape" {
-  count   = length(var.target_workload_zones)
-  backend = "azurerm"
-  config = {
-    resource_group_name  = local.deployer_remote_state_resource_group_name
-    storage_account_name = local.deployer_remote_state_storage_account_name
-    container_name       = "tfstate"
-    key                  = "terraform-${var.target_workload_zones[count.index].environment}-${var.target_workload_zones[count.index].region}-${var.target_workload_zones[count.index].code}-landscape.tfstate"
+data "azurerm_key_vault_secret" "subscription_id" {
+  count        = length(var.subscription_id) > 0 ? 0 : (var.use_spn ? 1 : 0)
+  name         = format("%s-subscription-id", local.environment)
+  key_vault_id = local.key_vault.spn.id
+  timeouts {
+    read = "1m"
   }
 }
 
-data "terraform_remote_state" "sap_system" {
-  for_each = { for system in var.sap_systems : "${system.environment}-${system.sid}" => system if !system.exclude_from_backup }
-  backend  = "azurerm"
-  config = {
-    resource_group_name  = local.deployer_remote_state_resource_group_name
-    storage_account_name = local.deployer_remote_state_storage_account_name
-    container_name       = "tfstate"
-    key                  = "terraform-${each.value.environment}-${local.region_code}-${each.value.sid}-sap_system.tfstate"
+data "azurerm_key_vault_secret" "client_id" {
+  count        = var.use_spn ? 1 : 0
+  name         = format("%s-client-id", local.environment)
+  key_vault_id = local.key_vault.spn.id
+  timeouts {
+    read = "1m"
   }
+}
+
+ephemeral "azurerm_key_vault_secret" "client_secret" {
+  count        = var.use_spn ? 1 : 0
+  name         = format("%s-client-secret", local.environment)
+  key_vault_id = local.key_vault.spn.id
+
+}
+
+data "azurerm_key_vault_secret" "tenant_id" {
+  count        = var.use_spn ? 1 : 0
+  name         = format("%s-tenant-id", local.environment)
+  key_vault_id = local.key_vault.spn.id
+  timeouts {
+    read = "1m"
+  }
+}
+
+data "azurerm_key_vault_secret" "cp_subscription_id" {
+  count        = length(try(data.terraform_remote_state.deployer[0].outputs.environment, "")) > 0 ? (var.use_spn ? 1 : 0) : 0
+  name         = format("%s-subscription-id", data.terraform_remote_state.deployer[0].outputs.environment)
+  key_vault_id = local.key_vault.spn.id
+  timeouts {
+    read = "1m"
+  }
+}
+
+data "azurerm_key_vault_secret" "cp_client_id" {
+  count        = var.use_spn ? 1 : 0
+  name         = format("%s-client-id", data.terraform_remote_state.deployer[0].outputs.environment)
+  key_vault_id = local.key_vault.spn.id
+
+}
+
+ephemeral "azurerm_key_vault_secret" "cp_client_secret" {
+  count        = var.use_spn ? 1 : 0
+  name         = format("%s-client-secret", data.terraform_remote_state.deployer[0].outputs.environment)
+  key_vault_id = local.key_vault.spn.id
+}
+
+data "azurerm_key_vault_secret" "cp_tenant_id" {
+  count        = var.use_spn ? 1 : 0
+  name         = format("%s-tenant-id", data.terraform_remote_state.deployer[0].outputs.environment)
+  key_vault_id = local.key_vault.spn.id
 }

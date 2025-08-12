@@ -10,15 +10,25 @@
 
 locals {
 
-  version_label                        = trimspace(file("${path.module}/../../../configs/version.txt"))
+  version_label                       = trimspace(file("${path.module}/../../../configs/version.txt"))
 
-  environment                          = upper(local.infrastructure.environment)
+  environment                         = upper(local.infrastructure.environment)
 
-  backup_vnet_logical_name             = local.infrastructure.vnets.backup.logical_name
+  parsed_id                           = provider::azurerm::parse_resource_id(var.tfstate_resource_id)
 
-  tfstate_container_name               = module.sap_namegenerator.naming.resource_suffixes.tfstate
+  SAPLibrary_subscription_id          = local.parsed_id["subscription_id"]
+  SAPLibrary_resource_group_name      = local.parsed_id["resource_group_name"]
+  tfstate_storage_account_name        = local.parsed_id["resource_name"]
+  tfstate_container_name              = module.sap_namegenerator.naming.resource_suffixes.tfstate
 
-  custom_names                         = length(var.name_override_file) > 0 ? (
+  deployer_subscription_id            = coalesce(
+                                          try(data.terraform_remote_state.deployer[0].outputs.created_resource_group_subscription_id,""),
+                                          local.SAPLibrary_subscription_id
+                                        )
+
+  backup_vnet_logical_name            = local.infrastructure.vnets.backup.logical_name
+
+  custom_names                        = length(var.name_override_file) > 0 ? (
                                             jsondecode(file(format("%s/%s", path.cwd, var.name_override_file)))
                                           ) : (
                                           null

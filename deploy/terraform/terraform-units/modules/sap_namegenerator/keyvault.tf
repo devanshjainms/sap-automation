@@ -15,4 +15,7 @@ locals {
   library_private_keyvault_name = format("%s%sSAPLIBprvt%s", replace(local.library_env_verified, "/[^A-Za-z0-9]/", ""), local.location_short, local.random_id_verified)
   library_user_keyvault_name    = format("%s%sSAPLIBuser%s", replace(local.library_env_verified, "/[^A-Za-z0-9]/", ""), local.location_short, local.random_id_verified)
 
+  backup_unit_private_keyvault_name = format("%s%s%sbackup%s", replace(local.backup_env_verified, "/[^A-Za-z0-9]/", ""), local.location_short, replace(local.backup_vnet_verified, "/[^A-Za-z0-9]/", ""), local.random_id_verified)
+  backup_unit_user_keyvault_name    = format("%s%s%sbackup%s", replace(local.backup_env_verified, "/[^A-Za-z0-9]/", ""), local.location_short, replace(local.backup_vnet_verified, "/[^A-Za-z0-9]/", ""), local.random_id_verified)
+
 }

@@ -5,70 +5,6 @@ resource "random_id" "deployment_id" {
   byte_length             = 2
 }
 
-locals {
-  backup_prefix          = var.naming.prefix.BACKUP
-  environment            = var.infrastructure.environment
-  location               = var.infrastructure.region
-  resource_group_name    = var.infrastructure.resource_group.name
-  sap_network_resource_group = var.infrastructure.vnets.sap.resource_group_name
-  backup_network_resource_group = try(var.infrastructure.vnets.backup.resource_group_name, null)
-
-  use_existing_network   = var.infrastructure.vnets.backup.subnet_backup != null && var.infrastructure.vnets.backup.subnet_backup.id != null
-  use_existing_backup_vnet = var.infrastructure.vnets.backup != null && var.infrastructure.vnets.backup.id != null
-
-  rsv_name                  = format("%s%s%s%s",
-    var.naming.resource_prefixes.backup_vault,
-    local.backup_prefix,
-    local.environment,
-    random_id.deployment_id.hex
-  )
-
-  backup_policy_name      = format("%s%s%s%s",
-    var.naming.resource_prefixes.backup_policy,
-    local.backup_prefix,
-    local.environment,
-    random_id.deployment_id.hex
-  )
-
-  private_endpoint_name   = format("%s%s%s%s",
-    var.naming.resource_prefixes.backup_private_endpoint,
-    local.backup_prefix,
-    local.environment,
-    random_id.deployment_id.hex
-  )
-
-  tags = merge(
-    var.infrastructure.tags,
-    {
-      "backup-environment" = local.environment
-      "backup-location"    = local.location
-      "backup-prefix"      = local.backup_prefix
-    }
-  )
-}
-
-data "azurerm_subnet" "backup" {
-  count               = local.use_existing_network && local.backup_network_resource_group != null ? 1 : 0
-  name                = var.infrastructure.vnets.backup.subnet.name
-  virtual_network_name = var.infrastructure.vnets.backup.name
-  resource_group_name = local.backup_network_resource_group
-}
-
-resource "azurerm_subnet" "backup" {
-  count                = local.use_existing_network ? 0 : 1
-  name                 = "${local.backup_prefix}-${local.environment}-subnet"
-  resource_group_name  = local.resource_group_name
-  virtual_network_name = azurerm_virtual_network.backup[0].name
-  address_prefixes     = var.infrastructure.vnets.backup.subnet_backup.address_prefixes
-}
-
-resource "azurerm_resource_group" "backup" {
-  count    = var.infrastructure.resource_group.use_existing ? 0 : 1
-  name     = local.resource_group_name
-  location = local.location
-  tags     = local.tags
-}
-
 resource "azurerm_recovery_services_vault" "main" {
   name                         = local.rsv_name
   location                     = local.location
@@ -214,17 +150,6 @@ resource "azurerm_private_endpoint" "backup" {
   }
 
   tags = local.tags
-}
-
-resource "azurerm_virtual_network" "backup" {
-  count               = local.use_existing_network ? 0 : 1
-  name                = "${local.backup_prefix}-${local.environment}-vnet"
-  location            = local.location
-  resource_group_name = local.resource_group_name
-  address_space       = var.infrastructure.vnets.backup.address_space
-  tags                = local.tags
-
-  depends_on = [azurerm_resource_group.backup]
 }
 
 resource "azurerm_network_security_group" "backup" {

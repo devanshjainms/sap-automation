@@ -14,7 +14,10 @@ module "sap_backup" {
   }
 
   infrastructure                      = local.infrastructure
-  naming                              = local.naming
+  naming                              = length(var.name_override_file) > 0 ? (
+                                          local.custom_names) : (
+                                          module.sap_namegenerator.naming
+                                        )
   backup_configuration                = local.backup_configuration
   backup_policy                       = local.backup_policy
   sap_systems                         = local.sap_systems

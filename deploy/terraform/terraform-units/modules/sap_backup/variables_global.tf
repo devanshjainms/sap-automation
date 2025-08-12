@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+variable "naming" { description = "Defines the names for the resources" }
+
 variable "infrastructure" {
   description                 = "Details of the Azure infrastructure to deploy the backup solution into"
   type = object({
@@ -40,20 +42,6 @@ variable "infrastructure" {
   })
 }
 
-variable "naming" {
-  description                 = "Defines the names for the resources"
-  type                        = object({
-    prefix                    = object({
-      BACKUP                  = string
-    })
-
-    resource_prefixes         = object({
-      backup_vault            = string
-      backup_policy           = string
-      backup_private_endpoint = string
-    })
-  })
-}
 
 variable "backup_configuration" {
   description                      = "Configuration for the backup infrastructure"
@@ -188,4 +176,8 @@ variable "target_workload_zones" {
     region                        = string
   }))
   default                         = []
+}
+
+variable "tags" {
+  description                     = "List of tags to associate to all resources"
 }

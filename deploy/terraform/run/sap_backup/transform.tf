@@ -7,56 +7,71 @@
 */
 
 locals {
-  version_label                   = trimspace(file("${path.module}/../../../configs/version.txt"))
 
-  name_components                 = split("-", var.backup_configuration_name)
-  environment                     = local.name_components[0]
-  region_code                     = local.name_components[1]
-  backup_name                     = local.name_components[2]
+  infrastructure = {
+    environment                        = coalesce(
+                                          var.environment,
+                                          try(var.infrastructure.environment, "")
+                                          )
+    region                             = coalesce(var.location, try(var.infrastructure.region, ""))
+    codename                           = try(var.codename, try(var.infrastructure.codename, ""))
+    resource_group                     = {
+                                            name = try(
+                                              coalesce(
+                                                var.backup_resourcegroup_name,
+                                                try(var.infrastructure.resource_group.name, "")
+                                              ),
+                                              ""
+                                            )
+                                            id = try(
+                                              coalesce(
+                                                var.backup_resourcegroup_arm_id,
+                                                try(var.infrastructure.backup_resource_group.arm_id, "")
+                                              ),
+                                              ""
+                                            )
+                                            exists = length(try(
+                                              coalesce(
+                                                var.backup_resourcegroup_arm_id,
+                                                try(var.infrastructure.backup_resource_group.arm_id, "")
+                                              ),
+                                              ""
+                                            )) > 0 ? true : false
 
-  location_map = {
-    "SECE"                        = "swedencentral"
-    "SWCE"                        = "switzerlandcentral"
-    "EAUS"                        = "eastus"
-    "WEU2"                        = "westeurope"
-    "CEUS"                        = "centralus"
-  }
+                                          }
+    tags                               = merge(
+                                            var.tags, var.backup_resourcegroup_tags
 
-  location                        = lookup(local.location_map, upper(local.region_code), "eastus")
+                                        )
 
-  deployer_prefix                 = "${var.deployer_environment}-${var.deployer_region}"
-  deployer_tfstate_key            = "${local.deployer_prefix}-DEPLOYER-infrastructure.tfstate"
-
-  deployer_remote_state_resource_group_name  = var.deployer_remote_state_resource_group_name
-  deployer_remote_state_storage_account_name = var.deployer_remote_state_storage_account_name
-
-  default_rg_name                 = format("rg-%s-%s-%s-backup",
-                                      lower(local.environment),
-                                      lower(local.region_code),
-                                      lower(local.backup_name)
-                                    )
-
-  infrastructure                  = {
-    environment                   = lower(local.environment)
-    region                        = local.location
-
-    resource_group                = {
-      name                        = try(var.infrastructure.resource_group.name, local.default_rg_name)
-      use_existing                = try(var.infrastructure.resource_group.use_existing, false)
-    }
+    authentication                       = {
+                                          username            = coalesce(var.automation_username,  "azureadm")
+                                          password            = var.automation_password
+                                          path_to_public_key  = var.automation_path_to_public_key
+                                          path_to_private_key = var.automation_path_to_private_key
+                                        }
+    options                              = {
+                                          enable_secure_transfer = true
+                                          use_spn                = var.use_spn
+                                          spn_id                 = coalesce(data.azurerm_client_config.current_main.object_id, var.spn_id)
+                                        }
 
     vnets = {
       sap = {
         id                        = var.sap_vnet_arm_id
+        exists                    = length(var.sap_vnet_arm_id) > 0
         name                      = split("/", var.sap_vnet_arm_id)[-1]
         resource_group_name       = split("/", var.sap_vnet_arm_id)[-3]
       }
 
       backup = var.backup_vnet_arm_id != "" && var.backup_vnet_arm_id != null ? {
+        logical_name              = var.backup_network_logical_name
         id                        = var.backup_vnet_arm_id
         name                      = split("/", var.backup_vnet_arm_id)[-1]
         resource_group_name       = split("/", var.backup_vnet_arm_id)[-3]
         address_space             = null
+        exists                    = true
+        flow_timeout_in_minutes   = var.network_flow_timeout_in_minutes
 
         subnet_backup             = var.backup_subnet_arm_id != "" && var.backup_subnet_arm_id != null ? {
           id                      = var.backup_subnet_arm_id
@@ -69,6 +84,7 @@ locals {
         name                      = null
         resource_group_name       = null
         address_space             = var.backup_vnet_address_space
+        exists                    = false
 
         subnet_backup             = {
           id                      = null
@@ -79,28 +95,6 @@ locals {
       }
     }
 
-    tags = merge(
-      {
-        "backup-deployment-version" = local.version_label
-        "backup-deployment-type"    = "sap-backup"
-        "backup-environment"        = local.environment
-        "backup-region"             = local.region_code
-        "backup-name"               = local.backup_name
-      },
-      var.tags
-    )
-  }
-
-  naming = {
-    prefix = {
-      BACKUP = upper(local.backup_name)
-    }
-
-    resource_prefixes = {
-      backup_vault             = "rsv-"
-      backup_policy           = "bkp-"
-      backup_private_endpoint = "pe-backup-"
-    }
   }
 
   backup_configuration = merge(
@@ -165,4 +159,8 @@ locals {
   sap_systems                   = var.sap_systems
 
   target_workload_zones         = var.target_workload_zones
+
+  terraform_state_storage_account      = {
+                                           id = var.terraform_storage_account_arm_id
+                                         }
 }

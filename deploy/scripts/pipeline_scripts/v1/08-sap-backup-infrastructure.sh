@@ -174,25 +174,35 @@ fi
 # Auto-approve in pipeline
 extra_params="$extra_params -i"
 
+deployer_tfstate_key=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "DEPLOYER_STATE_FILENAME" "${backup_config_information}" "deployer_tfstate_key")
+export deployer_tfstate_key
+Terraform_Remote_Storage_Account_Name=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "TERRAFORM_STATE_STORAGE_ACCOUNT" "${backup_config_information}" "REMOTE_STATE_SA")
+terraform_storage_account_subscription_id=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "ARM_SUBSCRIPTION_ID" "${backup_config_information}" "STATE_SUBSCRIPTION")
+
 echo ""
-echo "##vso[section]Installing SAP Backup Infrastructure"
+echo "##vso[task.logissue type=info]Installing SAP Backup Infrastructure"
 echo ""
 echo "Calling install_backup.sh with parameters:"
 echo "  Parameter file: $BACKUP_CONFIGURATION_FOLDERNAME.tfvars"
 echo "  Extra parameters: $extra_params"
+echo "  Deployer tfstate key: $deployer_tfstate_key"
+echo "	Terraform Remote Storage Account Name: $Terraform_Remote_Storage_Account_Name"
+echo "  Terraform Storage Account Subscription ID: $terraform_storage_account_subscription_id"
 echo ""
 
-# Add deployer tfstate key retrieval
-deployer_tfstate_key=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "DEPLOYER_STATE_FILENAME" "${backup_config_information}" "deployer_tfstate_key")
-export deployer_tfstate_key
 
-# Add terraform storage account details
-Terraform_Remote_Storage_Account_Name=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "TERRAFORM_STATE_STORAGE_ACCOUNT" "${backup_config_information}" "REMOTE_STATE_SA")
-terraform_storage_account_subscription_id=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "ARM_SUBSCRIPTION_ID" "${backup_config_information}" "STATE_SUBSCRIPTION")
 
 # Call the install_backup.sh script
+echo "About to call installer.sh with:"
+echo "  --parameterfile: $BACKUP_CONFIGURATION_FOLDERNAME.tfvars"
+echo "  --type: sap_backup"
+echo "  --deployer_tfstate_key: ${deployer_tfstate_key}"
+echo "  --storageaccountname: $Terraform_Remote_Storage_Account_Name"
+echo "  --state_subscription: ${terraform_storage_account_subscription_id}"
+echo "  --ado --auto-approve"
+
 if "$SAP_AUTOMATION_REPO_PATH/deploy/scripts/installer.sh" --parameterfile "$BACKUP_CONFIGURATION_FOLDERNAME.tfvars" --type sap_backup \
-    --deployer_tfstate_key "${deployer_tfstate_key}" --storageaccountname "$TERRAFORM_STATE_STORAGE_ACCOUNT"  \
+    --deployer_tfstate_key "${deployer_tfstate_key}" --storageaccountname "$Terraform_Remote_Storage_Account_Name"  \
     --state_subscription "${terraform_storage_account_subscription_id}" \
     --ado --auto-approve ; then
 	return_code=$?
@@ -222,10 +232,10 @@ git config --global user.name "$BUILD_REQUESTEDFOR"
 git add -A
 
 if [ -n "$(git status --porcelain)" ]; then
-	echo "##vso[section]Updating configuration repository"
+	echo "##vso[task.logissue type=info]Updating configuration repository"
 	git commit -m "Added backup configuration updates from backup infrastructure deployment [$BUILD_BUILDNUMBER] ***NO_CI***"
 
-	echo "##vso[section]Pushing changes to configuration repository"
+	echo "##vso[task.logissue type=info]Pushing changes to configuration repository"
 	git -c http.extraheader="AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN" push
 fi
 

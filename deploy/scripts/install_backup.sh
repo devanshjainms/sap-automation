@@ -91,6 +91,7 @@ fi
 
 backup_file_parametername=$(basename "${parameterfile}")
 param_dirname=$(dirname "${parameterfile}")
+export TF_DATA_DIR="${param_dirname}/.terraform"
 
 if [ "$param_dirname" != '.' ]; then
     echo ""
@@ -134,12 +135,7 @@ if [ 0 != $return_code ]; then
     exit $return_code
 fi
 
-backup_configuration_name=$(grep "backup_configuration_name" "${backup_file_parametername}" | cut -d'=' -f2 | tr -d ' "')
-
-if [ -z "${backup_configuration_name}" ]; then
-    printf "%b%s%b\n" "${bold_red_underscore}" "backup_configuration_name not found in parameter file" "${reset_formatting}"
-    exit 1
-fi
+backup_configuration_name=$(echo "${backup_file_parametername}" | cut -d. -f1)
 
 echo "Backup Configuration Name: ${backup_configuration_name}"
 

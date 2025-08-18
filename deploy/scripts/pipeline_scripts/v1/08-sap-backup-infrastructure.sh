@@ -55,6 +55,12 @@ if [ $USE_MSI == "true" ]; then
 	export ARM_USE_MSI
 fi
 
+if [ -v ARM_TENANT_ID ]; then
+	tenant_id="$ARM_TENANT_ID"
+	unset ARM_TENANT_ID
+	export ARM_TENANT_ID
+fi
+
 if [[ ! -f /etc/profile.d/deploy_server.sh ]]; then
 	configureNonDeployer "${tf_version:-1.12.2}"
 fi

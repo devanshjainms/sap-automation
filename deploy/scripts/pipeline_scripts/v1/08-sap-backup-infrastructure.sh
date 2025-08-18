@@ -86,11 +86,24 @@ cd "${CONFIG_REPO_PATH}" || exit
 mkdir -p .sap_deployment_automation
 git checkout -q "$BUILD_SOURCEBRANCHNAME"
 
+# Add debug information about the configuration
+echo "DEBUG: Backup configuration details:"
+echo "  BACKUP_CONFIGURATION_FOLDERNAME: $BACKUP_CONFIGURATION_FOLDERNAME"
+echo "  BACKUP_CONFIGURATION_NAME: $BACKUP_CONFIGURATION_NAME"
+echo "  Config file path: $CONFIG_REPO_PATH/$tfvarsFile"
+echo "  Environment: $ENVIRONMENT"
+echo "  Location: $LOCATION"
+echo "  Network: $NETWORK"
+
+# Validate that we have the correct tfvars file
 if [ ! -f "$CONFIG_REPO_PATH/$tfvarsFile" ]; then
 	print_banner "$banner_title" "$BACKUP_CONFIGURATION_FOLDERNAME.tfvars was not found" "error"
 	echo "##vso[task.logissue type=error]File $BACKUP_CONFIGURATION_FOLDERNAME.tfvars was not found."
 	exit 2
 fi
+
+echo "DEBUG: Contents of tfvars file (first 20 lines):"
+head -20 "$CONFIG_REPO_PATH/$tfvarsFile" || echo "Could not read tfvars file"
 
 BACKUP_CONFIGURATION_NAME=$(echo $BACKUP_CONFIGURATION_FOLDERNAME)
 

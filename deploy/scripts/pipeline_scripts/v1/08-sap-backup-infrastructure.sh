@@ -92,7 +92,7 @@ if [ ! -f "$CONFIG_REPO_PATH/$tfvarsFile" ]; then
 	exit 2
 fi
 
-BACKUP_CONFIGURATION_NAME=$($BACKUP_CONFIGURATION_FOLDERNAME)
+BACKUP_CONFIGURATION_NAME=$(echo $BACKUP_CONFIGURATION_FOLDERNAME)
 
 # If environment is not in tfvars, extract from backup configuration name
 if [ -z "$ENVIRONMENT" ]; then

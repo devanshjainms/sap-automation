@@ -135,7 +135,7 @@ if [ 0 != $return_code ]; then
     exit $return_code
 fi
 
-backup_configuration_name=$(echo "${backup_file_parametername}" | cut -d. -f1)
+backup_configuration_name=$(echo "${parameterfile}" | cut -d. -f1)
 
 echo "Backup Configuration Name: ${backup_configuration_name}"
 
@@ -153,7 +153,7 @@ backup_name="${NAME_PARTS[2]}"
 get_region_code "$region"
 
 if [ "${region_code}" == 'UNKN' ]; then
-    LOCATION_CODE_IN_FILENAME=$(echo "$backup_file_parametername" | awk -F'-' '{print $2}')
+    LOCATION_CODE_IN_FILENAME=$(echo "$parameterfile" | awk -F'-' '{print $2}')
     region_code=$(echo "${LOCATION_CODE_IN_FILENAME}" | tr "[:lower:]" "[:upper:]" | xargs)
 fi
 

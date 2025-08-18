@@ -94,14 +94,16 @@ fi
 
 BACKUP_CONFIGURATION_NAME=$(echo $BACKUP_CONFIGURATION_FOLDERNAME)
 
+
+ENVIRONMENT=$(grep -m1 "^environment" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"')
+LOCATION=$(grep -m1 "^location" "$tfvarsFile" | awk -F'=' '{print $2}' | tr '[:upper:]' '[:lower:]' | tr -d ' \t\n\r\f"')
+NETWORK=$(grep -m1 "^network_logical_name" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"')
+
 # If environment is not in tfvars, extract from backup configuration name
 if [ -z "$ENVIRONMENT" ]; then
 	ENVIRONMENT=$(echo "$BACKUP_CONFIGURATION_NAME" | cut -d'-' -f1)
 fi
 
-ENVIRONMENT=$(grep -m1 "^environment" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"')
-LOCATION=$(grep -m1 "^location" "$tfvarsFile" | awk -F'=' '{print $2}' | tr '[:upper:]' '[:lower:]' | tr -d ' \t\n\r\f"')
-NETWORK=$(grep -m1 "^network_logical_name" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"')
 
 ENVIRONMENT_IN_FILENAME=$(echo $BACKUP_CONFIGURATION_FOLDERNAME | awk -F'-' '{print $1}')
 LOCATION_CODE_IN_FILENAME=$(echo $BACKUP_CONFIGURATION_FOLDERNAME | awk -F'-' '{print $2}')

@@ -125,7 +125,7 @@ echo "Region code: $region_code"
 # Set up configuration directories
 automation_config_directory="$CONFIG_REPO_PATH/.sap_deployment_automation"
 generic_config_information="$automation_config_directory/config"
-backup_config_information="$automation_config_directory/${ENVIRONMENT}${region_code}BACKUP"
+backup_config_information="$automation_config_directory/${ENVIRONMENT}${region_code}"
 
 key="$BACKUP_CONFIGURATION_NAME"
 deployer_environment="${DEPLOYER_ENVIRONMENT:-MGMT}"

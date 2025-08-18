@@ -86,15 +86,6 @@ cd "${CONFIG_REPO_PATH}" || exit
 mkdir -p .sap_deployment_automation
 git checkout -q "$BUILD_SOURCEBRANCHNAME"
 
-# Add debug information about the configuration
-echo "DEBUG: Backup configuration details:"
-echo "  BACKUP_CONFIGURATION_FOLDERNAME: $BACKUP_CONFIGURATION_FOLDERNAME"
-echo "  BACKUP_CONFIGURATION_NAME: $BACKUP_CONFIGURATION_NAME"
-echo "  Config file path: $CONFIG_REPO_PATH/$tfvarsFile"
-echo "  Environment: $ENVIRONMENT"
-echo "  Location: $LOCATION"
-echo "  Network: $NETWORK"
-
 # Validate that we have the correct tfvars file
 if [ ! -f "$CONFIG_REPO_PATH/$tfvarsFile" ]; then
 	print_banner "$banner_title" "$BACKUP_CONFIGURATION_FOLDERNAME.tfvars was not found" "error"
@@ -219,10 +210,10 @@ if "$SAP_AUTOMATION_REPO_PATH/deploy/scripts/installer.sh" --parameterfile "$BAC
     --state_subscription "${terraform_storage_account_subscription_id}" \
     --ado --auto-approve ; then
 	return_code=$?
-	print_banner "$banner_title" "Deployment of $BACKUP_CONFIGURATION_NAME completed successfully" "success"
+	print_banner "$banner_title" "Deployment of $BACKUP_CONFIGURATION_FOLDERNAME completed successfully" "success"
 else
 	return_code=$?
-	print_banner "$banner_title" "Deployment of $BACKUP_CONFIGURATION_NAME failed" "error"
+	print_banner "$banner_title" "Deployment of $BACKUP_CONFIGURATION_FOLDERNAME failed" "error"
 	echo -e "$bold_red--- Deployment failed ---$reset"
 	echo "##vso[task.logissue type=error]Deployment failed."
 fi

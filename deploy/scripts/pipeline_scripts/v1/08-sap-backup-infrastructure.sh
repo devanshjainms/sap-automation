@@ -192,7 +192,7 @@ terraform_storage_account_subscription_id=$(getVariableFromVariableGroup "${VARI
 
 # Call the install_backup.sh script
 if "$SAP_AUTOMATION_REPO_PATH/deploy/scripts/installer.sh" --parameterfile "$BACKUP_CONFIGURATION_FOLDERNAME.tfvars" --type sap_backup \
-    --deployer_tfstate_key "${deployer_tfstate_key}" --storageaccountname "$terraform_storage_account_name"  \
+    --deployer_tfstate_key "${deployer_tfstate_key}" --storageaccountname "$TERRAFORM_STATE_STORAGE_ACCOUNT"  \
     --state_subscription "${terraform_storage_account_subscription_id}" \
     --ado --auto-approve ; then
 	return_code=$?

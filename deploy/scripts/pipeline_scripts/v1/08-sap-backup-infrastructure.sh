@@ -80,54 +80,37 @@ if ! get_variable_group_id "$VARIABLE_GROUP" "VARIABLE_GROUP_ID" ; then
 fi
 export VARIABLE_GROUP_ID
 
-tfvarsFile="BACKUP/$BACKUP_CONFIGURATION_FOLDERNAME/$BACKUP_CONFIGURATION_TFVARS_FILENAME"
+tfvarsFile="BACKUP/$BACKUP_CONFIGURATION_FOLDERNAME/$BACKUP_CONFIGURATION_FOLDERNAME.tfvars"
 
 cd "${CONFIG_REPO_PATH}" || exit
 mkdir -p .sap_deployment_automation
 git checkout -q "$BUILD_SOURCEBRANCHNAME"
 
 if [ ! -f "$CONFIG_REPO_PATH/$tfvarsFile" ]; then
-	print_banner "$banner_title" "$BACKUP_CONFIGURATION_TFVARS_FILENAME was not found" "error"
-	echo "##vso[task.logissue type=error]File $BACKUP_CONFIGURATION_TFVARS_FILENAME was not found."
+	print_banner "$banner_title" "$BACKUP_CONFIGURATION_FOLDERNAME.tfvars was not found" "error"
+	echo "##vso[task.logissue type=error]File $BACKUP_CONFIGURATION_FOLDERNAME.tfvars was not found."
 	exit 2
 fi
 
-BACKUP_CONFIGURATION_NAME=$(grep -m1 "^backup_configuration_name" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"')
-ENVIRONMENT=$(grep -m1 "^environment" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"' || echo "")
-LOCATION=$(grep -m1 "^location" "$tfvarsFile" | awk -F'=' '{print $2}' | tr '[:upper:]' '[:lower:]' | tr -d ' \t\n\r\f"' || echo "")
+BACKUP_CONFIGURATION_NAME=$($BACKUP_CONFIGURATION_FOLDERNAME)
 
 # If environment is not in tfvars, extract from backup configuration name
 if [ -z "$ENVIRONMENT" ]; then
 	ENVIRONMENT=$(echo "$BACKUP_CONFIGURATION_NAME" | cut -d'-' -f1)
 fi
 
-# If location is not in tfvars, extract from backup configuration name
-if [ -z "$LOCATION" ]; then
-	REGION_CODE=$(echo "$BACKUP_CONFIGURATION_NAME" | cut -d'-' -f2)
-	case "$REGION_CODE" in
-		"SECE") LOCATION="swedencentral" ;;
-		"EAUS") LOCATION="eastus" ;;
-		"WEUS") LOCATION="westus" ;;
-		"NEUS") LOCATION="northeurope" ;;
-		"WEEU") LOCATION="westeurope" ;;
-		*) LOCATION="swedencentral" ;;
-	esac
-fi
+ENVIRONMENT=$(grep -m1 "^environment" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"')
+LOCATION=$(grep -m1 "^location" "$tfvarsFile" | awk -F'=' '{print $2}' | tr '[:upper:]' '[:lower:]' | tr -d ' \t\n\r\f"')
+NETWORK=$(grep -m1 "^network_logical_name" "$tfvarsFile" | awk -F'=' '{print $2}' | tr -d ' \t\n\r\f"')
+
+ENVIRONMENT_IN_FILENAME=$(echo $BACKUP_CONFIGURATION_FOLDERNAME | awk -F'-' '{print $1}')
+LOCATION_CODE_IN_FILENAME=$(echo $BACKUP_CONFIGURATION_FOLDERNAME | awk -F'-' '{print $2}')
+NETWORK_IN_FILENAME=$(echo $BACKUP_CONFIGURATION_FOLDERNAME | awk -F'-' '{print $3}')
+
 
 echo "Backup Configuration Name: $BACKUP_CONFIGURATION_NAME"
 echo "Environment: $ENVIRONMENT"
 echo "Location: $LOCATION"
-
-# Construct the region code
-case "$LOCATION" in
-	"swedencentral") region_code="SECE" ;;
-	"eastus") region_code="EAUS" ;;
-	"westus") region_code="WEUS" ;;
-	"northeurope") region_code="NEUS" ;;
-	"westeurope") region_code="WEEU" ;;
-	*) region_code="UNKN" ;;
-esac
-
 echo "Region code: $region_code"
 
 # Set up configuration directories
@@ -192,7 +175,7 @@ echo ""
 echo "##vso[section]Installing SAP Backup Infrastructure"
 echo ""
 echo "Calling install_backup.sh with parameters:"
-echo "  Parameter file: $BACKUP_CONFIGURATION_TFVARS_FILENAME"
+echo "  Parameter file: $BACKUP_CONFIGURATION_FOLDERNAME.tfvars"
 echo "  Extra parameters: $extra_params"
 echo ""
 
@@ -205,7 +188,7 @@ Terraform_Remote_Storage_Account_Name=$(getVariableFromVariableGroup "${VARIABLE
 terraform_storage_account_subscription_id=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "ARM_SUBSCRIPTION_ID" "${backup_config_information}" "STATE_SUBSCRIPTION")
 
 # Call the install_backup.sh script
-if "$SAP_AUTOMATION_REPO_PATH/deploy/scripts/installer.sh" --parameterfile "$BACKUP_CONFIGURATION_TFVARS_FILENAME" --type sap_backup \
+if "$SAP_AUTOMATION_REPO_PATH/deploy/scripts/installer.sh" --parameterfile "$BACKUP_CONFIGURATION_FOLDERNAME.tfvars" --type sap_backup \
     --deployer_tfstate_key "${deployer_tfstate_key}" --storageaccountname "$terraform_storage_account_name"  \
     --state_subscription "${terraform_storage_account_subscription_id}" \
     --ado --auto-approve ; then

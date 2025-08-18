@@ -62,6 +62,7 @@ stages:
               ARM_TENANT_ID:                   $(ARM_TENANT_ID)
               ARM_USE_MSI:                     $(ARM_USE_MSI)
               AZURE_DEVOPS_EXT_PAT:            $(System.AccessToken)
+              BACKUP_CONFIGURATION_FOLDERNAME: $(backup_configuration_foldername)
               CONFIG_REPO_PATH:                ${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)
               DEPLOYER_KEYVAULT:               $(DEPLOYER_KEYVAULT)
               KEYVAULT:                        $(KEYVAULT)
@@ -73,3 +74,4 @@ stages:
               TF_IN_AUTOMATION:                true
               TF_LOG:                          $(TF_LOG)
               USE_MSI:                         $(Use_MSI)
+              VARIABLE_GROUP:                  $(variable_group)

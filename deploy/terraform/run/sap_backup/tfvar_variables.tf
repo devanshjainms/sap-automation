@@ -175,8 +175,8 @@ variable "backup_vnet_arm_id"                       {
                                                   description = "If provided, the Azure resource id of the virtual network"
                                                   default     = ""
                                                   validation    {
-                                                                  condition     = length(var.network_arm_id) == 0 ? true : can(provider::azurerm::parse_resource_id(var.network_arm_id))
-                                                                  error_message = "If specified the 'network_arm_id' variable must be a correct Azure resource identifier."
+                                                                  condition     = length(var.backup_vnet_arm_id) == 0 ? true : can(provider::azurerm::parse_resource_id(var.backup_vnet_arm_id))
+                                                                  error_message = "If specified the 'backup_vnet_arm_id' variable must be a correct Azure resource identifier."
                                                                 }
 
                                                 }

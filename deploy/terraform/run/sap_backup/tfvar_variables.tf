@@ -399,3 +399,15 @@ variable "deployer_tfstate_key"                   {
                                                     type    = string
                                                     default = ""
                                                   }
+
+variable "network_logical_name"                 {
+                                                  description = "The logical name of the network used for backward compatibility"
+                                                  type        = string
+                                                  default     = ""
+                                                }
+
+variable "deployment"                           {
+                                                  description = "The deployment configuration object"
+                                                  type        = any
+                                                  default     = {}
+                                                }

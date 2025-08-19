@@ -5,15 +5,18 @@
 green="\e[1;32m"
 reset="\e[0m"
 bold_red="\e[1;31m"
+cyan="\e[1;36m"
 
 # External helper functions
+#. "$(dirname "${BASH_SOURCE[0]}")/deploy_utils.sh"
 full_script_path="$(realpath "${BASH_SOURCE[0]}")"
 script_directory="$(dirname "${full_script_path}")"
 parent_directory="$(dirname "$script_directory")"
 grand_parent_directory="$(dirname "$parent_directory")"
 
 SCRIPT_NAME="$(basename "$0")"
-banner_title="Deploy SAP Backup Infrastructure"
+
+banner_title="Deploy SAP Backup Workload Zone"
 
 #call stack has full script name when using source
 # shellcheck disable=SC1091
@@ -21,9 +24,6 @@ source "${grand_parent_directory}/deploy_utils.sh"
 
 #call stack has full script name when using source
 source "${parent_directory}/helper.sh"
-
-echo "##vso[build.updatebuildnumber]Deploying the SAP Backup Infrastructure defined in $BACKUP_CONFIGURATION_FOLDERNAME"
-print_banner "$banner_title" "Starting $SCRIPT_NAME" "info"
 
 DEBUG=False
 
@@ -46,23 +46,17 @@ configure_devops
 if [[ ! -f /etc/profile.d/deploy_server.sh ]]; then
 	configureNonDeployer "${tf_version:-1.12.2}"
 fi
-configure_devops
 
 # Set logon variables
-if [ $USE_MSI == "true" ]; then
+if [ "$USE_MSI" == "true" ]; then
 	unset ARM_CLIENT_SECRET
 	ARM_USE_MSI=true
 	export ARM_USE_MSI
 fi
 
-if [ -v ARM_TENANT_ID ]; then
+if [ -n "${ARM_TENANT_ID:-}" ]; then
 	tenant_id="$ARM_TENANT_ID"
-	unset ARM_TENANT_ID
 	export ARM_TENANT_ID
-fi
-
-if [[ ! -f /etc/profile.d/deploy_server.sh ]]; then
-	configureNonDeployer "${tf_version:-1.12.2}"
 fi
 
 if az account show --query name; then
@@ -188,11 +182,11 @@ extra_params="$extra_params -i"
 
 deployer_tfstate_key=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "DEPLOYER_STATE_FILENAME" "${backup_config_information}" "deployer_tfstate_key")
 export deployer_tfstate_key
-Terraform_Remote_Storage_Account_Name=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "TERRAFORM_STATE_STORAGE_ACCOUNT" "${backup_config_information}" "REMOTE_STATE_SA")
-terraform_storage_account_subscription_id=$(getVariableFromVariableGroup "${VARIABLE_GROUP}" "ARM_SUBSCRIPTION_ID" "${backup_config_information}" "STATE_SUBSCRIPTION")
+Terraform_Remote_Storage_Account_Name=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "TERRAFORM_STATE_STORAGE_ACCOUNT" "${backup_config_information}" "REMOTE_STATE_SA")
+terraform_storage_account_subscription_id=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "ARM_SUBSCRIPTION_ID" "${backup_config_information}" "STATE_SUBSCRIPTION")
 
 echo ""
-echo "##vso[task.logissue type=info]Installing SAP Backup Infrastructure"
+echo "##vso[task.logissue type=warning]Installing SAP Backup Infrastructure"
 echo ""
 echo "Calling install_backup.sh with parameters:"
 echo "  Parameter file: $BACKUP_CONFIGURATION_FOLDERNAME.tfvars"
@@ -233,7 +227,7 @@ if [ 0 != $return_code ]; then
 	echo "##vso[task.logissue type=error]Backup infrastructure deployment failed."
 	print_banner "$banner_title" "Backup infrastructure deployment failed" "error"
 else
-	echo "##vso[task.logissue type=info]Backup infrastructure deployment completed successfully."
+	echo "##vso[task.logissue type=warning]Backup infrastructure deployment completed successfully."
 	print_banner "$banner_title" "Backup infrastructure deployment completed" "success"
 fi
 
@@ -244,10 +238,10 @@ git config --global user.name "$BUILD_REQUESTEDFOR"
 git add -A
 
 if [ -n "$(git status --porcelain)" ]; then
-	echo "##vso[task.logissue type=info]Updating configuration repository"
+	echo "##vso[task.logissue type=warning]Updating configuration repository"
 	git commit -m "Added backup configuration updates from backup infrastructure deployment [$BUILD_BUILDNUMBER] ***NO_CI***"
 
-	echo "##vso[task.logissue type=info]Pushing changes to configuration repository"
+	echo "##vso[task.logissue type=warning]Pushing changes to configuration repository"
 	git -c http.extraheader="AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN" push
 fi
 

@@ -3,23 +3,14 @@
 
 terraform {
   required_providers {
-    azurerm                   = {
-      source                  = "hashicorp/azurerm"
-      version                 = "~>3.108"
-      configuration_aliases   = [
-                                  azurerm.main,
-                                  azurerm.deployer,
-                                  azurerm.dnsmanagement,
-                                  azurerm.peering,
-                                  azurerm.privatelinkdnsmanagement
-                                ]
+    azurerm = {
+      source                = "hashicorp/azurerm"
+      configuration_aliases = [azurerm.main, azurerm.deployer, azurerm.dnsmanagement, azurerm.privatelinkdnsmanagement, azurerm.peering]
     }
-    azapi                     = {
-      source                  = "azure/azapi"
-      version                 = "~>1.13"
-      configuration_aliases   = [
-                                  azapi.api
-                                ]
+
+    azapi = {
+      source                = "azure/azapi"
+      configuration_aliases = [azapi.api]
     }
   }
 }

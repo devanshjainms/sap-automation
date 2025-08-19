@@ -1,6 +1,28 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+
+#######################################4#######################################8
+#                                                                              #
+#                                Resource Group                                #
+#                                                                              #
+#######################################4#######################################8
+
+data "azurerm_resource_group" "backup" {
+  provider                = azurerm.main
+  count                   = var.infrastructure.resource_group.use_existing ? 1 : 0
+  name                    = local.resource_group_name
+}
+
+resource "azurerm_resource_group" "backup"        {
+  provider                = azurerm.main
+  count                   = var.infrastructure.resource_group.use_existing ? 0 : 1
+  name                    = local.resource_group_name
+  location                = local.location
+  tags                    = local.tags
+}
+
+
 # resource "random_id" "deployment_id" {
 #   byte_length             = 2
 # }

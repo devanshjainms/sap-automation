@@ -114,49 +114,46 @@ locals {
     var.backup_configuration
   )
 
-  backup_policy = merge(
-    {
-      time_zone           = "UTC"
-      compression_enabled = false
+  backup_policy = {
+    time_zone           = try(var.backup_policy.time_zone, "UTC")
+    compression_enabled = try(var.backup_policy.compression_enabled, false)
 
-      full_backup = {
-        frequency = "Weekly"
-        time      = "23:00"
-        weekdays  = ["Sunday"]
+    full_backup = {
+      frequency = try(var.backup_policy.full_backup.frequency, "Weekly")
+      time      = try(var.backup_policy.full_backup.time, "23:00")
+      weekdays  = try(var.backup_policy.full_backup.weekdays, ["Sunday"])
 
-        retention_weekly = {
-          count    = 12
-          weekdays = ["Sunday"]
-        }
-
-        retention_monthly = {
-          count    = 12
-          weekdays = ["Sunday"]
-          weeks    = ["First"]
-        }
-
-        retention_yearly = {
-          count    = 7
-          weekdays = ["Sunday"]
-          weeks    = ["First"]
-          months   = ["January"]
-        }
+      retention_weekly = {
+        count    = try(var.backup_policy.full_backup.retention_weekly.count, 12)
+        weekdays = try(var.backup_policy.full_backup.retention_weekly.weekdays, ["Sunday"])
       }
 
-      incremental_backup = {
-        frequency      = "Daily"
-        time           = "01:00"
-        weekdays       = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-        retention_days = 30
+      retention_monthly = {
+        count    = try(var.backup_policy.full_backup.retention_monthly.count, 12)
+        weekdays = try(var.backup_policy.full_backup.retention_monthly.weekdays, ["Sunday"])
+        weeks    = try(var.backup_policy.full_backup.retention_monthly.weeks, ["First"])
       }
 
-      log_backup = {
-        frequency_in_minutes = 15
-        retention_days       = 7
+      retention_yearly = {
+        count    = try(var.backup_policy.full_backup.retention_yearly.count, 7)
+        weekdays = try(var.backup_policy.full_backup.retention_yearly.weekdays, ["Sunday"])
+        weeks    = try(var.backup_policy.full_backup.retention_yearly.weeks, ["First"])
+        months   = try(var.backup_policy.full_backup.retention_yearly.months, ["January"])
       }
-    },
-    var.backup_policy
-  )
+    }
+
+    incremental_backup = {
+      frequency      = try(var.backup_policy.incremental_backup.frequency, "Daily")
+      time           = try(var.backup_policy.incremental_backup.time, "01:00")
+      weekdays       = try(var.backup_policy.incremental_backup.weekdays, ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"])
+      retention_days = try(var.backup_policy.incremental_backup.retention_days, 30)
+    }
+
+    log_backup = {
+      frequency_in_minutes = try(var.backup_policy.log_backup.frequency_in_minutes, 15)
+      retention_days       = try(var.backup_policy.log_backup.retention_days, 7)
+    }
+  }
 
   sap_systems = var.sap_systems
 

@@ -33,7 +33,7 @@ module "sap_namegenerator" {
   environment                                  = var.environment
   backup_environment                           = var.environment
   location                                     = lower(var.location)
-  random_id                                    = coalesce(var.custom_random_id, module.sap_landscape.random_id)
+  random_id                                    = coalesce(var.custom_random_id, random_id.deployment_id.hex)
   backup_vnet_name                             = var.backup_network_logical_name
 }
 

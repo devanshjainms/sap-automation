@@ -40,6 +40,8 @@ locals {
                                           null
                                         )
 
+}
 
-
+resource "random_id" "deployment_id" {
+  byte_length = 3
 }

@@ -405,9 +405,3 @@ variable "network_logical_name"                 {
                                                   type        = string
                                                   default     = ""
                                                 }
-
-variable "deployment"                           {
-                                                  description = "The deployment configuration object"
-                                                  type        = any
-                                                  default     = {}
-                                                }

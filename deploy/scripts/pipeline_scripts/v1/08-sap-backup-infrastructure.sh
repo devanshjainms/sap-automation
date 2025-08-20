@@ -58,11 +58,6 @@ if [ "$USE_MSI" == "true" ]; then
 	export ARM_USE_MSI
 fi
 
-if [ -n "${ARM_TENANT_ID:-}" ]; then
-	tenant_id="$ARM_TENANT_ID"
-	echo "Using ARM_TENANT_ID: $tenant_id"
-	export ARM_TENANT_ID
-fi
 
 if az account show --query name; then
 	echo -e "$green--- Already logged in to Azure ---$reset"

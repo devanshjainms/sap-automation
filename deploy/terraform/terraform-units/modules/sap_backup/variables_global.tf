@@ -22,11 +22,13 @@ variable "infrastructure" {
       })
 
       backup                  = optional(object({
-        id                    = optional(string)
-        name                  = optional(string)
-        resource_group_name   = optional(string)
-        address_space         = optional(list(string))
-        exists                = optional(bool, false)
+        logical_name            = optional(string)
+        id                      = optional(string)
+        name                    = optional(string)
+        resource_group_name     = optional(string)
+        address_space           = optional(list(string))
+        exists                  = optional(bool, false)
+        flow_timeout_in_minutes = optional(number, 30)
         subnet_backup         = optional(object({
           id                  = optional(string)
           name                = optional(string)

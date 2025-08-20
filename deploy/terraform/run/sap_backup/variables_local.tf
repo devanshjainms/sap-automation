@@ -20,8 +20,6 @@ locals {
     }
   }
 
-  environment                         = upper(local.infrastructure.environment)
-
   parsed_id                           = provider::azurerm::parse_resource_id(var.tfstate_resource_id)
 
   SAPLibrary_subscription_id          = local.parsed_id["subscription_id"]

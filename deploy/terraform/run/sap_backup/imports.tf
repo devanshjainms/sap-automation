@@ -44,7 +44,9 @@ ephemeral "azurerm_key_vault_secret" "client_secret" {
   count        = var.use_spn ? 1 : 0
   name         = format("%s-client-secret", var.environment)
   key_vault_id = local.key_vault.spn.id
-
+  timeouts {
+    read = "1m"
+  }
 }
 
 data "azurerm_key_vault_secret" "tenant_id" {
@@ -76,6 +78,9 @@ ephemeral "azurerm_key_vault_secret" "cp_client_secret" {
   count        = var.use_spn ? 1 : 0
   name         = format("%s-client-secret", data.terraform_remote_state.deployer[0].outputs.environment)
   key_vault_id = local.key_vault.spn.id
+  timeouts {
+    read = "1m"
+  }
 }
 
 data "azurerm_key_vault_secret" "cp_tenant_id" {

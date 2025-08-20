@@ -417,3 +417,9 @@ variable "deployment"                           {
                                                   type        = string
                                                   default     = ""
                                                 }
+
+variable "infrastructure"                       {
+                                                  description = "Infrastructure configuration object"
+                                                  type        = any
+                                                  default     = {}
+                                                }

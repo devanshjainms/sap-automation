@@ -29,19 +29,19 @@ output "private_endpoint" {
 output "backup_vnet" {
   description             = "Backup VNet details"
   value                   = local.use_existing_network ? null : {
-    id                    = azurerm_virtual_network.backup[0].id
-    name                  = azurerm_virtual_network.backup[0].name
-    address_space         = azurerm_virtual_network.backup[0].address_space
-    resource_group_name   = azurerm_virtual_network.backup[0].resource_group_name
+    id                    = azurerm_virtual_network.vnet_backup[0].id
+    name                  = azurerm_virtual_network.vnet_backup[0].name
+    address_space         = azurerm_virtual_network.vnet_backup[0].address_space
+    resource_group_name   = azurerm_virtual_network.vnet_backup[0].resource_group_name
   }
 }
 
 output "backup_subnet" {
   description             = "Backup subnet details"
   value                   = local.use_existing_network ? null : {
-    id                    = azurerm_subnet.backup[0].id
-    name                  = azurerm_subnet.backup[0].name
-    address_prefixes      = azurerm_subnet.backup[0].address_prefixes
+    id                    = azurerm_subnet.subnet_backup[0].id
+    name                  = azurerm_subnet.subnet_backup[0].name
+    address_prefixes      = azurerm_subnet.subnet_backup[0].address_prefixes
   }
 }
 

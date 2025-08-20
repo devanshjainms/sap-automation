@@ -149,14 +149,14 @@ resource "azurerm_private_endpoint" "backup" {
   location            = local.location
   resource_group_name = local.resource_group_name
   subnet_id           = local.use_existing_network ? (
-    length(data.azurerm_subnet.backup) > 0 ? data.azurerm_subnet.backup[0].id : null
+    length(data.azurerm_subnet.subnet_backup) > 0 ? data.azurerm_subnet.subnet_backup[0].id : null
   ) : (
-    length(azurerm_subnet.backup) > 0 ? azurerm_subnet.backup[0].id : null
+    length(azurerm_subnet.subnet_backup) > 0 ? azurerm_subnet.subnet_backup[0].id : null
   )
 
   depends_on = [
-    azurerm_subnet.backup,
-    data.azurerm_subnet.backup
+    azurerm_subnet.subnet_backup,
+    data.azurerm_subnet.subnet_backup
   ]
 
   private_service_connection {
@@ -210,7 +210,7 @@ resource "azurerm_network_security_group" "backup" {
 
 resource "azurerm_subnet_network_security_group_association" "backup" {
   count                     = local.use_existing_network ? 0 : 1
-  subnet_id                 = azurerm_subnet.backup[0].id
+  subnet_id                 = azurerm_subnet.subnet_backup[0].id
   network_security_group_id = azurerm_network_security_group.backup[0].id
 }
 
@@ -251,7 +251,7 @@ resource "azurerm_virtual_network_peering" "backup_to_sap" {
   count                        = !local.use_existing_network ? 1 : 0
   name                         = "${local.backup_prefix}-${local.environment}-to-sap-peering"
   resource_group_name          = local.resource_group_name
-  virtual_network_name         = azurerm_virtual_network.backup[0].name
+  virtual_network_name         = azurerm_virtual_network.vnet_backup[0].name
   remote_virtual_network_id    = var.infrastructure.vnets.sap.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
@@ -259,8 +259,8 @@ resource "azurerm_virtual_network_peering" "backup_to_sap" {
   use_remote_gateways          = false
 
   depends_on                   = [
-                                  azurerm_virtual_network.backup,
-                                  azurerm_subnet.backup
+                                  azurerm_virtual_network.vnet_backup,
+                                  azurerm_subnet.subnet_backup
                                 ]
 }
 
@@ -269,14 +269,14 @@ resource "azurerm_virtual_network_peering" "sap_to_backup" {
   name                         = "sap-to-${local.backup_prefix}-${local.environment}-peering"
   resource_group_name          = var.infrastructure.vnets.sap.resource_group_name
   virtual_network_name         = split("/", var.infrastructure.vnets.sap.id)[8]
-  remote_virtual_network_id    = azurerm_virtual_network.backup[0].id
+  remote_virtual_network_id    = azurerm_virtual_network.vnet_backup[0].id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
   use_remote_gateways          = false
 
   depends_on                   = [
-                                  azurerm_virtual_network.backup,
-                                  azurerm_subnet.backup
+                                  azurerm_virtual_network.vnet_backup,
+                                  azurerm_subnet.subnet_backup
                                 ]
 }

@@ -26,6 +26,7 @@ variable "infrastructure" {
         name                  = optional(string)
         resource_group_name   = optional(string)
         address_space         = optional(list(string))
+        exists                = optional(bool, false)
         subnet_backup         = optional(object({
           id                  = optional(string)
           name                = optional(string)

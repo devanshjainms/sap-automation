@@ -1193,6 +1193,8 @@ if [ "${deployment_system}" == sap_backup ]; then
     fi
 fi
 
+fi
+
 if [ -f "${system_config_information}".err ]; then
 	cat "${system_config_information}".err
 	rm "${system_config_information}".err

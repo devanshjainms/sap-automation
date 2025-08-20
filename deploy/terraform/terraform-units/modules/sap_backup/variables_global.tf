@@ -179,3 +179,13 @@ variable "target_workload_zones" {
 variable "tags" {
   description                     = "List of tags to associate to all resources"
 }
+
+variable "dns_settings" {
+  description                     = "DNS configuration settings"
+  type = object({
+    dns_server_list               = optional(list(string), [])
+  })
+  default = {
+    dns_server_list               = []
+  }
+}

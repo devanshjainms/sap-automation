@@ -23,6 +23,7 @@ module "sap_backup" {
   sap_systems           = local.sap_systems
   target_workload_zones = local.target_workload_zones
   tags                  = local.infrastructure.tags
+  dns_settings          = local.dns_settings
   deployer_tfstate      = try(data.terraform_remote_state.deployer[0].outputs, [])
 
 }

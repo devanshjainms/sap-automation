@@ -40,6 +40,10 @@ locals {
                                           null
                                         )
 
+  dns_settings                        = {
+    dns_server_list                   = []
+  }
+
 }
 
 resource "random_id" "deployment_id" {

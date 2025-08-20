@@ -57,6 +57,12 @@ variable "use_deployer"                         {
                                                   default     = true
                                                 }
 
+variable "spn_keyvault_id"                      {
+                                                  description = "The Resource ID of the Key Vault containing the SPN secrets"
+                                                  type        = string
+                                                  default     = ""
+                                                }
+
 variable "place_delete_lock_on_resources"       {
                                                   description = "If defined, a delete lock will be placed on the key resources"
                                                   default     = false

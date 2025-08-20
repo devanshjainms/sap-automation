@@ -12,6 +12,14 @@ locals {
 
   version_label                       = trimspace(file("${path.module}/../../../configs/version.txt"))
 
+  spn_key_vault_arm_id                = var.use_deployer ?  coalesce(var.spn_keyvault_id, try(data.terraform_remote_state.deployer[0].outputs.deployer_kv_user_arm_id, "")) : ""
+
+  key_vault = {
+    spn = {
+      id = local.spn_key_vault_arm_id
+    }
+  }
+
   environment                         = upper(local.infrastructure.environment)
 
   parsed_id                           = provider::azurerm::parse_resource_id(var.tfstate_resource_id)

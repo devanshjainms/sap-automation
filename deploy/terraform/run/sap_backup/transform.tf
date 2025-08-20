@@ -72,7 +72,7 @@ locals {
         address_space           = null
         exists                  = true
         flow_timeout_in_minutes = var.network_flow_timeout_in_minutes
-
+        enable_route_propagation = var.network_enable_route_propagation
         subnet_backup = var.backup_subnet_arm_id != "" && var.backup_subnet_arm_id != null ? {
           id                  = var.backup_subnet_arm_id
           name                = split("/", var.backup_subnet_arm_id)[-1]

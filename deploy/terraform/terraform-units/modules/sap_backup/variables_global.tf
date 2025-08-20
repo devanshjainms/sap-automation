@@ -29,6 +29,7 @@ variable "infrastructure" {
         address_space           = optional(list(string))
         exists                  = optional(bool, false)
         flow_timeout_in_minutes = optional(number, 30)
+        enable_route_propagation = optional(bool, true)
         subnet_backup         = optional(object({
           id                  = optional(string)
           name                = optional(string)

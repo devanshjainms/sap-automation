@@ -19,9 +19,6 @@ variable "infrastructure" {
         id                    = string
         name                  = string
         resource_group_name   = string
-        subnet_app = object({
-          resource_group_name = string
-        })
       })
 
       backup                  = optional(object({

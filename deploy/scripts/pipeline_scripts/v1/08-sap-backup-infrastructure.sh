@@ -42,6 +42,10 @@ print_header
 # Configure DevOps
 configure_devops
 
+print_banner "$banner_title" "Starting $SCRIPT_NAME" "info"
+
+tfvarsFile="BACKUP/$BACKUP_CONFIGURATION_FOLDERNAME/$BACKUP_CONFIGURATION_FOLDERNAME.tfvars"
+
 # Check if running on deployer
 if [[ ! -f /etc/profile.d/deploy_server.sh ]]; then
 	configureNonDeployer "${tf_version:-1.12.2}"
@@ -56,6 +60,7 @@ fi
 
 if [ -n "${ARM_TENANT_ID:-}" ]; then
 	tenant_id="$ARM_TENANT_ID"
+	echo "Using ARM_TENANT_ID: $tenant_id"
 	export ARM_TENANT_ID
 fi
 
@@ -80,7 +85,7 @@ if ! get_variable_group_id "$VARIABLE_GROUP" "VARIABLE_GROUP_ID" ; then
 fi
 export VARIABLE_GROUP_ID
 
-tfvarsFile="BACKUP/$BACKUP_CONFIGURATION_FOLDERNAME/$BACKUP_CONFIGURATION_FOLDERNAME.tfvars"
+
 
 cd "${CONFIG_REPO_PATH}" || exit
 mkdir -p .sap_deployment_automation

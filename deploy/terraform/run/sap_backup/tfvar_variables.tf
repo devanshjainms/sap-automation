@@ -269,8 +269,8 @@ variable "sap_systems" {
   type                            = list(object({
     sid                            = string
     environment                     = string
-    resource_group_name             = string
-    hana_instance_number            = string
+    resource_group_name             = optional(string, "")
+    hana_instance_number            = optional(string, "00")
     database_names                  = optional(list(string), [])
     exclude_from_backup             = optional(bool, false)
   }))

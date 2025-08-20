@@ -60,32 +60,34 @@ locals {
       sap = {
         id                  = var.sap_vnet_arm_id
         exists              = length(var.sap_vnet_arm_id) > 0
-        name                = split("/", var.sap_vnet_arm_id)[-1]
-        resource_group_name = split("/", var.sap_vnet_arm_id)[-3]
+        name                = length(var.sap_vnet_arm_id) > 0 ? element(split("/", var.sap_vnet_arm_id), length(split("/", var.sap_vnet_arm_id)) - 1) : ""
+        resource_group_name = length(var.sap_vnet_arm_id) > 0 ? element(split("/", var.sap_vnet_arm_id), length(split("/", var.sap_vnet_arm_id)) - 5) : ""
       }
 
       backup = var.backup_vnet_arm_id != "" && var.backup_vnet_arm_id != null ? {
         logical_name            = var.backup_network_logical_name
         id                      = var.backup_vnet_arm_id
-        name                    = split("/", var.backup_vnet_arm_id)[-1]
-        resource_group_name     = split("/", var.backup_vnet_arm_id)[-3]
+        name                    = element(split("/", var.backup_vnet_arm_id), length(split("/", var.backup_vnet_arm_id)) - 1)
+        resource_group_name     = element(split("/", var.backup_vnet_arm_id), length(split("/", var.backup_vnet_arm_id)) - 5)
         address_space           = null
         exists                  = true
         flow_timeout_in_minutes = var.network_flow_timeout_in_minutes
         enable_route_propagation = var.network_enable_route_propagation
         subnet_backup = var.backup_subnet_arm_id != "" && var.backup_subnet_arm_id != null ? {
           id                  = var.backup_subnet_arm_id
-          name                = split("/", var.backup_subnet_arm_id)[-1]
-          resource_group_name = split("/", var.backup_subnet_arm_id)[-3]
+          name                = element(split("/", var.backup_subnet_arm_id), length(split("/", var.backup_subnet_arm_id)) - 1)
+          resource_group_name = element(split("/", var.backup_subnet_arm_id), length(split("/", var.backup_subnet_arm_id)) - 5)
           address_prefixes    = null
         } : null
         } : {
-        id                  = null
-        name                = null
-        resource_group_name = null
-        address_space       = var.backup_vnet_address_space
-        exists              = false
-
+        logical_name            = var.backup_network_logical_name
+        id                      = null
+        name                    = null
+        resource_group_name     = null
+        address_space           = var.backup_vnet_address_space
+        exists                  = false
+        flow_timeout_in_minutes = var.network_flow_timeout_in_minutes
+        enable_route_propagation = var.network_enable_route_propagation
         subnet_backup = {
           id                  = null
           name                = null

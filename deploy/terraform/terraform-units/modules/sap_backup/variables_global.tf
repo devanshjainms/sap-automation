@@ -11,7 +11,7 @@ variable "infrastructure" {
 
     resource_group            = object({
       name                    = string
-      use_existing            = bool
+      exists                  = bool
     })
 
     vnets = object({

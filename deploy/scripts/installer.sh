@@ -1263,7 +1263,7 @@ fi
 echo ""
 echo "#########################################################################################"
 echo "#                                                                                       #"
-echo -e "#                        $green Deployment completed $reset_formatting                                         #"
+echo -e "#                        $green Deployment completed $reset_formatting               #"
 echo "#                                                                                       #"
 echo "#########################################################################################"
 echo ""

@@ -127,10 +127,6 @@ variable "backup_policy" {
       time                          = "23:00"
       weekdays                      = ["Sunday"]
 
-      retention_daily = {
-        count                       = 30
-      }
-
       retention_weekly = {
         count                       = 12
         weekdays                    = ["Sunday"]

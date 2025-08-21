@@ -123,6 +123,10 @@ locals {
       time      = try(var.backup_policy.full_backup.time, "23:00")
       weekdays  = try(var.backup_policy.full_backup.weekdays, ["Sunday"])
 
+      retention_daily = {
+        count = try(var.backup_policy.full_backup.retention_daily.count, 30)
+      }
+
       retention_weekly = {
         count    = try(var.backup_policy.full_backup.retention_weekly.count, 12)
         weekdays = try(var.backup_policy.full_backup.retention_weekly.weekdays, ["Sunday"])

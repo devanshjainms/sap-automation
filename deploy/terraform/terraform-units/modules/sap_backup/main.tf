@@ -76,6 +76,13 @@ resource "azurerm_backup_policy_vm_workload" "hana" {
       weekdays  = var.backup_policy.full_backup.weekdays
     }
 
+    dynamic "retention_daily" {
+      for_each = var.backup_policy.full_backup.frequency == "Daily" && var.backup_policy.full_backup.retention_daily != null ? [1] : []
+      content {
+        count = var.backup_policy.full_backup.retention_daily.count
+      }
+    }
+
     retention_weekly {
       count    = var.backup_policy.full_backup.retention_weekly.count
       weekdays = var.backup_policy.full_backup.retention_weekly.weekdays

@@ -322,6 +322,10 @@ variable "backup_policy" {
       time                        = optional(string)
       weekdays                    = optional(list(string))
 
+      retention_daily             = optional(object({
+        count                     = optional(number)
+      }))
+
       retention_weekly            = optional(object({
         count                     = optional(number)
         weekdays                  = optional(list(string))

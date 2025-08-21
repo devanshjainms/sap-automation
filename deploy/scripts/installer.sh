@@ -177,6 +177,7 @@ echo "Terraform state subscription_id:     ${STATE_SUBSCRIPTION}"
 echo "Terraform state storage account name:${REMOTE_STATE_SA}"
 
 landscape_tfstate_key_exists=false
+backup_tfstate_key_exists=false
 
 parameterfile_name=$(basename "${parameterfile}")
 param_dirname=$(dirname "${parameterfile}")
@@ -766,7 +767,7 @@ if [ 1 != $return_value ]; then
 
 	if [ "${deployment_system}" == sap_landscape ]; then
 		state_path="LANDSCAPE"
-		if [ $landscape_tfstate_key_exists == false ]; then
+		if [ "${landscape_tfstate_key_exists}" == "false" ]; then
 			save_config_vars "${system_config_information}" \
 				landscape_tfstate_key
 		fi

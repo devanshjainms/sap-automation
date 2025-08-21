@@ -1,10 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-/*
-  Description:
-  Transform input variables for the backup deployment
-*/
 
 locals {
 
@@ -114,16 +110,18 @@ locals {
     var.backup_configuration
   )
 
+  full_backup_frequency = try(var.backup_policy.full_backup.frequency, "Weekly")
+
   backup_policy = {
     time_zone           = try(var.backup_policy.time_zone, "UTC")
     compression_enabled = try(var.backup_policy.compression_enabled, false)
 
     full_backup = {
-      frequency = try(var.backup_policy.full_backup.frequency, "Weekly")
+      frequency = local.full_backup_frequency
       time      = try(var.backup_policy.full_backup.time, "23:00")
       weekdays  = try(var.backup_policy.full_backup.weekdays, ["Sunday"])
 
-      retention_daily = try(var.backup_policy.full_backup.frequency, "Weekly") == "Daily" ? {
+      retention_daily = local.full_backup_frequency == "Daily" ? {
         count = try(var.backup_policy.full_backup.retention_daily.count, 30)
       } : null
 

@@ -103,38 +103,6 @@ resource "azurerm_backup_policy_vm_workload" "hana" {
       months      = var.backup_policy.full_backup.retention_yearly.months
     }
   }
-
-  dynamic "protection_policy" {
-    for_each = var.backup_policy.incremental_backup != null ? [1] : []
-    content {
-      policy_type = "Incremental"
-
-      backup {
-        frequency = var.backup_policy.incremental_backup.frequency
-        time      = var.backup_policy.incremental_backup.time
-        weekdays  = var.backup_policy.incremental_backup.weekdays
-      }
-
-      simple_retention {
-        count = var.backup_policy.incremental_backup.retention_days
-      }
-    }
-  }
-
-  dynamic "protection_policy" {
-    for_each = var.backup_policy.log_backup != null ? [1] : []
-    content {
-      policy_type = "Log"
-
-      backup {
-        frequency_in_minutes = var.backup_policy.log_backup.frequency_in_minutes
-      }
-
-      simple_retention {
-        count = var.backup_policy.log_backup.retention_days
-      }
-    }
-  }
 }
 
 resource "azurerm_private_dns_zone" "backup" {

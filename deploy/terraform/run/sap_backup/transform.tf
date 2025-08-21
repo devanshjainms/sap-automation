@@ -144,17 +144,17 @@ locals {
       }
     }
 
-    incremental_backup = {
+    incremental_backup = var.backup_policy.incremental_backup != null ? {
       frequency      = try(var.backup_policy.incremental_backup.frequency, "Daily")
       time           = try(var.backup_policy.incremental_backup.time, "01:00")
       weekdays       = try(var.backup_policy.incremental_backup.weekdays, ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"])
       retention_days = try(var.backup_policy.incremental_backup.retention_days, 30)
-    }
+    } : null
 
-    log_backup = {
+    log_backup = var.backup_policy.log_backup != null ? {
       frequency_in_minutes = try(var.backup_policy.log_backup.frequency_in_minutes, 15)
       retention_days       = try(var.backup_policy.log_backup.retention_days, 7)
-    }
+    } : null
   }
 
   sap_systems = var.sap_systems

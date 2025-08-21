@@ -104,29 +104,35 @@ resource "azurerm_backup_policy_vm_workload" "hana" {
     }
   }
 
-  protection_policy {
-    policy_type = "Incremental"
+  dynamic "protection_policy" {
+    for_each = var.backup_policy.incremental_backup != null ? [1] : []
+    content {
+      policy_type = "Incremental"
 
-    backup {
-      frequency = var.backup_policy.incremental_backup.frequency
-      time      = var.backup_policy.incremental_backup.time
-      weekdays  = var.backup_policy.incremental_backup.weekdays
-    }
+      backup {
+        frequency = var.backup_policy.incremental_backup.frequency
+        time      = var.backup_policy.incremental_backup.time
+        weekdays  = var.backup_policy.incremental_backup.weekdays
+      }
 
-    simple_retention {
-      count = var.backup_policy.incremental_backup.retention_days
+      simple_retention {
+        count = var.backup_policy.incremental_backup.retention_days
+      }
     }
   }
 
-  protection_policy {
-    policy_type = "Log"
+  dynamic "protection_policy" {
+    for_each = var.backup_policy.log_backup != null ? [1] : []
+    content {
+      policy_type = "Log"
 
-    backup {
-      frequency_in_minutes = var.backup_policy.log_backup.frequency_in_minutes
-    }
+      backup {
+        frequency_in_minutes = var.backup_policy.log_backup.frequency_in_minutes
+      }
 
-    simple_retention {
-      count = var.backup_policy.log_backup.retention_days
+      simple_retention {
+        count = var.backup_policy.log_backup.retention_days
+      }
     }
   }
 }

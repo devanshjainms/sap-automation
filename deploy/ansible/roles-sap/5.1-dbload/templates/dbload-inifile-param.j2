@@ -6,15 +6,20 @@
 
 archives.downloadBasket                                               = {{ target_media_location }}/download_basket
 
+{% if application_type == "ABAP" %}
 SAPINST.CD.PACKAGE.HDBCLIENT                                          = {{ target_media_location }}/CD_HDBCLIENT/SAP_HANA_CLIENT
 SAPINST.CD.PACKAGE.CD1                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/EXP1
 SAPINST.CD.PACKAGE.CD2                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/EXP2
 SAPINST.CD.PACKAGE.CD3                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/EXP3
 SAPINST.CD.PACKAGE.CD4                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/EXP4
-
+{% endif %}
 {% if application_type == "JAVA" %}
-SAPINST.CD.PACKAGE.CD5                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/EXP5
-SAPINST.CD.PACKAGE.SCA                                                = {{ target_media_location }}/download_basket
+SAPINST.CD.PACKAGE.HDBCLIENT                                          = {{ target_media_location }}/CD_HDBCLIENT/SAP_HANA_CLIENT
+SAPINST.CD.PACKAGE.CD1                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/JAVA_EXPORT
+SAPINST.CD.PACKAGE.CD2                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/JAVA_EXPORT_JDMP
+SAPINST.CD.PACKAGE.CD3                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/JAVA_J2EE_OSINDEP
+SAPINST.CD.PACKAGE.CD4                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/JAVA_J2EE_OSINDEP_J2EE_INST
+SAPINST.CD.PACKAGE.CD5                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/JAVA_J2EE_OSINDEP_UT
 {% endif %}
 
 nwUsers.sapadmUID                                                     = {{ sapadm_uid }}

@@ -12,6 +12,9 @@ SAPINST.CD.PACKAGE.CD2                                                = {{ targe
 SAPINST.CD.PACKAGE.CD3                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/EXP3
 SAPINST.CD.PACKAGE.CD4                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/EXP4
 
+{% if application_type == "JAVA" %}
+SAPINST.CD.PACKAGE.CD5                                                = {{ target_media_location }}/CD_EXPORT/DATA_UNITS/EXP5
+{% endif %}
 
 nwUsers.sapadmUID                                                     = {{ sapadm_uid }}
 nwUsers.sapsysGID                                                     = {{ sapsys_gid }}
@@ -35,12 +38,33 @@ hanadb.landscape.reorg.useParameterFile                               = DONOTUSE
 
 {% if platform | upper == 'HANA' %}
 
+{% if application_type == "JAVA" %}
+# Java-specific schema configuration
+HDB_Schema_Check_Dialogs.schemaName                                   = {{ hana_schema | default('SAPJAVA1', true) }}
+HDB_Schema_Check_Dialogs.schemaPassword                               = {{ main_password }}
 
+NW_HDB_DB.javaSchemaName                                              = {{ hana_schema | default('SAPJAVA1', true) }}
+NW_HDB_DB.javaSchemaPassword                                          = {{ main_password }}
+
+# Java-specific export configuration
+NW_JAVA_Export.keyPhrase                                              = {{ main_password }}
+
+# SAP INTERNAL USE ONLY
+NW_System.installSAPHostAgent                                         = true
+
+# Specify FQDN for Java systems
+NW_getFQDN.FQDN                                                       = {{ sap_fqdn | default(ansible_fqdn, true) }}
+
+{% else %}
+# ABAP-specific schema configuration
 HDB_Schema_Check_Dialogs.schemaName                                   = {{ hana_schema }}
 HDB_Schema_Check_Dialogs.schemaPassword                               = {{ main_password }}
 
 NW_HDB_DB.abapSchemaName                                              = {{ hana_schema }}
 NW_HDB_DB.abapSchemaPassword                                          = {{ main_password }}
+{% endif %}
+
+# Common HANA configuration for both ABAP and Java
 NW_HDB_DBClient.clientPathStrategy                                    = SAPCPE
 NW_HDB_getDBInfo.dbhost                                               = {{ sap_db_hostname }}
 NW_HDB_getDBInfo.dbsid                                                = {{ db_sid | upper }}
@@ -55,10 +79,16 @@ NW_Recovery_Install_HDB.extractParallelJobs                           = 24
 NW_Recovery_Install_HDB.sidAdmName                                    = {{ db_sid | lower }}adm
 NW_Recovery_Install_HDB.sidAdmPassword                                = {{ main_password }}
 
-
 {% endif %}
 
+{% if application_type == "JAVA" %}
+# Java-specific messaging configuration (SCS uses different port)
+NW_checkMsgServer.javaMSPort                                          = 36{{ scs_instance_number }}
+{% else %}
+# ABAP-specific messaging configuration (ASCS)
 NW_checkMsgServer.abapMSPort                                          = 36{{ scs_instance_number }}
+{% endif %}
+
 NW_getLoadType.loadType                                               = SAP
 NW_readProfileDir.profileDir                                          = {{ sap_profile_dir }}
 NW_readProfileDir.profilesAvailable                                   = true
@@ -70,7 +100,6 @@ NW_getDBInfoGeneric.dbsid                                             = {{ db_si
 NW_ABAP_Import_Dialog.migmonJobNum                                    = 20
 NW_ABAP_Import_Dialog.dbCodepage                                      = 4103
 NW_ABAP_Import_Dialog.migmonLoadArgs                                  = -stop_on_error -loadprocedure fast
-
 
 {% if platform | upper == 'ORACLE-ASM' %}
 SAPINST.CD.PACKAGE.ORACLI                                             = {{ target_media_location }}/oraclient
@@ -127,8 +156,6 @@ SAPINST.CD.PACKAGE.CD2                                                = {{ targe
 SAPINST.CD.PACKAGE.CD3                                                = {{ target_media_location }}/EXPORT/DATA_UNITS/EXP3
 {% endif %}
 
-
-
 {% if platform | upper == 'ASE' %}
 
 # Sort order configuration of the database server
@@ -158,10 +185,8 @@ SYB.NW_DB.autoExpandSaptoolsThresholdDefault                            = 2
 # Only if you use the 'autoextend' feature: Free space threshold size for the saptools database log segment in GB
 SYB.NW_DB.autoExpandSaptoolsThresholdLog                                = 2
 
-
 # Database device information like 'type','folder','size','maxsize','growsize','name'
 SYB.NW_DB.databaseDevices = data device for SAP,/sybase/{{ db_sid | upper }}/sapdata_1,64,,10,{{ db_sid | upper }}_data_001,log device for SAP,/sybase/{{ db_sid | upper }}/saplog_1,32,,5,{{ db_sid | upper }}_log_001,data device for saptools,/sybase/{{ db_sid | upper }}/sapdiag,14,,2,saptools_data_001,log device for saptools,/sybase/{{ db_sid | upper }}/sapdiag,8,,2,saptools_log_001,data device for sybsecurity,/sybase/{{ db_sid | upper }}/sybsecurity,8,,,sybsecurity_data_001,data device for sybsecurity,/sybase/{{ db_sid | upper }}/sybsecurity,8,,,sybsecurity_data_002,log device for sybsecurity,/sybase/{{ db_sid | upper }}/sybsecurity,4,,,sybsecurity_log_001,temp device for SAP,/sybase/{{ db_sid | upper }}/saptemp,8,,,saptempdb_data_001,
-
 
 # Type of SAP ASE
 SYB.NW_DB.databaseType                                                  = ase
@@ -169,10 +194,8 @@ SYB.NW_DB.databaseType                                                  = ase
 # Enable database 'autoextend' feature
 SYB.NW_DB.enableDataDeviceAutoExpansion                                 = true
 
-
 # Setup granular permissions for administrative tasks
 SYB.NW_DB.enableGranularPermissions                                     = true
-
 
 # Enable strong cipher suites for SSL encrypted data transfer
 SYB.NW_DB.enableStrongCipherSuitesForSSL                                = false

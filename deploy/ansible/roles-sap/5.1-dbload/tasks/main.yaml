@@ -75,6 +75,16 @@
   ansible.builtin.set_fact:
     db_load_path:                      "{{ tmp_directory }}/{{ sid_to_be_deployed.sid | upper }}/sapinst_instdir/{{ product_id.replace('.', '/').replace('/' + application_type, '').split(':')[1] }}/INSTALL/DISTRIBUTED/{{ application_type }}/DB"
 
+- name:                                "DBLoad: Set Java-specific schema for Java systems"
+  ansible.builtin.set_fact:
+    java_schema_name:                  "{{ 'SAPJAVA1' if application_type == 'JAVA' else omit }}"
+  when:                                application_type == 'JAVA'
+
+- name:                                "DBLoad: Set schema name based on application type"
+  ansible.builtin.set_fact:
+    schema_name:                       "{{ java_schema_name if application_type == 'JAVA' else (schema_name if schema_name is defined else hana_schema) }}"
+  when:                                platform == "HANA"
+
 - name:                                "DBLoad: Check if DBLoad has been tried on this server"
   ansible.builtin.stat:
     path:                              "{{ db_load_path }}"
@@ -212,7 +222,6 @@
           - "HANA Backup path:         {{ hana_backup_path }}"
           - "Backup path:              {{ backup_path }}"
 
-
     - name:                            "DBLoad: - Template processing - Create ini file {{ sap_inifile }} from {{ sap_inifile_template }}"
       ansible.builtin.template:
         src:                           "{{ sap_inifile_template }}"
@@ -221,7 +230,7 @@
         force:                         true
       vars:
         hana_backup_path:              "{{ backup_path }}"
-        hana_schema:                   "{% if schema_name is defined %}{{ schema_name }}{% else %}omit{% endif %}"
+        hana_schema:                   "{{ schema_name }}"
         param_directory:               "{{ dir_params }}"
         sap_db_hostname:               "{{ custom_db_virtual_hostname | default(db_virtual_hostname, true) }}"
         sap_profile_dir:               "/sapmnt/{{ sid_to_be_deployed.sid | upper }}/profile"

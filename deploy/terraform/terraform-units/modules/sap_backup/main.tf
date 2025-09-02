@@ -73,43 +73,12 @@ resource "azurerm_backup_policy_vm_workload" "hana" {
     backup {
       frequency = var.backup_policy.full_backup.frequency
       time      = var.backup_policy.full_backup.time
-      weekdays  = var.backup_policy.full_backup.frequency == "Weekly" ? var.backup_policy.full_backup.weekdays : null
+      weekdays  = var.backup_policy.full_backup.frequency == "Weekly" ? var.backup_policy.full_backup.weekdays : []
     }
 
-    dynamic "retention_daily" {
-      for_each = var.backup_policy.full_backup.frequency == "Daily" && var.backup_policy.full_backup.retention_daily != null ? [1] : []
-      content {
-        count = var.backup_policy.full_backup.retention_daily.count
-      }
-    }
-
-    dynamic "retention_weekly" {
-      for_each = var.backup_policy.full_backup.frequency == "Weekly" ? [1] : []
-      content {
-        count    = var.backup_policy.full_backup.retention_weekly.count
-        weekdays = var.backup_policy.full_backup.retention_weekly.weekdays
-      }
-    }
-
-    dynamic "retention_monthly" {
-      for_each = var.backup_policy.full_backup.retention_monthly != null ? [1] : []
-      content {
-        count       = var.backup_policy.full_backup.retention_monthly.count
-        format_type = "Weekly"
-        weekdays    = var.backup_policy.full_backup.retention_monthly.weekdays
-        weeks       = var.backup_policy.full_backup.retention_monthly.weeks
-      }
-    }
-
-    dynamic "retention_yearly" {
-      for_each = var.backup_policy.full_backup.retention_yearly != null ? [1] : []
-      content {
-        count       = var.backup_policy.full_backup.retention_yearly.count
-        format_type = "Weekly"
-        weekdays    = var.backup_policy.full_backup.retention_yearly.weekdays
-        weeks       = var.backup_policy.full_backup.retention_yearly.weeks
-        months      = var.backup_policy.full_backup.retention_yearly.months
-      }
+    retention_weekly {
+      count    = var.backup_policy.full_backup.retention_weekly.count
+      weekdays = var.backup_policy.full_backup.retention_weekly.weekdays
     }
   }
 }

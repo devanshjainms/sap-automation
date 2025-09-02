@@ -124,11 +124,11 @@ variable "backup_policy" {
 
     full_backup                     = {
       frequency                     = "Weekly"
-      time                          = "23:00"
+      time                          = "02:00"
       weekdays                      = ["Sunday"]
 
       retention_weekly = {
-        count                       = 12
+        count                       = 4
         weekdays                    = ["Sunday"]
       }
 

@@ -79,7 +79,7 @@ output "backup_configuration_summary" {
     soft_delete_enabled    = var.backup_configuration.soft_delete_enabled
     private_endpoint_enabled = var.backup_configuration.enable_private_endpoint
     full_backup_frequency    = var.backup_policy.full_backup.frequency
-    incremental_backup_frequency = var.backup_policy.incremental_backup != null ? var.backup_policy.incremental_backup.frequency : null
-    log_backup_frequency_minutes = var.backup_policy.log_backup != null ? var.backup_policy.log_backup.frequency_in_minutes : null
+    incremental_backup_frequency = try(var.backup_policy.incremental_backup.frequency, null)
+    log_backup_frequency_minutes = try(var.backup_policy.log_backup.frequency_in_minutes, null)
   }
 }

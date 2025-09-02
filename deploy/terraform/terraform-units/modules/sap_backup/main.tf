@@ -73,7 +73,7 @@ resource "azurerm_backup_policy_vm_workload" "hana" {
     backup {
       frequency = var.backup_policy.full_backup.frequency
       time      = var.backup_policy.full_backup.time
-      weekdays  = var.backup_policy.full_backup.weekdays
+      weekdays  = var.backup_policy.full_backup.frequency == "Weekly" ? var.backup_policy.full_backup.weekdays : null
     }
 
     dynamic "retention_daily" {
@@ -83,24 +83,33 @@ resource "azurerm_backup_policy_vm_workload" "hana" {
       }
     }
 
-    retention_weekly {
-      count    = var.backup_policy.full_backup.retention_weekly.count
-      weekdays = var.backup_policy.full_backup.retention_weekly.weekdays
+    dynamic "retention_weekly" {
+      for_each = var.backup_policy.full_backup.frequency == "Weekly" ? [1] : []
+      content {
+        count    = var.backup_policy.full_backup.retention_weekly.count
+        weekdays = var.backup_policy.full_backup.retention_weekly.weekdays
+      }
     }
 
-    retention_monthly {
-      count       = var.backup_policy.full_backup.retention_monthly.count
-      format_type = "Weekly"
-      weekdays    = var.backup_policy.full_backup.retention_monthly.weekdays
-      weeks       = var.backup_policy.full_backup.retention_monthly.weeks
+    dynamic "retention_monthly" {
+      for_each = var.backup_policy.full_backup.retention_monthly != null ? [1] : []
+      content {
+        count       = var.backup_policy.full_backup.retention_monthly.count
+        format_type = "Weekly"
+        weekdays    = var.backup_policy.full_backup.retention_monthly.weekdays
+        weeks       = var.backup_policy.full_backup.retention_monthly.weeks
+      }
     }
 
-    retention_yearly {
-      count       = var.backup_policy.full_backup.retention_yearly.count
-      format_type = "Weekly"
-      weekdays    = var.backup_policy.full_backup.retention_yearly.weekdays
-      weeks       = var.backup_policy.full_backup.retention_yearly.weeks
-      months      = var.backup_policy.full_backup.retention_yearly.months
+    dynamic "retention_yearly" {
+      for_each = var.backup_policy.full_backup.retention_yearly != null ? [1] : []
+      content {
+        count       = var.backup_policy.full_backup.retention_yearly.count
+        format_type = "Weekly"
+        weekdays    = var.backup_policy.full_backup.retention_yearly.weekdays
+        weeks       = var.backup_policy.full_backup.retention_yearly.weeks
+        months      = var.backup_policy.full_backup.retention_yearly.months
+      }
     }
   }
 }

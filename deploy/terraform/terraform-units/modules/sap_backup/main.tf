@@ -63,22 +63,49 @@ resource "azurerm_backup_policy_vm_workload" "hana" {
   workload_type       = "SAPHanaDatabase"
 
   settings {
-    time_zone           = var.backup_policy.time_zone
-    compression_enabled = var.backup_policy.compression_enabled
+    time_zone           = "UTC"
+    compression_enabled = false
   }
 
   protection_policy {
     policy_type = "Full"
 
     backup {
-      frequency = var.backup_policy.full_backup.frequency
-      time      = var.backup_policy.full_backup.time
-      weekdays  = var.backup_policy.full_backup.frequency == "Weekly" ? var.backup_policy.full_backup.weekdays : []
+      frequency = "Weekly"
+      time      = "02:00"
+      weekdays  = ["Sunday"]
     }
 
     retention_weekly {
-      count    = var.backup_policy.full_backup.retention_weekly.count
-      weekdays = var.backup_policy.full_backup.retention_weekly.weekdays
+      count    = 4
+      weekdays = ["Sunday"]
+    }
+
+    retention_monthly {
+      count       = 12
+      format_type = "Weekly"
+      weekdays    = ["Sunday"]
+      weeks       = ["First"]
+    }
+
+    retention_yearly {
+      count       = 1
+      format_type = "Weekly"
+      weekdays    = ["Sunday"]
+      weeks       = ["First"]
+      months      = ["January"]
+    }
+  }
+
+  protection_policy {
+    policy_type = "Log"
+
+    backup {
+      frequency_in_minutes = 15
+    }
+
+    simple_retention {
+      count = 7
     }
   }
 }

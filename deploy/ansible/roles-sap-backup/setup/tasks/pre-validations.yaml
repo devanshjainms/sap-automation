@@ -1,0 +1,145 @@
+---
+# Pre-validations for SAP HANA backup setup
+# This playbook validates the required hdbuserstore key configuration
+
+- name:                                   "SAP HANA Backup Setup - Pre-validations"
+  block:
+
+    - name:                               "Check if SAP HANA is installed"
+      ansible.builtin.stat:
+        path:                             "/usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbuserstore"
+      register:                           hdbuserstore_binary
+
+    - name:                               "Fail if SAP HANA is not installed"
+      ansible.builtin.set_fact:
+        pre_validation:
+          failed:                         true
+          msg:                            "SAP HANA is not installed or hdbuserstore binary not found at /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbuserstore"
+      when:                               not hdbuserstore_binary.stat.exists
+
+    - name:                               "Check if HANA system is MDC or SDC"
+      ansible.builtin.shell: |
+        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbsql -U DEFAULT "SELECT COUNT(*) FROM SYS.M_DATABASES WHERE DATABASE_NAME != 'SYSTEMDB'"
+      register:                           hana_db_count
+      become:                             true
+      become_user:                        "{{ db_sid | lower }}adm"
+      changed_when:                       false
+      failed_when:                        false
+
+    - name:                               "Determine HANA system type"
+      ansible.builtin.set_fact:
+        is_mdc:                           "{{ hana_db_count.stdout | int > 0 }}"
+        is_sdc:                           "{{ hana_db_count.stdout | int == 0 }}"
+
+    - name:                               "Get NAMESERVER SQL port for MDC"
+      ansible.builtin.shell: |
+        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbsql -U DEFAULT "SELECT SQL_PORT FROM SYS.M_SERVICES WHERE SERVICE_NAME='nameserver' AND COORDINATOR_TYPE='MASTER'"
+      register:                           nameserver_port
+      become:                             true
+      become_user:                        "{{ db_sid | lower }}adm"
+      when:                               is_mdc | bool
+      changed_when:                       false
+      failed_when:                        false
+
+    - name:                               "Get INDEXSERVER SQL port for SDC"
+      ansible.builtin.shell: |
+        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbsql -U DEFAULT "SELECT SQL_PORT FROM SYS.M_SERVICES WHERE SERVICE_NAME='indexserver'"
+      register:                           indexserver_port
+      become:                             true
+      become_user:                        "{{ db_sid | lower }}adm"
+      when:                               is_sdc | bool
+      changed_when:                       false
+      failed_when:                        false
+
+    - name:                               "List all keys in hdbuserstore"
+      ansible.builtin.shell: |
+        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbuserstore list
+      register:                           hdbuserstore_keys
+      become:                             true
+      become_user:                        "{{ db_sid | lower }}adm"
+      changed_when:                       false
+
+    - name:                               "Check if DEFAULT key exists in hdbuserstore"
+      ansible.builtin.set_fact:
+        pre_validation:
+          failed:                         true
+          msg:                            "DEFAULT key not found in hdbuserstore. Please create a DEFAULT key with appropriate credentials."
+      when:                               "'DEFAULT' not in hdbuserstore_keys.stdout"
+
+    - name:                               "Parse DEFAULT key details"
+      ansible.builtin.shell: |
+        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbuserstore list DEFAULT | grep -A2 "KEY DEFAULT"
+      register:                           default_key_details
+      become:                             true
+      become_user:                        "{{ db_sid | lower }}adm"
+      changed_when:                       false
+
+    - name:                               "Extract port from DEFAULT key"
+      ansible.builtin.set_fact:
+        default_key_port:                 "{{ default_key_details.stdout | regex_search(':(\\d+)', '\\1') | first }}"
+      when:                               default_key_details.stdout is defined
+
+    - name:                               "Validate DEFAULT key points to correct port for MDC (NAMESERVER)"
+      ansible.builtin.set_fact:
+        pre_validation:
+          failed:                         true
+          msg: |
+            For MDC systems, the DEFAULT key should point to the NAMESERVER SQL port ({{ nameserver_port.stdout }}).
+            Current DEFAULT key points to port {{ default_key_port }}.
+            Please update the DEFAULT key to point to the correct port.
+      when:
+        - is_mdc | bool
+        - nameserver_port.stdout is defined
+        - default_key_port != nameserver_port.stdout
+
+    - name:                               "Validate DEFAULT key points to correct port for SDC (INDEXSERVER)"
+      ansible.builtin.set_fact:
+        pre_validation:
+          failed:                         true
+          msg: |
+            For SDC systems, the DEFAULT key should point to the INDEXSERVER SQL port ({{ indexserver_port.stdout }}).
+            Current DEFAULT key points to port {{ default_key_port }}.
+            Please update the DEFAULT key to point to the correct port.
+      when:
+        - is_sdc | bool
+        - indexserver_port.stdout is defined
+        - default_key_port != indexserver_port.stdout
+
+    - name:                               "Test DEFAULT key connectivity"
+      ansible.builtin.shell: |
+        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbsql -U DEFAULT "SELECT CURRENT_USER FROM SYS.DUMMY"
+      register:                           default_key_connectivity
+      become:                             true
+      become_user:                        "{{ db_sid | lower }}adm"
+      changed_when:                       false
+      failed_when:                        false
+
+    - name:                               "Fail if DEFAULT key cannot connect"
+      ansible.builtin.set_fact:
+        pre_validation:
+          failed:                         true
+          msg:                            "DEFAULT key cannot connect to HANA database. Please verify credentials."
+      when:                               default_key_connectivity.rc != 0
+
+    - name:                               "Display validation summary"
+      ansible.builtin.debug:
+        msg: |
+          HANA Backup Pre-validation completed
+      when:                               pre_validation.failed is not defined
+
+  rescue:
+    - name:                               "Set pre-validation failure flag on rescue"
+      ansible.builtin.set_fact:
+        pre_validation:
+          failed:                         true
+          msg:                            "Pre-validation failed due to unexpected error during execution"
+
+    - name:                               "Display error information"
+      ansible.builtin.debug:
+        msg: |
+          HANA Backup Pre-validation failed.
+
+    - name:                               "Show specific failure message if available"
+      ansible.builtin.debug:
+        msg:                              "{{ pre_validation.msg }}"
+      when:                               pre_validation.msg is defined

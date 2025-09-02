@@ -1,0 +1,20 @@
+---
+
+#############################################################################
+#                                                                           #
+#                            Backup Parameters                              #
+#                                                                           #
+#############################################################################
+
+# SAP Systems to be backed up
+sap_systems:
+%{~ for system in sap_systems }
+  - sid: ${system.sid}
+    database_names_to_backup:
+%{~ for db_name in system.database_names_to_backup }
+      - ${db_name}
+%{~ endfor }
+%{~ if length(system.database_names_to_backup) == 0 }
+      [] # All databases will be backed up
+%{~ endif }
+%{~ endfor }

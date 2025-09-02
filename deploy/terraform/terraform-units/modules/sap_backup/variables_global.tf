@@ -164,11 +164,7 @@ variable "sap_systems" {
   description                     = "List of SAP systems to be backed up"
   type = list(object({
     sid                           = string
-    environment                   = string
-    resource_group_name           = string
-    hana_instance_number          = string
-    database_names                = optional(list(string), [])
-    exclude_from_backup           = optional(bool, false)
+    database_names_to_backup      = optional(list(string), [])
   }))
   default = []
 }

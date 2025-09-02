@@ -1,0 +1,110 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+---
+- name:                       "Check if pre-registration script has already been executed"
+  ansible.builtin.stat:
+    path:                     "/opt/scripts/pre-registration.flag"
+  register:                   preregistration_flag
+
+- name:                       "Pre registration flag does not exists"
+  when:                       not preregistration_flag.stat.exists
+  block:
+    - name:                   "Run pre-validations for Azure Backup from other task failure"
+      ansible.builtin.include_tasks: "pre-validation.yaml"
+
+    - name:                   "Run pre-registration if validations have passed"
+      when:                   pre_validation is not defined or (pre_validation is defined and pre_validation.failed is not defined)
+      block:
+        - name:               "Ensure scripts directory exists"
+          ansible.builtin.file:
+            path:             "/opt/scripts"
+            state:            directory
+            mode:             "0755"
+            owner:            root
+            group:            root
+
+        - name:               "Validate prerequisites for SAP HANA backup setup"
+          block:
+            - name:           "Check if SAP HANA is installed"
+              ansible.builtin.stat:
+                path:         "/hana/shared"
+              register:       hana_installation
+
+            - name:           "Verify HANA system is running"
+              ansible.builtin.shell: |
+                ps aux | grep -i hdb | grep -v grep | wc -l
+              register:       hana_processes
+              changed_when:   false
+
+            - name:           "Fail if HANA is not properly installed"
+              ansible.builtin.fail:
+                msg:          "SAP HANA is not installed or not running properly on this system"
+              when:           not hana_installation.stat.exists or hana_processes.stdout|int < 1
+
+        - name:               "Download the pre-registration script from Microsoft"
+          ansible.builtin.get_url:
+            url:              "https://github.com/Azure/Azure-Workload-Backup-Troubleshooting-Scripts/releases/download/SAPHanaScript-Prod-Release/msawb-plugin-config-com-sap-hana.sh"
+            dest:             "/opt/scripts/pre-registration.sh"
+            mode:             "0755"
+            owner:            root
+            group:            root
+            backup:           true
+            timeout:          30
+            force:            true
+            validate_certs:   true
+          register:           script_download
+          retries:            3
+          delay:              5
+          until:              script_download is succeeded
+
+        - name:               "Run pre-registration script on SAP HANA VMs to provide permissions to Azure Backup service"
+          ansible.builtin.shell: |
+            set -e
+            set -o pipefail
+            mkdir -p /var/log
+            echo "Starting pre-registration script execution at $(date)" >> /var/log/azure-backup-preregistration.log
+            export PATH="$PATH:/usr/sap/*/HDB*/exe"
+            if bash /opt/scripts/pre-registration.sh 2>&1 | tee -a /var/log/azure-backup-preregistration.log; then
+              echo "Pre-registration script executed successfully at $(date)" >> /var/log/azure-backup-preregistration.log
+              exit 0
+            else
+              echo "Pre-registration script failed at $(date)" >> /var/log/azure-backup-preregistration.log
+              exit 1
+            fi
+          register:            preregistration_script
+          changed_when:        preregistration_script.rc == 0
+          failed_when:         preregistration_script.rc != 0
+
+        - name:               "Show preregistration script output on success"
+          ansible.builtin.debug:
+            var:              preregistration_script.stdout_lines
+          when:               preregistration_script is defined and preregistration_script.rc == 0
+
+        - name:               "Show preregistration script errors on failure"
+          ansible.builtin.debug:
+            msg:
+              - "Pre-registration script failed with return code: {{ preregistration_script.rc }}"
+              - "Error output: {{ preregistration_script.stderr_lines }}"
+          when:               preregistration_script is defined and preregistration_script.rc != 0
+
+        - name:               "Create flag file to indicate successful completion"
+          ansible.builtin.copy:
+            content: |
+              # Azure Backup Pre-registration completed successfully
+              # Execution date: {{ ansible_date_time.iso8601 }}
+              # Hostname: {{ ansible_hostname }}
+              # Return code: {{ preregistration_script.rc }}
+            dest:             "/opt/scripts/pre-registration.flag"
+            mode:             "0644"
+            owner:            root
+            group:            root
+          when:               preregistration_script is defined and preregistration_script.rc == 0
+
+- name:                       "Skip execution message when already completed"
+  ansible.builtin.debug:
+    msg:
+      - "Pre-registration script has already been executed on this system"
+      - "Flag file exists: /opt/scripts/pre-registration.flag"
+      - "To re-run, remove the flag file and execute this role again"
+  when:                       preregistration_flag.stat.exists

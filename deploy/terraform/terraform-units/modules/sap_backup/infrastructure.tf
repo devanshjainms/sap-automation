@@ -97,3 +97,20 @@ resource "azurerm_subnet" "subnet_backup" {
   virtual_network_name      = azurerm_virtual_network.vnet_backup[0].name
   address_prefixes          = var.infrastructure.vnets.backup.subnet_backup.address_prefixes
 }
+
+
+
+#################################################################################
+#                                                                               #
+#                       Create Local files for backup-parameters using template #
+#                                                                               #
+#################################################################################
+
+resource "local_file" "backup_parameters" {
+  content                   = templatefile(format("%s%s", path.module, "/backup-parameters.tmpl"), {
+    sap_systems             = var.sap_systems
+  })
+  filename                  = "backup-parameters.yaml"
+  file_permission           = "0660"
+  directory_permission      = "0770"
+}

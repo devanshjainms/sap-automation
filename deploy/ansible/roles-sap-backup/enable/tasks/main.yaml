@@ -12,7 +12,7 @@
     use_proxy:                 false
     headers:
       Metadata:                true
-    register:                 vm_metadata
+  register:                 vm_metadata
 
 - name:                       "Set the VM resource id fact"
   ansible.builtin.set_fact:

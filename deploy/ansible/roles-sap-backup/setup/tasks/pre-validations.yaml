@@ -16,10 +16,16 @@
           msg:                            "SAP HANA is not installed or hdbuserstore binary not found at /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbuserstore"
       when:                               not hdbuserstore_binary.stat.exists
 
+    - name:                               Check if global.ini file exists
+      ansible.builtin.stat:
+        path:                             "/usr/sap/{{ db_sid }}/SYS/global/hdb/custom/config/global.ini"
+      register:                           ini_stat
+
     - name:                               Read the global.ini file
       ansible.builtin.slurp:
         path:                             "/usr/sap/{{ db_sid }}/SYS/global/hdb/custom/config/global.ini"
       register:                           ini_slurp
+      when:                               ini_stat.stat.exists
 
     - name:                               Read multidb.mode (if file exists)
       ansible.builtin.set_fact:
@@ -27,6 +33,7 @@
           {{
             (ini_slurp.content | b64decode | lower)
             | regex_search('(?ms)\\[multidb\\].*?mode\\s*=\\s*(\\S+)', '\\1')
+            | first | default('false')
           }}
 
     - name:                               Classify deployment type

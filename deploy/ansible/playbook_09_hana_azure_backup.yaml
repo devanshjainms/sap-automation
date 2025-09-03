@@ -1,0 +1,91 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+---
+
+# /*----------------------------------------------------------------------------8
+# |                                                                            |
+# |                      Prepare for DB Install                           |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+- hosts:                               localhost
+  name:                                "Azure Backup for HANA DB Playbook: - Initialization"
+  gather_facts:                        true
+  vars_files:
+    - vars/ansible-input-api.yaml
+
+  tasks:
+    - name:                            "Azure Backup for HANA DB Playbook: - Create Progress folder"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress"
+        state:                         directory
+        mode:                          0755
+
+    - name:                            "Azure Backup for HANA DB Playbook: - Create Progress db folder"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress/az-backup"
+        state:                         directory
+        mode:                          0755
+
+    - name:                            "Azure Backup for HANA DB Playbook: - Remove az-backup-hana-done flag"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress/az-backup/az-backup-hana-done"
+        state:                          absent
+
+    - name:                            "Azure Backup for HANA DB Playbook: - Set hdb fact"
+      ansible.builtin.set_fact:
+        tier:                          hdb
+
+
+# /*----------------------------------------------------------------------------8
+# |                                                                             |
+# |                      Playbook for HANA DB Install                           |
+# |                          No Scale Out configuration                         |
+# +------------------------------------4--------------------------------------*/
+
+- hosts:                               "{{ sap_sid | upper }}_DB"
+  name:                                DB Installation - HANA
+  remote_user:                         "{{ orchestration_ansible_user }}"
+  gather_facts:                        true                                    # Important to collect hostvars information
+  any_errors_fatal:                    true
+  vars_files:
+    - vars/ansible-input-api.yaml                                              # API Input template with defaults
+
+  tasks:
+  # -------------------------------------+---------------------------------------8
+  #
+  # Build the list of tasks to be executed in order here.
+  #
+  # -------------------------------------+---------------------------------------8
+
+    - name:                            "Backward Compatibility - Check required Database HA variables"
+      ansible.builtin.set_fact:
+        database_high_availability:    "{{ db_high_availability | default(false) }}"
+      when:
+        - db_high_availability is defined
+        - database_high_availability is not defined
+
+    - name:                            "Azure Backup for HANA DB Playbook: - Install HANA"
+      become:                          true
+      when:
+        - node_tier == 'hana'
+        - not database_scale_out
+      block:
+        - name:                        "Run the Azure Backup for HANA DB Playbook"
+          block:
+            - name:                    "Azure Backup for HANA DB Playbook: - Setup Azure Backup pre-registration"
+              ansible.builtin.include_role:
+                name:                  roles-sap-backup/setup
+
+            - name:                    "Azure Backup for HANA DB Playbook: - Enable Azure Backup"
+              ansible.builtin.include_role:
+                name:                  roles-sap-backup/enable
+              when:
+                - pre_validation.failed is not defined
+
+
+...
+# /*----------------------------------------------------------------------------8
+# |                                    END                                      |
+# +------------------------------------4--------------------------------------*/

@@ -25,6 +25,11 @@ parameters:
     displayName:                       Bill of Materials name
     type:                              string
 
+  - name:                              backup_environment_name
+    displayName:                       Backup Environment Name
+    type:                              string
+    default:                           DEV-WEEU-BUP01-INFRASTRUCTURE
+
   - name:                              extra_params
     displayName:                       Extra Parameters
     type:                              string
@@ -77,6 +82,11 @@ parameters:
 
   - name:                              webdispatcher_installation
     displayName:                       Web Dispatcher Installation
+    type:                              boolean
+    default:                           false
+
+  - name:                              enable_sap_backup
+    displayName:                       Enable SAP HANA Azure Backup
     type:                              boolean
     default:                           false
 
@@ -433,6 +443,27 @@ stages:
                   azureClientSecret:         $(ARM_CLIENT_SECRET)
                   azureTenantId:             $(ARM_TENANT_ID)
                   azureSubscriptionId:       $(ARM_SUBSCRIPTION_ID)
+                  USE_MSI:                   $(USE_MSI)
+                  CONTROL_PLANE_SUBSCRIPTION_ID: $(Terraform_Remote_Storage_Subscription)
+          - ${{ if eq(parameters.enable_sap_backup, true) }}:
+              - template:                    templates\run-ansible.yaml
+                parameters:
+                  displayName:               "SAP HANA Azure Backup Setup"
+                  ansibleFilePath:           ${{ parameters.sap_automation_repo_path }}/deploy/ansible/playbook_09_hana_azure_backup.yaml
+                  ansibleConfigPath:         ${{ parameters.sap_automation_repo_path }}/deploy/ansible/ansible.cfg
+                  secretName:                "$(Preparation.SSH_KEY_NAME)"
+                  passwordSecretName:        "$(Preparation.PASSWORD_KEY_NAME)"
+                  userNameSecretName:        "$(Preparation.USERNAME_KEY_NAME)"
+                  vaultName:                 $(KEYVAULT)
+                  parametersFolder:          $(Preparation.FOLDER)
+                  sapParams:                 "${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)/SYSTEM/${{ parameters.sap_system_configuration_name }}/artifacts/$(Preparation.SAP_PARAMETERS)"
+                  sidHosts:                  $(Preparation.HOSTS)
+                  extraParams:               "$(Preparation.NEW_PARAMETERS)"
+                  azureClientId:             $(ARM_CLIENT_ID)
+                  azureClientSecret:         $(ARM_CLIENT_SECRET)
+                  azureTenantId:             $(ARM_TENANT_ID)
+                  azureSubscriptionId:       $(ARM_SUBSCRIPTION_ID)
+                  backupEnvironmentName:     $(Preparation.BACKUP_ENVIRONMENT_NAME)
                   USE_MSI:                   $(USE_MSI)
                   CONTROL_PLANE_SUBSCRIPTION_ID: $(Terraform_Remote_Storage_Subscription)
           - ${{ if eq(parameters.sap_on_azure_quality_checks, true) }}:

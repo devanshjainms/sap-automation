@@ -11,7 +11,7 @@
   when:                       not preregistration_flag.stat.exists
   block:
     - name:                   "Run pre-validations for Azure Backup from other task failure"
-      ansible.builtin.include_tasks: "pre-validation.yaml"
+      ansible.builtin.include_tasks: "pre-validations.yaml"
 
     - name:                   "Run pre-registration if validations have passed"
       when:                   pre_validation is not defined or (pre_validation is defined and pre_validation.failed is not defined)
@@ -33,7 +33,7 @@
 
             - name:           "Verify HANA system is running"
               ansible.builtin.shell: |
-                ps aux | grep -i hdb | grep -v grep | wc -l
+                set -o pipefail && ps aux | grep -i hdb | grep -v grep | wc -l
               register:       hana_processes
               changed_when:   false
 

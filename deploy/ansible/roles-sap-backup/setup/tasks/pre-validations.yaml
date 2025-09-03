@@ -27,31 +27,31 @@
       register:                           ini_slurp
       when:                               ini_stat.stat.exists
 
-    - name:                               Set default multidb mode
-      ansible.builtin.set_fact:
-        hana_multidb_mode:                "false"
-      when:                               ini_stat.stat.exists and ini_slurp is defined
+    - name:                               Read multidb.mode (if file exists)
+      ansible.builtin.shell: |
+        set -o pipefail
+        sed -n '/^\[multidb\]/,/^\[/p' "{{ global_ini_path }}" \
+          | grep -i '^[[:space:]]*mode[[:space:]]*=' \
+          | head -1 \
+          | cut -d'=' -f2 \
+          | tr -d ' ' \
+          | tr '[:upper:]' '[:lower:]'
+      register:                           multidb_mode_result
+      failed_when:                        false
+      changed_when:                       false
+      when:                               ini_stat.stat.exists
 
-    - name:                               Check if multidb mode is enabled
+    - name:                               Set multidb mode variable
       ansible.builtin.set_fact:
-        hana_multidb_mode:                "{{ line.split('=')[1].strip() | lower }}"
-      when:
-        - ini_stat.stat.exists
-        - ini_slurp is defined
-        - "'[multidb]' in (ini_slurp.content | b64decode)"
-        - line is defined
-        - line.strip() != ""
-        - "line.strip().startswith('mode')"
-      loop:                               "{{ (ini_slurp.content | b64decode).split('\n') }}"
-      loop_control:
-        loop_var:                         line
+        hana_multidb_mode:                "{{ multidb_mode_result.stdout | default('false') }}"
+      when:                               ini_stat.stat.exists
 
     - name:                               Classify deployment type
       ansible.builtin.set_fact:
         hana_deployment_type: >-
           {% if not ini_stat.stat.exists %}
           unknown
-          {% elif hana_multidb_mode in ['1','true','yes','on'] %}
+          {% elif hana_multidb_mode | lower in ['multidb','mdc','1','true','yes','on'] %}
           MDC
           {% else %}
           SDC

@@ -79,7 +79,14 @@
         - node_tier == 'hana'
         - not database_scale_out
       block:
+        - name:                        "Identify the primary instance name"
+          ansible.builtin.shell: |
+            set -o pipefail && SAPHanaSR-showAttr | awk 'toupper($13)=="PRIM"{ print $1; exit }'
+          register:                     primary_instance_name_cmd
+          changed_when:                 false
+
         - name:                        "Run the Azure Backup for HANA DB Playbook"
+          when:                        ansible_hostname == primary_instance_name_cmd.stdout
           block:
             - name:                    "Azure Backup for HANA DB Playbook: - Setup Azure Backup pre-registration"
               ansible.builtin.include_role:
@@ -88,8 +95,7 @@
             - name:                    "Azure Backup for HANA DB Playbook: - Enable Azure Backup"
               ansible.builtin.include_role:
                 name:                  roles-sap-backup/enable
-              when:
-                - pre_validation.failed is not defined
+              when:                    pre_validation.failed is not defined
 
 
 ...

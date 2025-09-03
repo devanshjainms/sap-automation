@@ -16,7 +16,7 @@
 
 - name:                       "Set the VM resource id fact"
   ansible.builtin.set_fact:
-    vm_resource_id:           "{{ vm_metadata.json.compute.id }}"
+    vm_resource_id:           "{{ vm_metadata.json.compute.resourceId }}"
 
 - name:                       "Set the backup vault name"
   ansible.builtin.set_fact:

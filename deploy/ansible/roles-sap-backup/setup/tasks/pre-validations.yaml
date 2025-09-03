@@ -16,6 +16,37 @@
           msg:                            "SAP HANA is not installed or hdbuserstore binary not found at /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbuserstore"
       when:                               not hdbuserstore_binary.stat.exists
 
+    - name:                               Check if global.ini file exists
+      ansible.builtin.stat:
+        path:                             "/usr/sap/{{ db_sid }}/SYS/global/hdb/custom/config/global.ini"
+      register:                           ini_stat
+
+    - name:                               Read multidb.mode (if file exists)
+      ansible.builtin.set_fact:
+        hana_multidb_mode: >-
+          {{ lookup('community.general.ini',
+                    'mode section=multidb file=' ~ /usr/sap/{{ db_sid }}/SYS/global/hdb/custom/config/global.ini,
+                    errors='ignore') | lower }}
+
+    - name:                               Classify deployment type
+      ansible.builtin.set_fact:
+        hana_deployment_type: >-
+          {% if not ini_stat.stat.exists %}
+          unknown
+          {% elif hana_multidb_mode in ['1','true','yes','on'] %}
+          MDC
+          {% else %}
+          SDC
+          {% endif %}
+      when:                               hana_multidb_mode is defined
+
+    - name:                               "Fail if SDC - because it is not supported"
+      ansible.builtin.set_fact:
+        pre_validation:
+          failed:                         true
+          msg:                            "SAP HANA SDC is not supported for backup"
+      when:                               hana_deployment_type == 'SDC'
+
     - name:                               "List all keys in hdbuserstore"
       ansible.builtin.shell: |
         set -o pipefail && /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbuserstore list
@@ -39,19 +70,6 @@
       failed_when:                        false
       when:                               not default_key_exists
 
-    - name:                               "Create DEFAULT key in hdbuserstore for SDC system (fallback)"
-      ansible.builtin.shell: |
-        set -o pipefail && /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbuserstore set DEFAULT localhost:3{{ db_instance_number }}15 SYSTEM '{{ hostvars.localhost.sap_password }}'
-      register:                           create_default_key_sdc
-      become:                             true
-      become_user:                        "{{ db_sid | lower }}adm"
-      changed_when:                       create_default_key_sdc.rc == 0
-      failed_when:                        false
-      when:
-        - not default_key_exists
-        - create_default_key_mdc is defined
-        - create_default_key_mdc.rc != 0
-
     - name:                               "Fail if DEFAULT key creation failed"
       ansible.builtin.set_fact:
         pre_validation:
@@ -61,8 +79,6 @@
         - not default_key_exists
         - create_default_key_mdc is defined
         - create_default_key_mdc.rc != 0
-        - create_default_key_sdc is defined
-        - create_default_key_sdc.rc != 0
 
     - name:                               "Test DEFAULT key connectivity"
       ansible.builtin.shell: |
@@ -80,23 +96,6 @@
           msg:                            "DEFAULT key cannot connect to HANA database. Please verify credentials and connectivity."
       when:                               default_key_connectivity.rc != 0
 
-    - name:                               "Check if HANA system is MDC or SDC"
-      ansible.builtin.shell: |
-        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbsql -U DEFAULT "SELECT COUNT(*) FROM SYS.M_DATABASES WHERE DATABASE_NAME != 'SYSTEMDB'"
-      register:                           hana_db_count
-      become:                             true
-      become_user:                        "{{ db_sid | lower }}adm"
-      changed_when:                       false
-      failed_when:                        false
-      when:                               default_key_connectivity.rc == 0
-
-    - name:                               "Determine HANA system type"
-      ansible.builtin.set_fact:
-        is_mdc:                           "{{ hana_db_count.stdout | int > 0 }}"
-        is_sdc:                           "{{ hana_db_count.stdout | int == 0 }}"
-      when:
-        - default_key_connectivity.rc == 0
-        - hana_db_count is defined
 
     - name:                               "Get NAMESERVER SQL port for MDC"
       ansible.builtin.shell: |
@@ -108,21 +107,8 @@
       failed_when:                        false
       when:
         - default_key_connectivity.rc == 0
-        - is_mdc is defined
-        - is_mdc | bool
-
-    - name:                               "Get INDEXSERVER SQL port for SDC"
-      ansible.builtin.shell: |
-        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbsql -U DEFAULT "SELECT SQL_PORT FROM SYS.M_SERVICES WHERE SERVICE_NAME='indexserver'"
-      register:                           indexserver_port
-      become:                             true
-      become_user:                        "{{ db_sid | lower }}adm"
-      changed_when:                       false
-      failed_when:                        false
-      when:
-        - default_key_connectivity.rc == 0
-        - is_sdc is defined
-        - is_sdc | bool
+        - hana_deployment_type is defined
+        - hana_deployment_type == 'MDC'
 
     - name:                               "Parse DEFAULT key details"
       ansible.builtin.shell: |
@@ -151,64 +137,9 @@
             Current DEFAULT key points to port {{ default_key_port }}.
             Please update the DEFAULT key to point to the correct port.
       when:
-        - is_mdc is defined
-        - is_mdc | bool
-        - nameserver_port is defined
-        - nameserver_port.stdout is defined
-        - default_key_port is defined
+        - hana_deployment_type is defined
+        - hana_deployment_type == 'MDC'
         - default_key_port != nameserver_port.stdout
-
-    - name:                               "Validate DEFAULT key points to correct port for SDC (INDEXSERVER)"
-      ansible.builtin.set_fact:
-        pre_validation:
-          failed:                         true
-          msg: |
-            For SDC systems, the DEFAULT key should point to the INDEXSERVER SQL port ({{ indexserver_port.stdout }}).
-            Current DEFAULT key points to port {{ default_key_port }}.
-            Please update the DEFAULT key to point to the correct port.
-      when:
-        - is_sdc is defined
-        - is_sdc | bool
-        - indexserver_port is defined
-        - indexserver_port.stdout is defined
-        - default_key_port is defined
-        - default_key_port != indexserver_port.stdout
-
-    - name:                               "Test user management privileges - Create test user"
-      ansible.builtin.shell: |
-        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbsql -U DEFAULT "CREATE USER TEST_BACKUP_USER PASSWORD \"TempPass123\" NO FORCE_FIRST_PASSWORD_CHANGE"
-      register:                           create_user_test
-      become:                             true
-      become_user:                        "{{ db_sid | lower }}adm"
-      changed_when:                       false
-      failed_when:                        false
-      when:                               default_key_connectivity.rc == 0
-
-    - name:                               "Test user management privileges - Drop test user"
-      ansible.builtin.shell: |
-        /usr/sap/{{ db_sid }}/HDB{{ db_instance_number }}/exe/hdbsql -U DEFAULT "DROP USER TEST_BACKUP_USER CASCADE"
-      register:                           drop_user_test
-      become:                             true
-      become_user:                        "{{ db_sid | lower }}adm"
-      changed_when:                       false
-      failed_when:                        false
-      when:
-        - default_key_connectivity.rc == 0
-        - create_user_test is defined
-        - create_user_test.rc == 0
-
-    - name:                               "Validate user management privileges"
-      ansible.builtin.set_fact:
-        pre_validation:
-          failed:                         true
-          msg: |
-            The DEFAULT key does not have sufficient privileges to create and delete users.
-            Error during user creation: {{ create_user_test.stderr | default('Unknown error') }}
-            The user associated with the DEFAULT key must have USER ADMIN privileges.
-      when:
-        - default_key_connectivity.rc == 0
-        - create_user_test is defined
-        - create_user_test.rc != 0
 
     - name:                               "Display validation summary"
       ansible.builtin.debug:

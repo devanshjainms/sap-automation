@@ -6,32 +6,24 @@
   ansible.builtin.debug:
     msg:                      "Enabling the HANA DB backup"
 
-# register with the Recovery Services vault using az cli command
-# az backup container register --resource-group saphanaResourceGroup \
-#     --vault-name saphanaVault \
-#     --workload-type SAPHANA \
-#     --backup-management-type AzureWorkload \
-#     --resource-id VMResourceId
-
-
 - name:                       "Get the resource id of the VM using IMDS"
   ansible.builtin.uri:
-    url:                      "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
-    method:                   GET
+    url:                       http://169.254.169.254/metadata/instance?api-version=2021-02-01
+    use_proxy:                 false
     headers:
-      Metadata:              true
-    register:                vm_metadata
+      Metadata:                true
+    register:                 vm_metadata
 
 - name:                       "Set the VM resource id fact"
   ansible.builtin.set_fact:
-    vm_resource_id:          "{{ vm_metadata.json.compute.id }}"
+    vm_resource_id:           "{{ vm_metadata.json.compute.id }}"
 
 - name:                       "Set the backup vault name"
   ansible.builtin.set_fact:
-    backup_vault_name:       "{{ sap_backup_vault_name }}"
-    backup_resource_group:   "{{ sap_backup_resource_group }}"
+    backup_vault_name:        "{{ sap_backup_vault_name }}"
+    backup_resource_group:    "{{ sap_backup_resource_group }}"
 
-- name:                      "Run the command to register the instance with recovery services vault"
+- name:                       "Run the command to register the instance with recovery services vault"
   ansible.builtin.shell: |
     az backup container register --resource-group {{ backup_resource_group }} \
         --vault-name {{ backup_vault_name }} \

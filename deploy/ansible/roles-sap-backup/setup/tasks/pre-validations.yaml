@@ -25,7 +25,7 @@
       ansible.builtin.set_fact:
         hana_multidb_mode: >-
           {{ lookup('community.general.ini',
-                    'mode section=multidb file=' ~ /usr/sap/{{ db_sid }}/SYS/global/hdb/custom/config/global.ini,
+                    'mode section=multidb file=/usr/sap/' + db_sid + '/SYS/global/hdb/custom/config/global.ini',
                     errors='ignore') | lower }}
 
     - name:                               Classify deployment type

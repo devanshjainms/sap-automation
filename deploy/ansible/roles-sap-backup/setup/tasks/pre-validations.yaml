@@ -22,9 +22,8 @@
       register:                           ini_stat
 
     - name:                               Read the global.ini file
-      ansible.builtin.slurp:
-        path:                             "/usr/sap/{{ db_sid }}/SYS/global/hdb/custom/config/global.ini"
-      register:                           ini_slurp
+      ansible.builtin.set_fact:
+        global_ini_path:                  "/usr/sap/{{ db_sid }}/SYS/global/hdb/custom/config/global.ini"
       when:                               ini_stat.stat.exists
 
     - name:                               Read multidb.mode (if file exists)

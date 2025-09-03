@@ -27,14 +27,24 @@
       register:                           ini_slurp
       when:                               ini_stat.stat.exists
 
-    - name:                               Read multidb.mode (if file exists)
+    - name:                               Set default multidb mode
       ansible.builtin.set_fact:
-        hana_multidb_mode: >-
-          {{
-            (ini_slurp.content | b64decode | lower)
-            | regex_search('(?ms)\\[multidb\\].*?mode\\s*=\\s*(\\S+)', '\\1')
-            | first | default('false')
-          }}
+        hana_multidb_mode:                "false"
+      when:                               ini_stat.stat.exists and ini_slurp is defined
+
+    - name:                               Check if multidb mode is enabled
+      ansible.builtin.set_fact:
+        hana_multidb_mode:                "{{ line.split('=')[1].strip() | lower }}"
+      when:
+        - ini_stat.stat.exists
+        - ini_slurp is defined
+        - "'[multidb]' in (ini_slurp.content | b64decode)"
+        - line is defined
+        - line.strip() != ""
+        - "line.strip().startswith('mode')"
+      loop:                               "{{ (ini_slurp.content | b64decode).split('\n') }}"
+      loop_control:
+        loop_var:                         line
 
     - name:                               Classify deployment type
       ansible.builtin.set_fact:

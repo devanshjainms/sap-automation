@@ -24,6 +24,7 @@
     backup_resource_group:    "{{ sap_backup_resource_group }}"
 
 - name:                       "Run the command to register the instance with recovery services vault"
+  delegate_to:                localhost
   ansible.builtin.shell: |
     az backup container register --resource-group {{ backup_resource_group }} \
         --vault-name {{ backup_vault_name }} \

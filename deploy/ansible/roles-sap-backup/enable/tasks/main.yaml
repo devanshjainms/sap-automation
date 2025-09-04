@@ -8,26 +8,56 @@
 
 - name:                       "Get the resource id of the VM using IMDS"
   ansible.builtin.uri:
-    url:                       http://169.254.169.254/metadata/instance?api-version=2021-02-01
-    use_proxy:                 false
+    url:                      http://169.254.169.254/metadata/instance?api-version=2021-02-01
+    use_proxy:                false
     headers:
-      Metadata:                true
-  register:                 vm_metadata
+      Metadata:               true
+  register:                   vm_metadata
 
 - name:                       "Set the VM resource id fact"
   ansible.builtin.set_fact:
     vm_resource_id:           "{{ vm_metadata.json.compute.resourceId }}"
 
-- name:                       "Set the backup vault name"
-  ansible.builtin.set_fact:
-    backup_vault_name:        "{{ sap_backup_vault_name }}"
-    backup_resource_group:    "{{ sap_backup_resource_group }}"
+- name:                       "Check if the VM is registered with the recovery services vault"
+  delegate_to:                localhost
+  register:                   backup_container_list
+  ansible.builtin.shell: |
+    az backup container list --backup-management-type AzureWorkload \
+      --resource-group {{ sap_backup_resource_group }} \
+      --vault-name {{ sap_backup_vault_name }} \
 
 - name:                       "Run the command to register the instance with recovery services vault"
   delegate_to:                localhost
+  when:                       backup_container_list.rc == 0 and vm_resource_id not in backup_container_list.stdout
+  register:                   backup_container_register
   ansible.builtin.shell: |
-    az backup container register --resource-group {{ backup_resource_group }} \
-        --vault-name {{ backup_vault_name }} \
+    az backup container register --resource-group {{ sap_backup_resource_group }} \
+        --vault-name {{ sap_backup_vault_name }} \
         --workload-type SAPHANA \
         --backup-management-type AzureWorkload \
-        --resource-id {{ vm_resource_id }}
+        --resource-id {{ vm_resource_id.split('/')[-1] }}
+
+- name:                       "Get the list of databases discovered in the registration setup"
+  delegate_to:                localhost
+  when:                       backup_container_register.rc == 0
+  register:                   backup_item_list
+  ansible.builtin.shell: |
+    az backup protectable-item list --resource-group {{ sap_backup_resource_group }} \
+      --vault-name {{ sap_backup_vault_name }} \
+      --workload-type SAPHANA \
+      --output table
+
+- name:                       "Filter backups for SAP HANA databases"
+  delegate_to:                localhost
+  when:                       backup_item_list is defined and backup_item_list.rc == 0
+  ansible.builtin.set_fact:
+    backup_protectable_items: "{{ backup_item_list.stdout_lines[2:]
+                                  | select('search', 'SAPHanaDatabase')
+                                  | select('search', 'NotProtected')
+                                  | list }}"
+
+- name:                       "Debug filtered backup items"
+  delegate_to:                localhost
+  ansible.builtin.debug:
+    msg:                      "Found {{ backup_protectable_items | length }} databases to protect: {{ backup_protectable_items }}"
+  when:                       backup_protectable_items is defined

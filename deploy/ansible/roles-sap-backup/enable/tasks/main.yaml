@@ -78,3 +78,30 @@
   loop:                       "{{ backup_protectable_items }}"
   loop_control:
     loop_var:                 backup_item
+
+- name:                       "Get backup list for SAP HANA Databases have been enabled"
+  delegate_to:                localhost
+  when:                       backup_protectable_items is defined and backup_protectable_items | length > 0
+  ansible.builtin.shell:
+                              az backup item list --resource-group {{ sap_backup_resource_group }} \
+                                --vault-name {{ sap_backup_vault_name }} \
+                                --backup-management-type AzureWorkload \
+                                --workload-type SAPHanaDatabase
+  register:                   enabled_backup_items
+
+- name:                       "Create list of enabled backup item names"
+  delegate_to:                localhost
+  when:                       enabled_backup_items is defined and enabled_backup_items.rc == 0
+  ansible.builtin.set_fact:
+    enabled_item_names:       "{{ enabled_backup_items.stdout | from_json | map(attribute='name') | list }}"
+
+- name:                       "Validate each database is backed up"
+  delegate_to:                localhost
+  ansible.builtin.assert:
+    that:                     backup_item.item_name in enabled_item_names
+    fail_msg:                 "Database {{ backup_item.item_name }} is not protected"
+    success_msg:              "Database {{ backup_item.item_name }} is protected"
+  loop:                       "{{ backup_protectable_items }}"
+  loop_control:
+    loop_var:                 backup_item
+  when:                       enabled_item_names is defined and backup_protectable_items is defined

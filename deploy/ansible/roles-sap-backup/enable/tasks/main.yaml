@@ -40,7 +40,11 @@
 
 - name:                       "Get the list of databases discovered in the registration setup"
   delegate_to:                localhost
-  when:                       backup_container_register.rc == 0
+  when:                       backup_container_list.rc == 0 and (
+                                backup_container_register is not defined or (
+                                  backup_container_register is defined and backup_container_register.rc == 0
+                                )
+                              )
   register:                   backup_item_list
   ansible.builtin.shell: |
     az backup protectable-item list --resource-group {{ sap_backup_resource_group }} \

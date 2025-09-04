@@ -41,20 +41,40 @@
   ansible.builtin.shell: |
                               az backup protectable-item list --resource-group {{ sap_backup_resource_group }} \
                                 --vault-name {{ sap_backup_vault_name }} \
-                                --workload-type SAPHANA \
-                                --output table
+                                --workload-type SAPHANA
 
 - name:                       "Filter backups for SAP HANA databases"
   delegate_to:                localhost
   when:                       backup_item_list is defined and backup_item_list.rc == 0
   ansible.builtin.set_fact:
-    backup_protectable_items: "{{ backup_item_list.stdout_lines[2:]
-                                  | select('search', 'SAPHanaDatabase')
-                                  | select('search', 'NotProtected')
-                                  | list }}"
+    backup_protectable_items: []
 
-- name:                       "Debug filtered backup items"
+- name:                       "Build backup items list"
   delegate_to:                localhost
-  ansible.builtin.debug:
-    msg:                      "Found {{ backup_protectable_items | length }} databases to protect: {{ backup_protectable_items }}"
-  when:                       backup_protectable_items is defined
+  ansible.builtin.set_fact:
+    backup_protectable_items: "{{ backup_protectable_items + [{'item_name': item.name, 'server_name': item.properties.serverName}] }}"
+  loop:                       "{{ backup_item_list.stdout | from_json }}"
+  loop_control:
+    loop_var:                 item
+  when:
+    - backup_item_list is defined
+    - backup_item_list.rc == 0
+    - item.properties.protectableItemType == 'SAPHanaDatabase'
+    - item.properties.protectionState == 'NotProtected'
+    - item.properties.IsProtectable == true
+
+- name:                       "Enable backup for SAP HANA databases"
+  delegate_to:                localhost
+  when:                       backup_protectable_items is defined and backup_protectable_items | length > 0
+  ansible.builtin.shell: |
+                              az backup protection enable-for-azurewl --resource-group {{ sap_backup_resource_group }} \
+                                --vault-name {{ sap_backup_vault_name }} \
+                                --policy-name {{ sap_backup_policy_name }} \
+                                --protectable-item-name "{{ backup_item.item_name }}"  \
+                                --protectable-item-type SAPHANADatabase \
+                                --server-name "{{ backup_item.server_name }}" \
+                                --workload-type SAPHANA \
+                                --output table
+  loop:                       "{{ backup_protectable_items }}"
+  loop_control:
+    loop_var:                 backup_item

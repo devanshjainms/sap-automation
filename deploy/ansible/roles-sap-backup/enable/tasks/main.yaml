@@ -1,12 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 ---
-- name:                       "Debug state for enable"
-  ansible.builtin.debug:
-    msg:                      "Enabling the HANA DB backup"
 
-- name:                       "Get the resource id of the VM using IMDS"
+- name:                       "Get resource id of the VM using IMDS"
   ansible.builtin.uri:
     url:                      http://169.254.169.254/metadata/instance?api-version=2021-02-01
     use_proxy:                false
@@ -14,11 +10,7 @@
       Metadata:               true
   register:                   vm_metadata
 
-- name:                       "Set the VM resource id fact"
-  ansible.builtin.set_fact:
-    vm_resource_id:           "{{ vm_metadata.json.compute.resourceId }}"
-
-- name:                       "Check if the VM is registered with the recovery services vault"
+- name:                       "Check if VM is registered with recovery services vault"
   delegate_to:                localhost
   register:                   backup_container_list
   ansible.builtin.shell: |
@@ -27,18 +19,19 @@
                                 --vault-name {{ sap_backup_vault_name }} \
                                 --output table
 
-- name:                       "Run the command to register the instance with recovery services vault"
+- name:                       "Run command to register instance with recovery services vault"
   delegate_to:                localhost
-  when:                       backup_container_list.rc == 0 and vm_resource_id.split('/')[-1] not in backup_container_list.stdout
+  when:                       backup_container_list.rc == 0 and
+                              vm_metadata.json.compute.resourceId.split('/')[-1] not in backup_container_list.stdout
   register:                   backup_container_register
   ansible.builtin.shell: |
                               az backup container register --resource-group {{ sap_backup_resource_group }} \
                                   --vault-name {{ sap_backup_vault_name }} \
                                   --workload-type SAPHANA \
                                   --backup-management-type AzureWorkload \
-                                  --resource-id {{ vm_resource_id }}
+                                  --resource-id {{ vm_metadata.json.compute.resourceId }}
 
-- name:                       "Get the list of databases discovered in the registration setup"
+- name:                       "Get the list of databases discovered in registration setup"
   delegate_to:                localhost
   when:
                               - backup_container_list.rc == 0

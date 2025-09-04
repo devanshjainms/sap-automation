@@ -29,7 +29,7 @@
 
 - name:                       "Run the command to register the instance with recovery services vault"
   delegate_to:                localhost
-  when:                       backup_container_list.rc == 0 and vm_resource_id.split('/')[-1] not in backup_container_list.stdout_lines
+  when:                       backup_container_list.rc == 0 and vm_resource_id.split('/')[-1] not in backup_container_list.stdout
   register:                   backup_container_register
   ansible.builtin.shell: |
     az backup container register --resource-group {{ sap_backup_resource_group }} \

@@ -25,17 +25,18 @@
     az backup container list --backup-management-type AzureWorkload \
       --resource-group {{ sap_backup_resource_group }} \
       --vault-name {{ sap_backup_vault_name }} \
+      --output table
 
 - name:                       "Run the command to register the instance with recovery services vault"
   delegate_to:                localhost
-  when:                       backup_container_list.rc == 0 and vm_resource_id not in backup_container_list.stdout
+  when:                       backup_container_list.rc == 0 and vm_resource_id.split('/')[-1] not in backup_container_list.stdout_lines
   register:                   backup_container_register
   ansible.builtin.shell: |
     az backup container register --resource-group {{ sap_backup_resource_group }} \
         --vault-name {{ sap_backup_vault_name }} \
         --workload-type SAPHANA \
         --backup-management-type AzureWorkload \
-        --resource-id {{ vm_resource_id.split('/')[-1] }}
+        --resource-id {{ vm_resource_id }}
 
 - name:                       "Get the list of databases discovered in the registration setup"
   delegate_to:                localhost

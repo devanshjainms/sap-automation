@@ -22,21 +22,21 @@
   delegate_to:                localhost
   register:                   backup_container_list
   ansible.builtin.shell: |
-    az backup container list --backup-management-type AzureWorkload \
-      --resource-group {{ sap_backup_resource_group }} \
-      --vault-name {{ sap_backup_vault_name }} \
-      --output table
+                              az backup container list --backup-management-type AzureWorkload \
+                                --resource-group {{ sap_backup_resource_group }} \
+                                --vault-name {{ sap_backup_vault_name }} \
+                                --output table
 
 - name:                       "Run the command to register the instance with recovery services vault"
   delegate_to:                localhost
   when:                       backup_container_list.rc == 0 and vm_resource_id.split('/')[-1] not in backup_container_list.stdout
   register:                   backup_container_register
   ansible.builtin.shell: |
-    az backup container register --resource-group {{ sap_backup_resource_group }} \
-        --vault-name {{ sap_backup_vault_name }} \
-        --workload-type SAPHANA \
-        --backup-management-type AzureWorkload \
-        --resource-id {{ vm_resource_id }}
+                              az backup container register --resource-group {{ sap_backup_resource_group }} \
+                                  --vault-name {{ sap_backup_vault_name }} \
+                                  --workload-type SAPHANA \
+                                  --backup-management-type AzureWorkload \
+                                  --resource-id {{ vm_resource_id }}
 
 - name:                       "Get the list of databases discovered in the registration setup"
   delegate_to:                localhost
@@ -46,10 +46,10 @@
                                 backup_container_register.rc | default(1) == 0
   register:                   backup_item_list
   ansible.builtin.shell: |
-    az backup protectable-item list --resource-group {{ sap_backup_resource_group }} \
-      --vault-name {{ sap_backup_vault_name }} \
-      --workload-type SAPHANA \
-      --output table
+                              az backup protectable-item list --resource-group {{ sap_backup_resource_group }} \
+                                --vault-name {{ sap_backup_vault_name }} \
+                                --workload-type SAPHANA \
+                                --output table
 
 - name:                       "Filter backups for SAP HANA databases"
   delegate_to:                localhost

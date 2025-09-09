@@ -123,13 +123,13 @@ ansible_facts.
 {{ '%-19s' | format(host_ips[0]) }}{{ '%-80s ' | format(host + '.' + sap_fqdn) }}{{ '%-21s' | format(host) }}
 
 {# If there's only one IP, replicate the entry with different virtual_host_names #}
-{%     if host_ips|length == 1 %}
+{# {%     if host_ips|length == 1 %} #}
 {%       for vh_name in virtual_host_names if virtual_host_names | length >= 1 %}
 
 {{ '%-19s' | format(host_ips[0]) }}{{ '%-80s ' | format(vh_name + '.' + sap_fqdn) }}{{ '%-21s' | format(vh_name) }}
 
 {%       endfor %}
-{%     else %}
+{#{%     else %}#}
 {# Loop through remaining IPs for the virtual host #}
 {%       for ip in host_ips[1:] %}
 {%         if (database_scale_out) %}
@@ -152,6 +152,6 @@ ansible_facts.
 {%           endfor %}
 {%         endif %}
 {%       endfor %}
-{%     endif %}
+{#{%     endif %}#}
 {%   endif %}
 {% endfor %}

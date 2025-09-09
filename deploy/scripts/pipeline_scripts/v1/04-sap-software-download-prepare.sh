@@ -108,7 +108,7 @@ if [ -z "${VARIABLE_GROUP_ID}" ]; then
 	exit 2
 fi
 
-echo "Keyvault: $DEPLOYER_KEYVAULT
+echo "Keyvault: $DEPLOYER_KEYVAULT"
 echo " ##vso[task.setvariable variable=KV_NAME;isOutput=true]$key_vault"
 
 echo -e "$green--- BoM $BOM ---$reset"

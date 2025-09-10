@@ -118,7 +118,7 @@ output "storage_subnet_id"                      {
 
 output "anf_subnet_id"                          {
                                                   description = "Azure resource identifier for the anf subnet"
-                                                  value       = var.infrastructure.virtual_networks.sap.subnet_anf.defined ? (
+                                                  value       = var.infrastructure.virtual_networks.sap.subnet_anf.defined && length(azurerm_subnet.anf) > 0 ? (
                                                                   var.infrastructure.virtual_networks.sap.subnet_anf.exists ? (
                                                                     var.infrastructure.virtual_networks.sap.subnet_anf.id) : (
                                                                     azurerm_subnet.anf[0].id)) : (
@@ -384,7 +384,7 @@ output "ANF_pool_settings"                      {
                                                                        try(azurerm_netapp_pool.workload_netapp_pool[0].size_in_tb, 0)
                                                                      )
 
-                                                                     subnet_id = var.infrastructure.virtual_networks.sap.subnet_anf.defined ? (
+                                                                     subnet_id = var.infrastructure.virtual_networks.sap.subnet_anf.defined && length(azurerm_subnet.anf) > 0 ? (
                                                                        var.infrastructure.virtual_networks.sap.subnet_anf.exists ? var.infrastructure.virtual_networks.sap.subnet_anf.id : try(azurerm_subnet.anf[0].id, "")) : (
                                                                        ""
                                                                      )

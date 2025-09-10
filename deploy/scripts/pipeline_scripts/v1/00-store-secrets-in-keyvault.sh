@@ -101,7 +101,8 @@ if [ -v PARENT_VARIABLE_GROUP ]; then
 		if [ -z "$WZ_DEPLOYER_KEYVAULT" ]; then
 			az pipelines variable-group variable create --group-id "${VARIABLE_GROUP_ID}" --name "DEPLOYER_KEYVAULT" --value "$DEPLOYER_KEYVAULT" --output none
 		else
-			az pipelines variable-group variable update --group-id "${VARIABLE_GROUP_ID}" --name "DEPLOYER_KEYVAULT" --new-value "$DEPLOYER_KEYVAULT" --output none
+			az pipelines variable-group variable delete --group-id "${VARIABLE_GROUP_ID}" --name "DEPLOYER_KEYVAULT" --yes --output none
+			az pipelines variable-group variable create --group-id "${VARIABLE_GROUP_ID}" --name "DEPLOYER_KEYVAULT" --value "$DEPLOYER_KEYVAULT" --output none
 		fi
 
 		export PARENT_VARIABLE_GROUP_ID

@@ -262,7 +262,14 @@ function setSecretValue {
 			sleep 10
 
 			set +e
-			az keyvault secret set --name "${secret_name}" --vault-name "${keyvault}" --subscription "${subscription}" --value "${value}" --expires "$(date -d '+1 year' -u +%Y-%m-%dT%H:%M:%SZ)" --output none --content-type "${type}" 2>/dev/null
+			az keyvault secret set \
+				--vault-name "${keyvault}" \
+				--name "${secret_name}" \
+				--subscription "${subscription}" \
+				--value "${value}" \
+				--content-type "${type}" \
+				--expires "$(date -d '+1 year' -u +%Y-%m-%dT%H:%M:%SZ)" \
+				--output none 2>/dev/null
 			local_return_code=$?
 			set -e
 

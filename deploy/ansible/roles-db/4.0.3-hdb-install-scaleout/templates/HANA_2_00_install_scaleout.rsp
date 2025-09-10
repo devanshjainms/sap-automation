@@ -16,7 +16,7 @@ component_root={{ _rsp_component_root }}
 skip_hostagent_calls=n
 
 # Remote Execution ( Default: ssh; Valid values: ssh | saphostagent )
-remote_execution=saphostagent
+remote_execution=ssh
 
 # Verify the authenticity of SAP HANA components ( Default: n )
 verify_signature=n

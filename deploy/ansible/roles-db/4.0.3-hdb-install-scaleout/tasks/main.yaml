@@ -863,15 +863,15 @@
                 state:                     touch
                 mode:                      0755
 
-            - name:                        "SAP HANA SCALE OUT-HSR: remove install response file"
-              ansible.builtin.file:
-                path:                      "{{ dir_params }}/{{ sap_inifile }}"
-                state:                     absent
+            # - name:                        "SAP HANA SCALE OUT-HSR: remove install response file"
+            #   ansible.builtin.file:
+            #     path:                      "{{ dir_params }}/{{ sap_inifile }}"
+            #     state:                     absent
 
-            - name:                        "SAP HANA SCALE OUT-HSR: remove custom config response file"
-              ansible.builtin.file:
-                path:                      "{{ dir_params }}/{{ sap_custom_config }}"
-                state:                     absent
+            # - name:                        "SAP HANA SCALE OUT-HSR: remove custom config response file"
+            #   ansible.builtin.file:
+            #     path:                      "{{ dir_params }}/{{ sap_custom_config }}"
+            #     state:                     absent
 
           when:
             - hana_installation.rc is defined

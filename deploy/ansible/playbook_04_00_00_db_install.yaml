@@ -432,23 +432,23 @@
             update_password:               always
             password:                      "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) | password_hash('sha512') }}"
 
-        - name:                            Enable {{ item.key }} in /etc/ssh/sshd_config
-          become:                          true
-          ansible.builtin.lineinfile:
-            path:                          "/etc/ssh/sshd_config"
-            regex:                         "^(# *)?{{ item.key }}"
-            line:                          "{{ item.key }} {{ item.value }}"
-            state:                         present
-          loop:
-            - { key: "PermitRootLogin", value: "yes" }
-            - { key: "PasswordAuthentication", value: "no" }
-            - { key: "ChallengeResponseAuthentication", value: "no" }
+        # - name:                            Enable {{ item.key }} in /etc/ssh/sshd_config
+        #   become:                          true
+        #   ansible.builtin.lineinfile:
+        #     path:                          "/etc/ssh/sshd_config"
+        #     regex:                         "^(# *)?{{ item.key }}"
+        #     line:                          "{{ item.key }} {{ item.value }}"
+        #     state:                         present
+        #   loop:
+        #     - { key: "PermitRootLogin", value: "yes" }
+        #     - { key: "PasswordAuthentication", value: "no" }
+        #     - { key: "ChallengeResponseAuthentication", value: "no" }
 
-        - name:                            "Restart SSHD on {{ ansible_hostname }}"
-          become:                          true
-          ansible.builtin.service:
-            name:                          sshd
-            state:                         restarted
+        # - name:                            "Restart SSHD on {{ ansible_hostname }}"
+        #   become:                          true
+        #   ansible.builtin.service:
+        #     name:                          sshd
+        #     state:                         restarted
       when:
         - database_scale_out
         - hostvars.localhost.root_password is defined

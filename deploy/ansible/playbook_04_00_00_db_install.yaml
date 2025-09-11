@@ -308,6 +308,14 @@
             - { key: "PasswordAuthentication", value: "yes" }
             - { key: "ChallengeResponseAuthentication", value: "yes" }
 
+        - name:                            Debug sshdconfig file
+          become:                          true
+          ansible.builtin.command:          cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'
+          register:                        sshdconfig
+          changed_when:                    false
+          failed_when:                     false
+          ignore_errors:                   true
+
         - name:                            Append root user to AllowUsers if used
           become:                          true
           ansible.builtin.lineinfile:
@@ -322,9 +330,19 @@
           ansible.builtin.service:
             name:                          sshd
             state:                         restarted
+
+        - name:                            Debug sshdconfig file after restart
+          become:                          true
+          ansible.builtin.command:          cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'
+          register:                        sshdconfig
+          changed_when:                    false
+          failed_when:                     false
+          ignore_errors:                   true
       when:
         - database_scale_out
         - hostvars.localhost.root_password is defined
+
+        
 
     - name:                            "Database Installation Playbook: - Install HANA Scale Out"
       become:                          true

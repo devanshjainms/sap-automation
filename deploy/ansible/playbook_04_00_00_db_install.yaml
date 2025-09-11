@@ -296,17 +296,17 @@
             password:                      "{{ hostvars.localhost.root_password | password_hash('sha512') }}"
             password_lock:                 false
 
-        # - name:                            Enable {{ item.key }} in /etc/ssh/sshd_config
-        #   become:                          true
-        #   ansible.builtin.lineinfile:
-        #     path:                          "/etc/ssh/sshd_config"
-        #     regex:                         "^(# *)?{{ item.key }}"
-        #     line:                          "{{ item.key }} {{ item.value }}"
-        #     state:                         present
-        #   loop:
-        #     - { key: "PermitRootLogin", value: "yes" }
-        #     - { key: "PasswordAuthentication", value: "yes" }
-        #     - { key: "ChallengeResponseAuthentication", value: "yes" }
+        - name:                            Enable {{ item.key }} in /etc/ssh/sshd_config
+          become:                          true
+          ansible.builtin.lineinfile:
+            path:                          "/etc/ssh/sshd_config"
+            regex:                         "^(# *)?{{ item.key }}"
+            line:                          "{{ item.key }} {{ item.value }}"
+            state:                         present
+          loop:
+            - { key: "PermitRootLogin", value: "yes" }
+            - { key: "PasswordAuthentication", value: "yes" }
+            - { key: "ChallengeResponseAuthentication", value: "yes" }
 
         - name:                            Append root user to AllowUsers if used
           become:                          true

@@ -310,7 +310,7 @@
 
         - name:                            Debug sshdconfig file
           become:                          true
-          ansible.builtin.command:          cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'
+          ansible.builtin.shell:           "cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'"
           register:                        sshdconfig
           changed_when:                    false
           failed_when:                     false
@@ -333,7 +333,7 @@
 
         - name:                            Debug sshdconfig file after restart
           become:                          true
-          ansible.builtin.command:          cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'
+          ansible.builtin.shell:           "cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'"
           register:                        sshdconfig
           changed_when:                    false
           failed_when:                     false

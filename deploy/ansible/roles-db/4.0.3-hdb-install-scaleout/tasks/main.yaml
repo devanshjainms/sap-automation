@@ -22,7 +22,7 @@
 # +------------------------------------4--------------------------------------*/
 - name:                                "4.0.3 - SAP HANA SCALE OUT: Set BOM facts"
   ansible.builtin.set_fact:
-    sap_inifile:                       "hdbserver_{{ virtual_host }}_{{ sap_sid }}_install.rsp"
+    sap_inifile:                       "hdbserver_{{ virtual_host | trim }}_{{ sap_sid }}_install.rsp"
     dir_params:                        "{{ tmp_directory }}/.params"
     sap_custom_config:                 "global.ini"
 
@@ -146,7 +146,7 @@
         _rsp_component_root:           "../COMPONENTS"
         _rsp_components:               "{{ hana_components }}"
         _rsp_sapmnt:                   "/hana/shared"                              # Default Value
-        _rsp_hostname:                 "{{ virtual_host }}"
+        _rsp_hostname:                 "{{ virtual_host | trim }}"
         _rsp_sid:                      "{{ db_sid | upper }}"
         _rsp_number:                   "{{ db_instance_number }}"
         _rsp_system_usage:             "custom"
@@ -204,11 +204,11 @@
 
         - name:                        "4.0.3 - SAP HANA SCALE OUT: Re-execute hdblcm on {{ virtual_host }} and rescue"
           block:
-            - name:                    "4.0.3 - SAP HANA SCALE OUT: Re-execute hdblcm on {{ virtual_host }}"
+            - name:                    "4.0.3 - SAP HANA SCALE OUT: Re-execute hdblcm on {{ virtual_host | trim }}"
               ansible.builtin.shell: |
                                        umask {{ custom_umask | default('022') }} ;
                                        chmod 755 /usr/sap;
-                                       ./hdblcm --batch --action=install --hostname {{ virtual_host }} --configfile='{{ dir_params }}/{{ sap_inifile }}'
+                                       ./hdblcm --batch --action=install --hostname {{ virtual_host | trim }} --configfile='{{ dir_params }}/{{ sap_inifile }}'
               args:
                 chdir:                 "{{ target_media_location }}/CD_HDBSERVER/SAP_HANA_DATABASE"
                 creates:               "/etc/sap_deployment_automation/{{ db_sid | upper }}/sap_deployment_hdb.txt"
@@ -333,7 +333,7 @@
             section:                   "public_hostname_resolution"
             state:                     present
             mode:                      0644
-            option:                    "map_{{ hostvars[item].virtual_host }}"
+            option:                    "map_{{ hostvars[item].virtual_host | trim }}"
             value:                     "{{ (hostvars[item].ansible_all_ipv4_addresses | ansible.utils.ipaddr(subnet_cidr_client)) | first | default(hostvars[item].ansible_host) }}"
           with_items:
             - "{{ groups[(sap_sid | upper)~'_DB' ] }}"
@@ -346,7 +346,7 @@
             mode:                      0644
             state:                     present
             option:                    "{{ hostvars[item].ansible_host }}"
-            value:                     "{{ hostvars[item].virtual_host }}"
+            value:                     "{{ hostvars[item].virtual_host | trim }}"
           with_items:
             - "{{ groups[(sap_sid | upper)~'_DB' ] }}"
 
@@ -450,7 +450,7 @@
             _rsp_component_root:         "../COMPONENTS"
             _rsp_components:             "{{ hana_components }}"
             _rsp_sapmnt:                 "/hana/shared"                              # Default Value
-            _rsp_hostname:               "{{ virtual_host }}"
+            _rsp_hostname:               "{{ virtual_host | trim }}"
             _rsp_sid:                    "{{ db_sid | upper }}"
             _rsp_number:                 "{{ db_instance_number }}"
             _rsp_system_usage:           "custom"
@@ -643,7 +643,7 @@
                 mode:                    0644
                 state:                   present
                 option:                  "{{ hostvars[item].ansible_host }}"
-                value:                   "{{ hostvars[item].virtual_host }}"
+                value:                   "{{ hostvars[item].virtual_host | trim }}"
               with_items:
                 - "{{ db_hosts[0::2] }}"
 
@@ -654,7 +654,7 @@
                 mode:                      0644
                 state:                     present
                 option:                    "{{ hostvars[item].ansible_all_ipv4_addresses | ansible.utils.ipaddr(subnet_cidr_db) | first | default(hostvars[item].ansible_host ) }}"
-                value:                     "{{ hostvars[item].virtual_host }}"
+                value:                     "{{ hostvars[item].virtual_host | trim }}"
               with_items:
                 - "{{ groups[(sap_sid | upper)~'_DB' ] }}"
               when:
@@ -724,7 +724,7 @@
             _rsp_component_root:           "../COMPONENTS"
             _rsp_components:               "{{ hana_components }}"
             _rsp_sapmnt:                   "/hana/shared"                              # Default Value
-            _rsp_hostname:                 "{{ virtual_host }}"
+            _rsp_hostname:                 "{{ virtual_host | trim }}"
             _rsp_sid:                      "{{ db_sid | upper }}"
             _rsp_number:                   "{{ db_instance_number }}"
             _rsp_system_usage:             "custom"
@@ -918,7 +918,7 @@
                 mode:                      0644
                 state:                     present
                 option:                    "{{ hostvars[item].ansible_host }}"
-                value:                     "{{ hostvars[item].virtual_host }}"
+                value:                     "{{ hostvars[item].virtual_host | trim }}"
               with_items:
                 - "{{ db_hosts[1::2] }}"
 
@@ -929,7 +929,7 @@
                 mode:                      0644
                 state:                     present
                 option:                    "{{ hostvars[item].ansible_all_ipv4_addresses  | ansible.utils.ipaddr(subnet_cidr_db) | first | default(hostvars[item].ansible_host) }}"
-                value:                     "{{ hostvars[item].virtual_host }}"
+                value:                     "{{ hostvars[item].virtual_host | trim }}"
               with_items:
                 - "{{ groups[(sap_sid | upper)~'_DB' ] }}"
               when:

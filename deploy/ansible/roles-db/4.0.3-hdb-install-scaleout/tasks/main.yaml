@@ -22,7 +22,7 @@
 # +------------------------------------4--------------------------------------*/
 - name:                                "4.0.3 - SAP HANA SCALE OUT: Set BOM facts"
   ansible.builtin.set_fact:
-    sap_inifile:                       "hdbserver_{{ virtual_host | trim }}_{{ sap_sid }}_install.rsp"
+    sap_inifile:                       "hdbserver_{{ virtual_host }}_{{ sap_sid }}_install.rsp"
     dir_params:                        "{{ tmp_directory }}/.params"
     sap_custom_config:                 "global.ini"
 
@@ -30,9 +30,6 @@
   ansible.builtin.include_tasks:
     file:                              "preparation.yaml"
 
-- name:                                "4.0.3 - SAP HANA SCALE OUT: Create list of all db hosts"
-  ansible.builtin.set_fact:
-    db_hosts:                          "{{ query('inventory_hostnames', '{{ sap_sid | upper }}_DB') }}"
 
 #   0x) Create hidden directory for parameter files
 - name:                                "4.0.3 - SAP HANA SCALE OUT: Create directories"
@@ -150,7 +147,7 @@
         _rsp_component_root:           "../COMPONENTS"
         _rsp_components:               "{{ hana_components }}"
         _rsp_sapmnt:                   "/hana/shared"                              # Default Value
-        _rsp_hostname:                 "{{ virtual_host | trim }}"
+        _rsp_hostname:                 "{{ virtual_host }}"
         _rsp_sid:                      "{{ db_sid | upper }}"
         _rsp_number:                   "{{ db_instance_number }}"
         _rsp_system_usage:             "custom"
@@ -202,11 +199,11 @@
 
         - name:                        "4.0.3 - SAP HANA SCALE OUT: Re-execute hdblcm on {{ virtual_host }} and rescue"
           block:
-            - name:                    "4.0.3 - SAP HANA SCALE OUT: Re-execute hdblcm on {{ virtual_host | trim }}"
+            - name:                    "4.0.3 - SAP HANA SCALE OUT: Re-execute hdblcm on {{ virtual_host }}"
               ansible.builtin.shell: |
                                        umask {{ custom_umask | default('022') }} ;
                                        chmod 755 /usr/sap;
-                                       ./hdblcm --batch --action=install --hostname {{ virtual_host | trim }} --configfile='{{ dir_params }}/{{ sap_inifile }}'
+                                       ./hdblcm --batch --action=install --hostname {{ virtual_host }} --configfile='{{ dir_params }}/{{ sap_inifile }}'
               args:
                 chdir:                 "{{ target_media_location }}/CD_HDBSERVER/SAP_HANA_DATABASE"
                 creates:               "/etc/sap_deployment_automation/{{ db_sid | upper }}/sap_deployment_hdb.txt"
@@ -331,7 +328,7 @@
             section:                   "public_hostname_resolution"
             state:                     present
             mode:                      0644
-            option:                    "map_{{ hostvars[item].virtual_host | trim }}"
+            option:                    "map_{{ hostvars[item].virtual_host }}"
             value:                     "{{ (hostvars[item].ansible_all_ipv4_addresses | ansible.utils.ipaddr(subnet_cidr_client)) | first | default(hostvars[item].ansible_host) }}"
           with_items:
             - "{{ groups[(sap_sid | upper)~'_DB' ] }}"
@@ -344,7 +341,7 @@
             mode:                      0644
             state:                     present
             option:                    "{{ hostvars[item].ansible_host }}"
-            value:                     "{{ hostvars[item].virtual_host | trim }}"
+            value:                     "{{ hostvars[item].virtual_host }}"
           with_items:
             - "{{ groups[(sap_sid | upper)~'_DB' ] }}"
 
@@ -448,7 +445,7 @@
             _rsp_component_root:         "../COMPONENTS"
             _rsp_components:             "{{ hana_components }}"
             _rsp_sapmnt:                 "/hana/shared"                              # Default Value
-            _rsp_hostname:               "{{ virtual_host | trim }}"
+            _rsp_hostname:               "{{ virtual_host }}"
             _rsp_sid:                    "{{ db_sid | upper }}"
             _rsp_number:                 "{{ db_instance_number }}"
             _rsp_system_usage:           "custom"
@@ -639,7 +636,7 @@
                 mode:                    0644
                 state:                   present
                 option:                  "{{ hostvars[item].ansible_host }}"
-                value:                   "{{ hostvars[item].virtual_host | trim }}"
+                value:                   "{{ hostvars[item].virtual_host }}"
               with_items:
                 - "{{ db_hosts[0::2] }}"
 
@@ -650,7 +647,7 @@
                 mode:                      0644
                 state:                     present
                 option:                    "{{ hostvars[item].ansible_all_ipv4_addresses | ansible.utils.ipaddr(subnet_cidr_db) | first | default(hostvars[item].ansible_host ) }}"
-                value:                     "{{ hostvars[item].virtual_host | trim }}"
+                value:                     "{{ hostvars[item].virtual_host }}"
               with_items:
                 - "{{ groups[(sap_sid | upper)~'_DB' ] }}"
               when:
@@ -703,6 +700,9 @@
     # |             Secondary site setup with Shared nothing scale out               |
     # +------------------------------------4--------------------------------------*/
     - name:                                "4.0.3 - SAP HANA SCALE OUT: HANA Install - Scale Out - HSR ( Secondary Site )"
+      when:
+      - ansible_hostname == secondary_instance_name
+      - not hana_installed.stat.exists
       block:
         - name:                            "4.0.3 - SAP HANA SCALE OUT-HSR: remove install response file if exists"
           ansible.builtin.file:
@@ -720,7 +720,7 @@
             _rsp_component_root:           "../COMPONENTS"
             _rsp_components:               "{{ hana_components }}"
             _rsp_sapmnt:                   "/hana/shared"                              # Default Value
-            _rsp_hostname:                 "{{ virtual_host | trim }}"
+            _rsp_hostname:                 "{{ virtual_host }}"
             _rsp_sid:                      "{{ db_sid | upper }}"
             _rsp_number:                   "{{ db_instance_number }}"
             _rsp_system_usage:             "custom"
@@ -857,15 +857,15 @@
                 state:                     touch
                 mode:                      0755
 
-            # - name:                        "SAP HANA SCALE OUT-HSR: remove install response file"
-            #   ansible.builtin.file:
-            #     path:                      "{{ dir_params }}/{{ sap_inifile }}"
-            #     state:                     absent
+            - name:                        "SAP HANA SCALE OUT-HSR: remove install response file"
+              ansible.builtin.file:
+                path:                      "{{ dir_params }}/{{ sap_inifile }}"
+                state:                     absent
 
-            # - name:                        "SAP HANA SCALE OUT-HSR: remove custom config response file"
-            #   ansible.builtin.file:
-            #     path:                      "{{ dir_params }}/{{ sap_custom_config }}"
-            #     state:                     absent
+            - name:                        "SAP HANA SCALE OUT-HSR: remove custom config response file"
+              ansible.builtin.file:
+                path:                      "{{ dir_params }}/{{ sap_custom_config }}"
+                state:                     absent
 
           when:
             - hana_installation.rc is defined
@@ -912,7 +912,7 @@
                 mode:                      0644
                 state:                     present
                 option:                    "{{ hostvars[item].ansible_host }}"
-                value:                     "{{ hostvars[item].virtual_host | trim }}"
+                value:                     "{{ hostvars[item].virtual_host }}"
               with_items:
                 - "{{ db_hosts[1::2] }}"
 
@@ -923,7 +923,7 @@
                 mode:                      0644
                 state:                     present
                 option:                    "{{ hostvars[item].ansible_all_ipv4_addresses  | ansible.utils.ipaddr(subnet_cidr_db) | first | default(hostvars[item].ansible_host) }}"
-                value:                     "{{ hostvars[item].virtual_host | trim }}"
+                value:                     "{{ hostvars[item].virtual_host }}"
               with_items:
                 - "{{ groups[(sap_sid | upper)~'_DB' ] }}"
               when:
@@ -971,9 +971,6 @@
           - name:                        "Wait 2 minutes for SAP system to start"
             ansible.builtin.wait_for:
               timeout:                   120
-      when:
-      - ansible_hostname == secondary_instance_name
-      - not hana_installed.stat.exists
 
 # /*----------------------------End of setup----------------------------------8
 

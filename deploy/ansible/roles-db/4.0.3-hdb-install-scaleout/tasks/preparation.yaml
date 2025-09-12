@@ -28,10 +28,6 @@
     secondary_site_hosts:              "{{ hostvars | dict2items | selectattr('value.site', 'defined') | selectattr('value.site', 'eq', 'SITE2') | map(attribute='key') }}"
     all_hana_hosts:                    "{{ (hostvars | dict2items | selectattr('value.site', 'defined') | selectattr('value.site', 'eq', 'SITE1') | map(attribute='key') | list) + (hostvars | dict2items | selectattr('value.site', 'defined') | selectattr('value.site', 'eq', 'SITE2') | map(attribute='key') | list) }}"
 
-- name:                                "4.0.3 - SAP HANA SCALE OUT: Preparation tasks"
-  ansible.builtin.include_tasks:
-    file:                              "preparation.yaml"
-
 - name:                                "4.0.3 - SAP HANA SCALE OUT: Debug host groupings"
   ansible.builtin.debug:
     msg:

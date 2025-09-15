@@ -117,36 +117,36 @@
   block:
     - name:                            "1.18.2.0 Generic Pacemaker - Enable Stonith"
       ansible.builtin.shell: |
-                                       crm configure property stonith-enabled=true
+                                       crm configure property stonith-enabled=true \
                                        crm configure property concurrent-fencing=true
 
 # <TODO> templatize the pcmk_host_map from all entries in ansible_play_hosts_all and mm_hosts
     - name:                            "1.18.2.0 Generic Pacemaker - Create Azure Fencing Agent"
       ansible.builtin.shell: >
-                                       crm configure primitive rsc_st_azure stonith:fence_azure_arm params
-                                       subscriptionId="{{ fencing_spn_subscription_id }}"
-                                       resourceGroup="{{ resource_group_name }}"
-                                       tenantId="{{ fencing_spn_tenant_id }}"
-                                       login="{{ fencing_spn_client_id }}"
-                                       passwd="{{ fencing_spn_client_pwd }}"
-                                       pcmk_monitor_retries=4
-                                       pcmk_action_limit=-1
-                                       power_timeout=240
-                                       pcmk_reboot_timeout=900
+                                       crm configure primitive rsc_st_azure stonith:fence_azure_arm params \
+                                       subscriptionId="{{ fencing_spn_subscription_id }}" \
+                                       resourceGroup="{{ resource_group_name }}" \
+                                       tenantId="{{ fencing_spn_tenant_id }}" \
+                                       login="{{ fencing_spn_client_id }}" \
+                                       passwd="{{ fencing_spn_client_pwd }}" \
+                                       pcmk_monitor_retries=4 \
+                                       pcmk_action_limit=-1 \
+                                       power_timeout=240 \
+                                       pcmk_reboot_timeout=900 \
                                        pcmk_host_map="{% for item in ansible_play_hosts_all %}{{ item }}:{{ hostvars[item]['vm_name'] }}{{ ';' if not loop.last }}{% endfor %}"
       when:
         - not use_msi_for_clusters or distribution_full_id in ["sles_sap12.4"]
 
     - name:                            "1.18.2.0 Generic Pacemaker - Create Azure Fencing Agent (MSI)"
       ansible.builtin.shell: >
-                                       crm configure primitive rsc_st_azure stonith:fence_azure_arm params
-                                       subscriptionId="{{ fencing_spn_subscription_id }}"
-                                       resourceGroup="{{ resource_group_name }}"
-                                       msi=true
-                                       pcmk_monitor_retries=4
-                                       pcmk_action_limit=-1
-                                       power_timeout=240
-                                       pcmk_reboot_timeout=900
+                                       crm configure primitive rsc_st_azure stonith:fence_azure_arm params \
+                                       subscriptionId="{{ fencing_spn_subscription_id }}" \
+                                       resourceGroup="{{ resource_group_name }}" \
+                                       msi=true \
+                                       pcmk_monitor_retries=4 \
+                                       pcmk_action_limit=-1 \
+                                       power_timeout=240 \
+                                       pcmk_reboot_timeout=900 \
                                        pcmk_host_map="{% for item in ansible_play_hosts_all %}{{ item }}:{{ hostvars[item]['vm_name'] }}{{ ';' if not loop.last }}{% endfor %}"
       when:
         - use_msi_for_clusters
@@ -226,7 +226,7 @@
   become_user:                         root
   block:
 
-  
+
   # After configuring the Pacemaker resources for azure-events agent,
   # when you place the cluster in or out of maintenance mode, you may get warning messages like:
   #   WARNING: cib-bootstrap-options: unknown attribute 'hostName_ hostname'

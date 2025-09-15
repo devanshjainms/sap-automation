@@ -73,12 +73,39 @@
     src:                               /root/.ssh/id_rsa.pub
   register:                            hana_public_key
 
+
+- name:                                "4.0.3 - SAP HANA SCALE OUT: Read private key from primary instance"
+  when:                                ansible_hostname == primary_instance_name
+  become:                              true
+  become_user:                         root
+  ansible.builtin.slurp:
+    src:                               /root/.ssh/id_rsa
+  register:                            hana_private_key
+
 - name:                                "4.0.3 - SAP HANA SCALE OUT: Set key facts for distribution"
   when:
                                        - primary_instance_name in hostvars
                                        - hostvars[primary_instance_name]['hana_public_key'] is defined
+                                       - hostvars[primary_instance_name]['hana_private_key'] is defined
   ansible.builtin.set_fact:
     cluster_public_key:                "{{ hostvars[primary_instance_name]['hana_public_key']['content'] | b64decode }}"
+    cluster_private_key:               "{{ hostvars[primary_instance_name]['hana_private_key']['content'] | b64decode }}"
+
+
+- name:                                "4.0.3 - SAP HANA SCALE OUT: Deploy private key to all HANA nodes"
+  become:                              true
+  become_user:                         root
+  when:
+                                       - cluster_private_key is defined
+                                       - inventory_hostname in all_hana_hosts
+  ansible.builtin.copy:
+    content:                           "{{ cluster_private_key }}"
+    dest:                              /root/.ssh/id_rsa
+    owner:                             root
+    group:                             root
+    mode:                              '0600'
+    backup:                            true
+
 
 - name:                                "4.0.3 - SAP HANA SCALE OUT: Deploy public key to all HANA nodes"
   become:                              true
@@ -200,6 +227,7 @@
   become_user:                         root
   when:
                                        - ansible_hostname == primary_instance_name
+                                       - cluster_private_key is defined
   ansible.builtin.command:
     cmd:                               "ssh -o ConnectTimeout=10 -o BatchMode=yes {{ item }} 'echo SSH_OK'"
   register:                            ssh_test_results

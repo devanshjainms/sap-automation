@@ -446,4 +446,3 @@
     }
   vars:
     primary_host:                      "{{ ansible_hostname }}"
-

@@ -81,12 +81,14 @@
   become:                              true
   become_user:                         root
   block:
-    - name:                            "1.18.2.0 Generic Pacemaker - Ensure Secondary nodes joins the Cluster"
+    - name:                            "1.18.2.0 Generic Pacemaker - Ensure Secondary node {{ host_item }} joins the Cluster "
       # ha-cluster-join is not supported in SLES 15 SP4 anymore, crm syntax required
       ansible.builtin.shell:           "sudo crm cluster join -y -c {{ primary_instance_name }} --interface eth0"
-      delay:                           "{{ 30 + (ansible_play_hosts.index(inventory_hostname) * 30) }}"
-  when:
-    - ansible_hostname != primary_instance_name
+      loop:                            "{{ ansible_play_hosts }}"
+      loop_control:
+        loop_var:                       host_item
+      when:                            host_item != primary_instance_name
+  when:                                ansible_hostname != primary_instance_name
 
 - name:                                "1.18.2.0 Generic Pacemaker - Ensure HA Cluster password is set to something secure"
   ansible.builtin.user:

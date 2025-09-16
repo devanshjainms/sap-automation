@@ -309,7 +309,7 @@
             - { key: "ChallengeResponseAuthentication", value: "yes" }
 
         - name:                            Debug sshdconfig file
-          ansible.builtin.shell:           "cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'"
+          ansible.builtin.shell:           "set -o pipefail && cat /etc/ssh/sshd_config | /usr/bin/grep -v '^#' | /usr/bin/grep -v '^$'"
           register:                        sshdconfig
           changed_when:                    false
           failed_when:                     false
@@ -329,7 +329,7 @@
             state:                         restarted
 
         - name:                            Debug sshdconfig file after restart
-          ansible.builtin.shell:           "cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'"
+          ansible.builtin.shell:           "set -o pipefail && cat /etc/ssh/sshd_config | /usr/bin/grep -v '^#' | /usr/bin/grep -v '^$'"
           register:                        sshdconfig
           changed_when:                    false
           failed_when:                     false

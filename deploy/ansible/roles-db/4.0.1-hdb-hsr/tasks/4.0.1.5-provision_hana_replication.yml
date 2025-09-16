@@ -61,19 +61,21 @@
 - name:                                "HANA HSR: - Ensure HANA is configured for System Replication"
   when:                                ansible_hostname == primary_instance_name
   block:
-    - name:                            "HANA HSR: - Check whether replication has already been set up"
-      become_user:                     "{{ db_sid_admin_user }}"
-      become:                          true
-      ansible.builtin.shell: |
-                                       {{ hdbnsutil_command }} -sr_state
-      register:                        hana_replication_status
-      changed_when:                    false
-      failed_when:                     hana_replication_status.rc != 0
-      args:
-        executable:                    /bin/sh
+    - name:                                "HANA HSR: - Check whether replication has already been set up"
+      become_user:                         "{{ db_sid_admin_user }}"
+      become:                              true
+      ansible.builtin.command:             hdbnsutil -sr_state
+      register:                            hana_replication_status
+      changed_when:                        false
+      failed_when:                         hana_replication_status.rc != 0
       environment:
-        TEMPDIR:                       "{{ tmp_directory }}/{{ db_sid | upper }}"
-        ANSIBLE_TEMP_DIR:              "{{ tmp_directory }}/{{ db_sid | upper }}"
+        PATH:                              /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}:/usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        HOME:                              /usr/sap/{{ db_sid | upper }}/home
+        DIR_LIBRARY:                       /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        LD_LIBRARY_PATH:                   /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        SAPSYSTEMNAME:                     "{{ db_sid | upper }}"
+        SAP_RETRIEVAL_PATH:                "/usr/sap/{{ DB }}/{{ virtual_host }}"
+        SECUDIR:                           "/usr/sap/{{ DB }}/{{ virtual_host }}/sec"
 
     - name:                            "HANA HSR: - Debug replication status"
       ansible.builtin.debug:
@@ -89,6 +91,14 @@
       # rc == 102 means nameserver is already active
       failed_when:                     hana_status.rc != 0 and hana_status.rc != 102
       changed_when:                    "'successfully enabled system as system replication source site' in hana_status.stdout"
+      environment:
+        PATH:                          /usr/bin:/usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}:/usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        HOME:                          /usr/sap/{{ db_sid | upper }}/home
+        DIR_LIBRARY:                   /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        LD_LIBRARY_PATH:               /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        SAPSYSTEMNAME:                 "{{ db_sid | upper }}"
+        SAP_RETRIEVAL_PATH:            "/usr/sap/{{ DB }}/{{ virtual_host }}"
+        SECUDIR:                       "/usr/sap/{{ DB }}/{{ virtual_host }}/sec"
 
     - name:                            "HANA HSR: - Check replication state on primary"
       ansible.builtin.set_fact:
@@ -142,6 +152,14 @@
       changed_when:                    "'adding site' in hsr_secondary_registration.stdout"
       args:
         executable: /bin/bash
+      environment:
+        PATH:                          /usr/bin:/usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}:/usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        HOME:                          /usr/sap/{{ db_sid | upper }}/home
+        DIR_LIBRARY:                   /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        LD_LIBRARY_PATH:               /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        SAPSYSTEMNAME:                 "{{ db_sid | upper }}"
+        SAP_RETRIEVAL_PATH:            "/usr/sap/{{ DB }}/{{ virtual_host }}"
+        SECUDIR:                       "/usr/sap/{{ DB }}/{{ virtual_host }}/sec"
 
     - name:                            "HANA HSR: - Configure HANA active/read-enabled system replication"
       become_user:                     "{{ db_sid_admin_user }}"
@@ -155,6 +173,14 @@
       changed_when:                    "'adding site' in hsr_active_active_registration.stdout"
       args:
         executable: /bin/bash
+      environment:
+        PATH:                          /usr/bin:/usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}:/usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        HOME:                          /usr/sap/{{ db_sid | upper }}/home
+        DIR_LIBRARY:                   /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        LD_LIBRARY_PATH:               /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/exe
+        SAPSYSTEMNAME:                 "{{ db_sid | upper }}"
+        SAP_RETRIEVAL_PATH:            "/usr/sap/{{ DB }}/{{ virtual_host }}"
+        SECUDIR:                       "/usr/sap/{{ DB }}/{{ virtual_host }}/sec"
 
     - name:                            "HANA HSR: - Start HANA on {{ virtual_host }}"
       ansible.builtin.import_tasks:    ../../../roles-misc/0.4-helpers/tasks/04.01-start_hana.yml

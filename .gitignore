@@ -90,3 +90,5 @@ __pycache__
 *.pidb
 *.svclog
 *.scc
+
+.venv/

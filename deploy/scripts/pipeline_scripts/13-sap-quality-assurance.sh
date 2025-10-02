@@ -112,6 +112,7 @@ echo -e "$green--- Get connection details ---$reset"
 mkdir -p artifacts
 
 prefix="${ENVIRONMENT}${LOCATION}${NETWORK}"
+echo "Prefix:                              ${prefix}"
 
 workload_key_vault=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "${prefix}Workload_Key_Vault" "${environment_file_name}" "workloadkeyvault" || true)
 workload_prefix=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "${prefix}Workload_Secret_Prefix" "${environment_file_name}" "workload_zone_prefix" || true)

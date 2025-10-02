@@ -113,7 +113,9 @@ mkdir -p artifacts
 
 prefix="${ENVIRONMENT}${LOCATION}${NETWORK}"
 echo "Prefix:                              ${prefix}"
-
+echo "Looking for variable: ${prefix}Workload_Key_Vault"
+echo "Looking for variable: ${prefix}Workload_Secret_Prefix"
+az pipelines variable-group variable list --group-id "${VARIABLE_GROUP_ID}" --output table --only-show-errors
 workload_key_vault=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "${prefix}Workload_Key_Vault" "${environment_file_name}" "workloadkeyvault" || true)
 workload_prefix=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "${prefix}Workload_Secret_Prefix" "${environment_file_name}" "workload_zone_prefix" || true)
 control_plane_subscription=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "Terraform_Remote_Storage_Subscription" "${environment_file_name}" "STATE_SUBSCRIPTION" || true)

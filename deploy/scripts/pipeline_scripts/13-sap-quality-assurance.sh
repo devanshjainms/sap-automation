@@ -60,7 +60,7 @@ fi
 echo -e "$green--- az login ---$reset"
 # Check if running on deployer
 if [[ ! -f /etc/profile.d/deploy_server.sh ]]; then
-	configureNonDeployer "${tf_version:-1.12.2}"
+	#configureNonDeployer "${tf_version:-1.12.2}"
 	echo -e "$green--- az login ---$reset"
 	LogonToAzure "$USE_MSI"
 else

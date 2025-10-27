@@ -1,0 +1,56 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+---
+
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |        Playbook for SAP Functional Tests (sap-automation-qa)               |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+- hosts:                               localhost
+  name:                                "SAP Automation QA: - setup deployer"
+  gather_facts:                        true
+  vars_files:                          vars/ansible-input-api.yaml
+  tasks:
+    - name:                            "SAP Automation QA: - Create Progress folder"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress"
+        state:                         directory
+        mode:                          0755
+
+    - name:                            "SAP Automation QA: - Remove sap-functional-test flag"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress/sap-functional-tests-done"
+        state:                          absent
+
+- name:                                "SAP Configuration Checks"
+  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_configuration_checks.yml"
+  when:
+                                        - sap_configuration_checks | bool | default(false)
+
+# noqa syntax-check[missing-file]
+- name:                                "SAP Functional Database: Tests run checks"
+  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_ha_db_functional_tests.yml"
+  when:
+                                        - sap_functional_tests | bool | default(false)
+                                        - SAP_FUNCTIONAL_TEST_TYPE == "DatabaseHighAvailability"
+
+# noqa syntax-check[missing-file]
+- name:                                "SAP Functional Central Services: Tests run checks"
+  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_ha_scs_functional_tests.yml"
+  when:
+                                        - sap_functional_tests | bool | default(false)
+                                        - SAP_FUNCTIONAL_TEST_TYPE == "CentralServicesHighAvailability"
+
+- hosts:                               localhost
+  name:                                "SAP Automation QA: - Done"
+  gather_facts:                        true
+  vars_files:                          vars/ansible-input-api.yaml
+  tasks:
+    - name:                            "SAP Automation QA: - Create sap-functional-tests-done flag"
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.progress/sap-functional-tests-done"
+        state:                         touch
+        mode:                          0755

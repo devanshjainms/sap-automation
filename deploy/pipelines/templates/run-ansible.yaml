@@ -20,6 +20,9 @@ parameters:
   userNameSecretName: ''
   terraformStateStorageAccount: ''
   controlPlaneSubscriptionId: ''
+  sapConfigurationChecks: false
+  sapFunctionalTests: false
+  sapFunctionalTestType: ''
 
 steps:
 - task:                             Bash@3
@@ -52,3 +55,6 @@ steps:
     USERNAME_KEY_NAME:              ${{ parameters.userNameSecretName }}
     TERRAFORM_STATE_STORAGE_ACCOUNT: ${{ parameters.terraformStateStorageAccount }}
     CONTROL_PLANE_SUBSCRIPTION_ID:   ${{ parameters.controlPlaneSubscriptionId }}
+    sap_functional_tests:           ${{ parameters.sapFunctionalTests }}
+    SAP_FUNCTIONAL_TEST_TYPE:      ${{ parameters.sapFunctionalTestType }}
+    sap_configuration_checks:      ${{ parameters.sapConfigurationChecks }}

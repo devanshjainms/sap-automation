@@ -21,7 +21,7 @@ banner_title="Software installation"
 source "${grand_parent_directory}/scripts/deploy_utils.sh"
 
 #call stack has full script name when using source
-source "${grand_parent_directory}/pipelines/helper.sh"
+source "${script_directory}/helper.sh"
 
 DEBUG=false
 

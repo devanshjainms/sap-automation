@@ -159,7 +159,11 @@ command="ansible-playbook -i $INVENTORY --private-key $PARAMETERS_FOLDER/sshkey 
 					-e orchestration_ansible_user=$USER                                         \
   				-e ansible_user=$user_name                                                  \
 					-e ansible_python_interpreter=/usr/bin/python3                              \
-					-e ansible_ssh_pass='${ANSIBLE_PASSWORD}' $EXTRA_PARAMS $EXTRA_PARAM_FILE   \
+					-e ansible_ssh_pass='${ANSIBLE_PASSWORD}'                                   \
+					-e sap_configuration_checks=${sap_configuration_checks:-false}             \
+					-e sap_functional_tests=${sap_functional_tests:-false}                     \
+					-e SAP_FUNCTIONAL_TEST_TYPE=${SAP_FUNCTIONAL_TEST_TYPE:-}                  \
+					$EXTRA_PARAMS $EXTRA_PARAM_FILE   \
           $ANSIBLE_FILE_PATH"
 
 redacted_command="ansible-playbook -i $INVENTORY -e @$SAP_PARAMS $EXTRA_PARAMS        \

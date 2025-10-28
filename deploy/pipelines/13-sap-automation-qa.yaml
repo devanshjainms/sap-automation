@@ -98,26 +98,6 @@ stages:
               USE_MSI:                       $(USE_MSI)
               CONTROL_PLANE_SUBSCRIPTION_ID: $(Terraform_Remote_Storage_Subscription)
               ARM_SUBSCRIPTION_ID:           $(ARM_SUBSCRIPTION_ID)
-          - ${{ if eq(parameters.sap_configuration_checks, true) }}:
-              - template:                    templates\run-ansible.yaml
-                parameters:
-                  displayName:               SAP Configuration Checks
-                  ansibleFilePath:           ${{ parameters.sap_automation_repo_path }}/deploy/ansible/playbook_06_03_00_sap_functional_tests.yaml
-                  secretName:                "$(Preparation.SSH_KEY_NAME)"
-                  passwordSecretName:        "$(Preparation.PASSWORD_KEY_NAME)"
-                  userNameSecretName:        "$(Preparation.USERNAME_KEY_NAME)"
-                  vaultName:                 $(Preparation.VAULT_NAME)
-                  parametersFolder:          $(Preparation.FOLDER)
-                  sapParams:                 "${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)/SYSTEM/${{ parameters.sap_system_configuration_name }}/artifacts/$(Preparation.SAP_PARAMETERS)"
-                  sidHosts:                  $(Preparation.HOSTS)
-                  extraParams:               "$(Preparation.NEW_PARAMETERS)"
-                  azureClientId:             $(ARM_CLIENT_ID)
-                  azureClientSecret:         $(ARM_CLIENT_SECRET)
-                  azureTenantId:             $(ARM_TENANT_ID)
-                  azureSubscriptionId:       $(ARM_SUBSCRIPTION_ID)
-                  USE_MSI:                   $(USE_MSI)
-                  sapConfigurationChecks:    ${{ parameters.sap_configuration_checks }}
-                  ansibleConfigPath:         ${{ parameters.sap_automation_repo_path }}/deploy/ansible/ansible.cfg
           - ${{ if eq(parameters.sap_functional_tests, true) }}:
               - template:                    templates\run-ansible.yaml
                 parameters:
@@ -139,7 +119,28 @@ stages:
                   sapFunctionalTestType:     ${{ parameters.SAP_FUNCTIONAL_TEST_TYPE }}
                   ansibleConfigPath:         ${{ parameters.sap_automation_repo_path }}/deploy/ansible/ansible.cfg
                   telemetryDataDestination:  ${{ parameters.telemetry_data_destination }}
-          - ${{ if eq(parameters.sap_functional_tests, true) }}:
+          - ${{ if eq(parameters.sap_functional_tests, true) or eq(parameters.sap_configuration_checks, true) }}:
+              - template:                    templates\run-ansible.yaml
+                parameters:
+                  displayName:               SAP Configuration Checks
+                  ansibleFilePath:           ${{ parameters.sap_automation_repo_path }}/deploy/ansible/playbook_06_03_01_sap_functional_tests.yaml
+                  secretName:                "$(Preparation.SSH_KEY_NAME)"
+                  passwordSecretName:        "$(Preparation.PASSWORD_KEY_NAME)"
+                  userNameSecretName:        "$(Preparation.USERNAME_KEY_NAME)"
+                  vaultName:                 $(Preparation.VAULT_NAME)
+                  parametersFolder:          $(Preparation.FOLDER)
+                  sapParams:                 "${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)/SYSTEM/${{ parameters.sap_system_configuration_name }}/artifacts/$(Preparation.SAP_PARAMETERS)"
+                  sidHosts:                  $(Preparation.HOSTS)
+                  extraParams:               "$(Preparation.NEW_PARAMETERS)"
+                  azureClientId:             $(ARM_CLIENT_ID)
+                  azureClientSecret:         $(ARM_CLIENT_SECRET)
+                  azureTenantId:             $(ARM_TENANT_ID)
+                  azureSubscriptionId:       $(ARM_SUBSCRIPTION_ID)
+                  USE_MSI:                   $(USE_MSI)
+                  sapConfigurationChecks:    ${{ parameters.sap_configuration_checks }}
+                  ansibleConfigPath:         ${{ parameters.sap_automation_repo_path }}/deploy/ansible/ansible.cfg
+                  telemetryDataDestination:  ${{ parameters.telemetry_data_destination }}
+          - ${{ if eq(parameters.sap_functional_tests, true) or eq(parameters.sap_configuration_checks, true) }}:
               - template:                    templates\run-ansible.yaml
                 parameters:
                   displayName:               SAP Functional Tests Test Execution

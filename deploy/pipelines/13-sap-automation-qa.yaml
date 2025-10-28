@@ -169,3 +169,4 @@ stages:
               logPath:                       ${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)/SYSTEM/${{ parameters.sap_system_configuration_name }}/logs
               qualityAssuranceResultsPath:   ${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)/SYSTEM/${{ parameters.sap_system_configuration_name }}/quality_assurance
               runSapAutomationQaTests:       ${{ parameters.sap_functional_tests }}
+              runSapConfigurationChecks:     ${{ parameters.sap_configuration_checks }}

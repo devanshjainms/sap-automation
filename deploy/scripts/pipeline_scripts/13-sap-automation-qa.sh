@@ -18,10 +18,10 @@ banner_title="Software installation"
 
 #call stack has full script name when using source
 # shellcheck disable=SC1091
-source "${grand_parent_directory}/deploy_utils.sh"
+source "${grand_parent_directory}/scripts/deploy_utils.sh"
 
 #call stack has full script name when using source
-source "${parent_directory}/helper.sh"
+source "${grand_parent_directory}/pipelines/helper.sh"
 
 DEBUG=false
 

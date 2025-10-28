@@ -66,7 +66,7 @@ if az account show --query name; then
 else
 	# Check if running on deployer
 	echo -e "$green--- az login ---$reset"
-	LogonToAzure $USE_MSI
+	LogonToAzure "$USE_MSI"
 	return_code=$?
 	if [ 0 != $return_code ]; then
 		echo -e "$bold_red--- Login failed ---$reset"
@@ -119,7 +119,7 @@ if [ -f "$PARAMETERS_FOLDER/extra-params.yaml" ]; then
 
 	EXTRA_PARAM_FILE="-e @$PARAMETERS_FOLDER/extra-params.yaml"
 fi
-
+echo "Seeting subscription to: $ARM_SUBSCRIPTION_ID"
 az account set --subscription "$ARM_SUBSCRIPTION_ID" --output none
 
 ############################################################################################

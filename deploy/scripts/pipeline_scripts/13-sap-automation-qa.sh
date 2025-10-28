@@ -72,7 +72,7 @@ if [ 0 != $return_code ]; then
 	echo "##vso[task.logissue type=error]az login failed."
 	exit $return_code
 fi
-
+echo "##vso[task.logissue type=warning]Setting subscription to - '$AZURE_SUBSCRIPTION_ID'"
 az account set --subscription "$AZURE_SUBSCRIPTION_ID" --output none
 
 echo -e "$green--- Get key_vault name ---$reset"

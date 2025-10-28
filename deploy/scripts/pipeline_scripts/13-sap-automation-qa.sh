@@ -117,11 +117,6 @@ workload_key_vault=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "${pref
 workload_prefix=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "${prefix}Workload_Secret_Prefix" "${environment_file_name}" "workload_zone_prefix" || true)
 control_plane_subscription=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "Terraform_Remote_Storage_Subscription" "${environment_file_name}" "STATE_SUBSCRIPTION" || true)
 
-if [ -z "$control_plane_subscription" ]; then
-	echo "##vso[task.logissue type=warning]Control Plane Subscription not found in variable group, using current subscription: $AZURE_SUBSCRIPTION_ID"
-	control_plane_subscription="$AZURE_SUBSCRIPTION_ID"
-fi
-
 echo "SID:                                 ${SID}"
 echo "Folder:                              $HOME/SYSTEM/${SAP_SYSTEM_CONFIGURATION_NAME}"
 echo "Workload Key Vault:                  ${workload_key_vault}"

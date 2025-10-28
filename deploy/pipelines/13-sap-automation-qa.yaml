@@ -119,7 +119,7 @@ stages:
                   sapFunctionalTestType:     ${{ parameters.SAP_FUNCTIONAL_TEST_TYPE }}
                   ansibleConfigPath:         ${{ parameters.sap_automation_repo_path }}/deploy/ansible/ansible.cfg
                   telemetryDataDestination:  ${{ parameters.telemetry_data_destination }}
-          - ${{ if eq(parameters.sap_functional_tests, true) or eq(parameters.sap_configuration_checks, true) }}:
+          - ${{ if eq(parameters.sap_configuration_checks, true) }}:
               - template:                    templates\run-ansible.yaml
                 parameters:
                   displayName:               SAP Configuration Checks
@@ -140,7 +140,7 @@ stages:
                   sapConfigurationChecks:    ${{ parameters.sap_configuration_checks }}
                   ansibleConfigPath:         ${{ parameters.sap_automation_repo_path }}/deploy/ansible/ansible.cfg
                   telemetryDataDestination:  ${{ parameters.telemetry_data_destination }}
-          - ${{ if eq(parameters.sap_functional_tests, true) or eq(parameters.sap_configuration_checks, true) }}:
+          - ${{ if eq(parameters.sap_functional_tests, true) }}:
               - template:                    templates\run-ansible.yaml
                 parameters:
                   displayName:               SAP Functional Tests Test Execution

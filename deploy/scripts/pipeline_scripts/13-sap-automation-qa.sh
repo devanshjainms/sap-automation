@@ -117,7 +117,7 @@ echo -e "$green--- Get key_vault name ---$reset"
 
 key_vault=$(getVariableFromVariableGroup "${VARIABLE_GROUP_ID}" "KEYVAULT" "${workload_environment_file_name}" "workloadkeyvault")
 
-echo "##vso[build.updatebuildnumber]Deploying ${SAP_SYSTEM_CONFIGURATION_NAME} using BoM ${BOM_BASE_NAME}"
+echo "##vso[build.updatebuildnumber]Validating ${SAP_SYSTEM_CONFIGURATION_NAME}"
 
 echo "##vso[task.setvariable variable=SID;isOutput=true]${SID}"
 echo "##vso[task.setvariable variable=SAP_PARAMETERS;isOutput=true]sap-parameters.yaml"
@@ -129,7 +129,6 @@ echo "Environment:                         $ENVIRONMENT"
 echo "Location:                            $LOCATION"
 echo "Virtual network logical name:        $NETWORK"
 echo "Keyvault:                            $key_vault"
-echo "SAP Application BoM:                 $BOM_BASE_NAME"
 
 echo "SID:                                 ${SID}"
 echo "Folder:                              $CONFIG_REPO_PATH/SYSTEM/${SAP_SYSTEM_CONFIGURATION_NAME}"
@@ -138,9 +137,6 @@ echo "sap_parameters_file:                 $parameters_filename"
 echo "Configuration file:                  $workload_environment_file_name"
 
 cd "$CONFIG_REPO_PATH/SYSTEM/${SAP_SYSTEM_CONFIGURATION_NAME}"
-
-echo -e "$green--- Add BOM Base Name and SAP FQDN to sap-parameters.yaml ---$reset"
-sed -i 's|bom_base_name:.*|bom_base_name:                 '"$BOM_BASE_NAME"'|' sap-parameters.yaml
 
 mkdir -p artifacts
 

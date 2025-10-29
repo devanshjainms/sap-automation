@@ -25,22 +25,19 @@
         path:                          "{{ _workspace_directory }}/.progress/sap-functional-tests-done"
         state:                          absent
 
-# noqa syntax-check[missing-file]
 - name:                                "SAP Configuration Checks"
-  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_configuration_checks.yml"
+  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_configuration_checks.yml" # noqa: syntax-check[missing-file]
   when:
                                         - sap_configuration_checks | bool | default(false)
 
-# noqa syntax-check[missing-file]
 - name:                                "SAP Functional Database: Tests run checks"
-  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_ha_db_functional_tests.yml"
+  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_ha_db_functional_tests.yml" # noqa: syntax-check[missing-file]
   when:
                                         - sap_functional_tests | bool | default(false)
                                         - SAP_FUNCTIONAL_TEST_TYPE == "DatabaseHighAvailability"
 
-# noqa syntax-check[missing-file]
 - name:                                "SAP Functional Central Services: Tests run checks"
-  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_ha_scs_functional_tests.yml"
+  ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_ha_scs_functional_tests.yml" # noqa: syntax-check[missing-file]
   when:
                                         - sap_functional_tests | bool | default(false)
                                         - SAP_FUNCTIONAL_TEST_TYPE == "CentralServicesHighAvailability"

@@ -1,6 +1,7 @@
 exclude_paths:
   - deploy/pipelines
   - deploy/terraform
+  - /opt/microsoft
   - .github
 
 warn_list:
@@ -24,4 +25,3 @@ skip_list:
   - name[template]
   - command-instead-of-shell # csh is not supported in commands
   - jinja[spacing]
-  - syntax-check[missing-file]

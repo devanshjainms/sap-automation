@@ -110,7 +110,7 @@ if [ "azure pipelines" == "$THIS_AGENT" ]; then
 	echo "##vso[task.logissue type=error]Please use a self hosted agent for this playbook. Define it in the SDAF-$ENVIRONMENT variable group"
 	exit 2
 fi
-
+echo "##vso[task.logissue type=warning]Setting subscription to $ARM_SUBSCRIPTION_ID"
 az account set --subscription "$ARM_SUBSCRIPTION_ID" --output none
 
 echo -e "$green--- Get key_vault name ---$reset"

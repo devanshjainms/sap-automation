@@ -19,4 +19,4 @@ variables:
     value:                             $[lower(coalesce(variables['POOL'], variables['Agent']))]
 
   - name:                              variable_group
-    value:                             SDAF-${{ parameters.environment }}
+    value:                             SDAF-${{ parameters.sap_system_configuration_name }}

@@ -6,12 +6,11 @@
 
 parameters:
   environment:                         ""
-  sap_system_configuration_name:       ""
 
 variables:
   - group:                             "SDAF-General"
 
-  - group:                             SDAF-${{ parameters.sap_system_configuration_name }}
+  - group:                             SDAF-${{ parameters.environment }}
 
   - name:                              agent_name
     value:                             $[coalesce(variables['POOL'], variables['Agent'])]

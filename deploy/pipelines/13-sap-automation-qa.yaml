@@ -61,6 +61,7 @@ stages:
       - template:                      variables/13-sap-automation-qa.yaml
         parameters:
           environment:                 ${{ parameters.environment }}
+          sap_system_configuration_name: ${{ parameters.sap_system_configuration_name }}
     displayName:                       SAP Quality Assurance Tests
     jobs:
       - job:                           Installation_step

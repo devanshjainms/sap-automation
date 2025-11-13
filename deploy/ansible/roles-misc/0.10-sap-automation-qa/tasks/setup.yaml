@@ -64,4 +64,3 @@
   ansible.builtin.debug:
     msg:                            
       - "Ansible Python Interpreter set to {{ ansible_python_interpreter }}"
-      - "Python version: {{ python_version_check.stdout }}"

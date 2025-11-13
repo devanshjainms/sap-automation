@@ -1,0 +1,9 @@
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |                Variables for SAP Functional Tests role                     |
+# |                        from the Azure/sap-automation-qa                   |
+# +------------------------------------4--------------------------------------*/
+---
+
+# Set the Python interpreter to use the virtual environment
+ansible_python_interpreter: "/opt/microsoft/sap_automation_qa/.venv/bin/python3"

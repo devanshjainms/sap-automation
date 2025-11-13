@@ -44,10 +44,30 @@
     virtualenv:                     "/opt/microsoft/sap_automation_qa/.venv"
     requirements:                   "/opt/microsoft/sap_automation_qa/requirements.in"
 
-- name:                             "Set ANSIBLE_PYTHON_INTERPRETER environment variable"
+- name:                             "Update host facts with new Python interpreter"
+  ansible.builtin.setup:
+    gather_subset:                  min
+  vars:
+    ansible_python_interpreter:     "/opt/microsoft/sap_automation_qa/.venv/bin/python3"
+
+- name:                             "Set ANSIBLE_PYTHON_INTERPRETER environment variable for all subsequent tasks"
   ansible.builtin.set_fact:
     ansible_python_interpreter:     "/opt/microsoft/sap_automation_qa/.venv/bin/python3"
+    cacheable:                      yes
+
+- name:                             "Add Python interpreter to host vars"
+  ansible.builtin.add_host:
+    name:                           "{{ inventory_hostname }}"
+    ansible_python_interpreter:     "/opt/microsoft/sap_automation_qa/.venv/bin/python3"
+
+- name:                             "Verify Python interpreter path"
+  ansible.builtin.command:
+    cmd:                            "{{ ansible_python_interpreter }} --version"
+  register:                         python_version_check
+  changed_when:                     false
 
 - name:                             "Debug ansible python interpreter"
   ansible.builtin.debug:
-    msg:                            "Ansible Python Interpreter set to {{ ansible_python_interpreter }}"
+    msg:                            
+      - "Ansible Python Interpreter set to {{ ansible_python_interpreter }}"
+      - "Python version: {{ python_version_check.stdout }}"

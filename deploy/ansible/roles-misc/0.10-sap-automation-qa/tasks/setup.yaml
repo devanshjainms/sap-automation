@@ -25,3 +25,25 @@
     clone:                         true
     single_branch:                 false
     force:                         true
+
+- name:                             "Install python3-venv system package"
+  become:                           true
+  ansible.builtin.package:
+    name:                           python3-venv
+    state:                          present
+
+- name:                             "Create virtual environment"
+  ansible.builtin.pip:
+    name:                           pip
+    virtualenv:                     "/opt/microsoft/sap_automation_qa/.venv"
+    virtualenv_command:             python3 -m venv
+
+- name:                             "Install python azure packages required"
+  become:                           false
+  ansible.builtin.pip:
+    virtualenv:                     "/opt/microsoft/sap_automation_qa/.venv"
+    requirements:                   "/opt/microsoft/sap_automation_qa/requirements.in"
+
+- name:                             "Set ANSIBLE_PYTHON_INTERPRETER environment variable"
+  ansible.builtin.set_fact:
+    ansible_python_interpreter:     "/opt/microsoft/sap_automation_qa/.venv/bin/python3"

@@ -47,3 +47,7 @@
 - name:                             "Set ANSIBLE_PYTHON_INTERPRETER environment variable"
   ansible.builtin.set_fact:
     ansible_python_interpreter:     "/opt/microsoft/sap_automation_qa/.venv/bin/python3"
+
+- name:                             "Debug ansible python interpreter"
+  ansible.builtin.debug:
+    msg:                            "Ansible Python Interpreter set to {{ ansible_python_interpreter }}"

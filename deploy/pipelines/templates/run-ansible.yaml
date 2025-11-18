@@ -55,6 +55,6 @@ steps:
     USERNAME_KEY_NAME:              ${{ parameters.userNameSecretName }}
     TERRAFORM_STATE_STORAGE_ACCOUNT: ${{ parameters.terraformStateStorageAccount }}
     CONTROL_PLANE_SUBSCRIPTION_ID:   ${{ parameters.controlPlaneSubscriptionId }}
-    sap_functional_tests:           ${{ parameters.sapFunctionalTests }}
+    sap_functional_tests:           ${{ lower(parameters.sapFunctionalTests) }}
     SAP_FUNCTIONAL_TEST_TYPE:      ${{ parameters.sapFunctionalTestType }}
-    sap_configuration_checks:      ${{ parameters.sapConfigurationChecks }}
+    sap_configuration_checks:      ${{ lower(parameters.sapConfigurationChecks) }}

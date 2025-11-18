@@ -25,6 +25,13 @@
         path:                          "{{ _workspace_directory }}/.progress/sap-functional-tests-done"
         state:                          absent
 
+    - name:                            "Debug: Show functional test variables"
+      ansible.builtin.debug:
+        msg:
+          - "sap_functional_tests: {{ sap_functional_tests | default('UNDEFINED') }}"
+          - "SAP_FUNCTIONAL_TEST_TYPE: {{ SAP_FUNCTIONAL_TEST_TYPE | default('UNDEFINED') }}"
+          - "sap_configuration_checks: {{ sap_configuration_checks | default('UNDEFINED') }}"
+
 - name:                                "SAP Configuration Checks"
   ansible.builtin.import_playbook:     "/opt/microsoft/sap_automation_qa/src/playbook_00_configuration_checks.yml" # noqa: syntax-check[missing-file]
   when:

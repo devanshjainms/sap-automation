@@ -152,6 +152,10 @@ if [ -f "${filename}" ]; then
 
 fi
 
+# Convert boolean values to lowercase for Ansible
+sap_config_checks_lower=$(echo "${sap_configuration_checks:-false}" | tr '[:upper:]' '[:lower:]')
+sap_func_tests_lower=$(echo "${sap_functional_tests:-false}" | tr '[:upper:]' '[:lower:]')
+
 command="ansible-playbook -i $INVENTORY --private-key $PARAMETERS_FOLDER/sshkey       \
 					-e 'kv_name=$VAULT_NAME' -e @$SAP_PARAMS                                    \
 					-e 'download_directory=$AGENT_TEMPDIRECTORY'                                \
@@ -160,8 +164,8 @@ command="ansible-playbook -i $INVENTORY --private-key $PARAMETERS_FOLDER/sshkey 
   				-e ansible_user=$user_name                                                  \
 					-e ansible_python_interpreter=/usr/bin/python3                              \
 					-e ansible_ssh_pass='${ANSIBLE_PASSWORD}'                                   \
-					-e sap_configuration_checks=${sap_configuration_checks:-false}             \
-					-e sap_functional_tests=${sap_functional_tests:-false}                     \
+					-e sap_configuration_checks=${sap_config_checks_lower}                     \
+					-e sap_functional_tests=${sap_func_tests_lower}                            \
 					-e SAP_FUNCTIONAL_TEST_TYPE=${SAP_FUNCTIONAL_TEST_TYPE:-}                  \
 					$EXTRA_PARAMS $EXTRA_PARAM_FILE   \
           $ANSIBLE_FILE_PATH"

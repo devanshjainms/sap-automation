@@ -165,13 +165,30 @@ az account set --subscription "$tfstate_subscription_id" --output none --only-sh
 echo "##vso[task.setvariable variable=FOLDER;isOutput=true]$CONFIG_REPO_PATH/SYSTEM/$SAP_SYSTEM_CONFIGURATION_NAME"
 echo "##vso[task.setvariable variable=HOSTS;isOutput=true]${SID}_hosts.yaml"
 echo "##vso[task.setvariable variable=NEW_PARAMETERS;isOutput=true]${new_parameters}"
-echo "##vso[task.setvariable variable=PASSWORD_KEY_NAME;isOutput=true]${WORKLOAD_ZONE_NAME}-sid-password"
 echo "##vso[task.setvariable variable=SAP_PARAMETERS;isOutput=true]sap-parameters.yaml"
 echo "##vso[task.setvariable variable=SID;isOutput=true]${SID}"
-echo "##vso[task.setvariable variable=SSH_KEY_NAME;isOutput=true]${WORKLOAD_ZONE_NAME}-sid-sshkey"
-echo "##vso[task.setvariable variable=USERNAME_KEY_NAME;isOutput=true]${WORKLOAD_ZONE_NAME}-sid-username"
 
-az keyvault secret show --name "${WORKLOAD_ZONE_NAME}-sid-sshkey" --vault-name "$key_vault" --subscription "$key_vault_subscription_id" --query value -o tsv >"artifacts/${SAP_SYSTEM_CONFIGURATION_NAME}_sshkey"
+# Read secret names from sap-parameters.yaml if available, otherwise use shared/default naming pattern
+SSH_KEY_NAME=$(grep "^sshkey_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+PASSWORD_KEY_NAME=$(grep "^password_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+USERNAME_KEY_NAME=$(grep "^username_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+
+# Fall back to shared/default naming pattern (landscape-level keys) if not found in sap-parameters.yaml
+if [ -z "${SSH_KEY_NAME}" ]; then
+	SSH_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-sshkey"
+fi
+if [ -z "${PASSWORD_KEY_NAME}" ]; then
+	PASSWORD_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-password"
+fi
+if [ -z "${USERNAME_KEY_NAME}" ]; then
+	USERNAME_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-username"
+fi
+
+echo "##vso[task.setvariable variable=PASSWORD_KEY_NAME;isOutput=true]${PASSWORD_KEY_NAME}"
+echo "##vso[task.setvariable variable=SSH_KEY_NAME;isOutput=true]${SSH_KEY_NAME}"
+echo "##vso[task.setvariable variable=USERNAME_KEY_NAME;isOutput=true]${USERNAME_KEY_NAME}"
+
+az keyvault secret show --name "${SSH_KEY_NAME}" --vault-name "$key_vault" --subscription "$key_vault_subscription_id" --query value -o tsv >"artifacts/${SAP_SYSTEM_CONFIGURATION_NAME}_sshkey"
 cp sap-parameters.yaml artifacts/.
 cp "${SID}_hosts.yaml" artifacts/.
 chmod 600 artifacts/${SAP_SYSTEM_CONFIGURATION_NAME}_sshkey

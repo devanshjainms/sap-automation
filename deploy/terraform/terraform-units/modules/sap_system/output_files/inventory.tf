@@ -248,6 +248,9 @@ resource "local_file" "sap-parameters_yml" {
                                             )
               scs_server_loadbalancer_ip  = var.scs_server_loadbalancer_ip
               secret_prefix               = local.secret_prefix,
+              sshkey_secret_name          = local.sshkey_secret_name,
+              password_secret_name        = local.password_secret_name,
+              username_secret_name        = local.username_secret_name,
               settings                    = local.settings
               sid                         = var.sap_sid,
               subnet_cidr_anf             = var.subnet_cidr_anf,
@@ -300,17 +303,17 @@ resource "local_file" "sap_inventory_md" {
               db_sid                      = var.db_sid
               key_vault_name              = local.key_vault_name,
               pas_server                  = try(var.naming.virtualmachine_names.APP_COMPUTERNAME[0], "")
-              password_secret_name        = local.use_local_credentials ? format("%s-%s-sid-password", local.secret_prefix, var.sap_sid) : format("%s-sid-password", local.secret_prefix)
+              password_secret_name        = local.password_secret_name
               platform                    = lower(var.platform)
               resource_group_name         = var.created_resource_group_name
               scs_high_availability       = var.scs_high_availability ? "Yes" : "No"
               scs_server_loadbalancer_ip  = length(var.scs_server_loadbalancer_ip) > 0 ? var.scs_server_loadbalancer_ip : try(var.scs_server_ips[0], "")
               scs_servers                 = join(",", var.naming.virtualmachine_names.SCS_COMPUTERNAME)
               sid                         = var.sap_sid,
-              ssh_secret_name             = local.use_local_credentials ? format("%s-%s-sid-sshkey", local.secret_prefix, var.sap_sid) : format("%s-sid-sshkey", local.secret_prefix)
+              ssh_secret_name             = local.sshkey_secret_name
               subscription_id             = var.created_resource_group_subscription_id
               url                         = format("https://portal.azure.com/#@%s/resource/subscriptions/%s/resourceGroups/%s/overview", data.azurerm_client_config.current.tenant_id, var.created_resource_group_subscription_id, var.created_resource_group_name)
-              username_secret_name        = local.use_local_credentials ? format("%s-%s-sid-username", local.secret_prefix, var.sap_sid) : format("%s-sid-username", local.secret_prefix)
+              username_secret_name        = local.username_secret_name
               webdisp_servers             = length(var.naming.virtualmachine_names.WEB_COMPUTERNAME) > 0 ? join(",", var.naming.virtualmachine_names.WEB_COMPUTERNAME) : ""
               key_vault_url               = format("https://portal.azure.com/#@%s/resource/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s/overview",
                                                     data.azurerm_client_config.current.tenant_id,
@@ -321,17 +324,17 @@ resource "local_file" "sap_inventory_md" {
               username_secret_url         = format("https://portal.azure.com/#@%s/asset/Microsoft_Azure_KeyVault/Secret/https://%s.vault.azure.net/secrets/%s",
                                                     data.azurerm_client_config.current.tenant_id,
                                                     local.key_vault_name,
-                                                    local.use_local_credentials ? format("%s-%s-sid-username", local.secret_prefix, var.sap_sid) : format("%s-sid-username", local.secret_prefix)
+                                                    local.username_secret_name
                                                     )
               password_secret_url         = format("https://portal.azure.com/#@%s/asset/Microsoft_Azure_KeyVault/Secret/https://%s.vault.azure.net/secrets/%s",
                                                     data.azurerm_client_config.current.tenant_id,
                                                     local.key_vault_name,
-                                                    local.use_local_credentials ? format("%s-%s-sid-password", local.secret_prefix, var.sap_sid) : format("%s-sid-password", local.secret_prefix)
+                                                    local.password_secret_name
                                                     )
               ssh_secret_url              = format("https://portal.azure.com/#@%s/asset/Microsoft_Azure_KeyVault/Secret/https://%s.vault.azure.net/secrets/%s",
                                                     data.azurerm_client_config.current.tenant_id,
                                                     local.key_vault_name,
-                                                    local.use_local_credentials ? format("%s-%s-sid-sshkey", local.secret_prefix, var.sap_sid) : format("%s-sid-sshkey", local.secret_prefix)
+                                                    local.sshkey_secret_name
                                                     )
 
               }

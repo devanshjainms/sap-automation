@@ -173,6 +173,11 @@ kv_name:                       ${kv_name}
 # secret_prefix is the prefix for the name of the secret stored in key vault
 secret_prefix:                 ${secret_prefix}
 
+# Full secret names as stored in key vault (computed by Terraform)
+sshkey_secret_name:            ${sshkey_secret_name}
+password_secret_name:          ${password_secret_name}
+username_secret_name:          ${username_secret_name}
+
 # Set to true to instruct Ansible to update all the packages on the virtual machines
 upgrade_packages:              ${upgrade_packages}
 

@@ -91,26 +91,34 @@ curdir=$(dirname "$SAP_PARAMS")
 
 cd "$curdir" || exit
 
-if [ ! -v SSH_KEY_NAME ]; then
-	SSH_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-sshkey"
-else
-  if [ -z "$SSH_KEY_NAME" ]; then
+# Try to read secret names from sap-parameters.yaml first
+if [ -f "sap-parameters.yaml" ]; then
+	_ssh_key=$(grep "^sshkey_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+	_password_key=$(grep "^password_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+	_username_key=$(grep "^username_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+fi
+
+# Use sap-parameters.yaml values if available, otherwise use passed variables, otherwise use shared/default naming pattern
+if [ ! -v SSH_KEY_NAME ] || [ -z "$SSH_KEY_NAME" ]; then
+	if [ -n "${_ssh_key:-}" ]; then
+		SSH_KEY_NAME="${_ssh_key}"
+	else
 		SSH_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-sshkey"
 	fi
 fi
 
-if [ ! -v PASSWORD_KEY_NAME ]; then
-	PASSWORD_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-password"
-else
-  if [ -z "$PASSWORD_KEY_NAME" ]; then
+if [ ! -v PASSWORD_KEY_NAME ] || [ -z "$PASSWORD_KEY_NAME" ]; then
+	if [ -n "${_password_key:-}" ]; then
+		PASSWORD_KEY_NAME="${_password_key}"
+	else
 		PASSWORD_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-password"
 	fi
 fi
 
-if [ ! -v USERNAME_KEY_NAME ]; then
-	USERNAME_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-username"
-else
-  if [ -z "$USERNAME_KEY_NAME" ]; then
+if [ ! -v USERNAME_KEY_NAME ] || [ -z "$USERNAME_KEY_NAME" ]; then
+	if [ -n "${_username_key:-}" ]; then
+		USERNAME_KEY_NAME="${_username_key}"
+	else
 		USERNAME_KEY_NAME="${WORKLOAD_ZONE_NAME}-sid-username"
 	fi
 fi

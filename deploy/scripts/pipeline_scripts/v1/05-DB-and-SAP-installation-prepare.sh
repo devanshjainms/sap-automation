@@ -162,14 +162,30 @@ else
 	new_parameters="$EXTRA_PARAMETERS $PIPELINE_EXTRA_PARAMETERS"
 fi
 
-echo "##vso[task.setvariable variable=SSH_KEY_NAME;isOutput=true]${workload_prefix}-sid-sshkey"
+# Read secret names from sap-parameters.yaml if available, otherwise use shared/default naming pattern
+SSH_KEY_NAME=$(grep "^sshkey_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+PASSWORD_KEY_NAME=$(grep "^password_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+USERNAME_KEY_NAME=$(grep "^username_secret_name:" sap-parameters.yaml 2>/dev/null | awk '{print $2}')
+
+# Fall back to shared/default naming pattern (landscape-level keys) if not found in sap-parameters.yaml
+if [ -z "${SSH_KEY_NAME}" ]; then
+	SSH_KEY_NAME="${workload_prefix}-sid-sshkey"
+fi
+if [ -z "${PASSWORD_KEY_NAME}" ]; then
+	PASSWORD_KEY_NAME="${workload_prefix}-sid-password"
+fi
+if [ -z "${USERNAME_KEY_NAME}" ]; then
+	USERNAME_KEY_NAME="${workload_prefix}-sid-username"
+fi
+
+echo "##vso[task.setvariable variable=SSH_KEY_NAME;isOutput=true]${SSH_KEY_NAME}"
 echo "##vso[task.setvariable variable=VAULT_NAME;isOutput=true]$workload_key_vault"
-echo "##vso[task.setvariable variable=PASSWORD_KEY_NAME;isOutput=true]${workload_prefix}-sid-password"
-echo "##vso[task.setvariable variable=USERNAME_KEY_NAME;isOutput=true]${workload_prefix}-sid-username"
+echo "##vso[task.setvariable variable=PASSWORD_KEY_NAME;isOutput=true]${PASSWORD_KEY_NAME}"
+echo "##vso[task.setvariable variable=USERNAME_KEY_NAME;isOutput=true]${USERNAME_KEY_NAME}"
 echo "##vso[task.setvariable variable=NEW_PARAMETERS;isOutput=true]${new_parameters}"
 echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID;isOutput=true]${control_plane_subscription}"
 
-az keyvault secret show --name "${workload_prefix}-sid-sshkey" --vault-name "$workload_key_vault" --subscription "$control_plane_subscription" --query value -o tsv >"artifacts/${SAP_SYSTEM_CONFIGURATION_NAME}_sshkey"
+az keyvault secret show --name "${SSH_KEY_NAME}" --vault-name "$workload_key_vault" --subscription "$control_plane_subscription" --query value -o tsv >"artifacts/${SAP_SYSTEM_CONFIGURATION_NAME}_sshkey"
 cp sap-parameters.yaml artifacts/.
 cp "${SID}_hosts.yaml" artifacts/.
 sudo chmod 600 artifacts/${SAP_SYSTEM_CONFIGURATION_NAME}_sshkey

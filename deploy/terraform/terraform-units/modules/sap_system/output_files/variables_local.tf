@@ -72,4 +72,25 @@ locals {
 
   use_local_credentials                = length(var.authentication) > 0
 
+  # Compute the actual secret names that match what is created in key vaults
+  # When use_local_credentials=true: secrets are created as {SDU_PREFIX}-sshkey (no -sid-)
+  # When use_local_credentials=false: secrets are created as {WORKLOAD_ZONE_PREFIX}-sid-sshkey
+  sshkey_secret_name                   = var.use_local_credentials ? (
+                                           format("%s-sshkey", var.naming.prefix.SDU)
+                                         ) : (
+                                           format("%s-sid-sshkey", var.naming.prefix.WORKLOAD_ZONE)
+                                         )
+
+  password_secret_name                 = var.use_local_credentials ? (
+                                           format("%s-password", var.naming.prefix.SDU)
+                                         ) : (
+                                           format("%s-sid-password", var.naming.prefix.WORKLOAD_ZONE)
+                                         )
+
+  username_secret_name                 = var.use_local_credentials ? (
+                                           format("%s-username", var.naming.prefix.SDU)
+                                         ) : (
+                                           format("%s-sid-username", var.naming.prefix.WORKLOAD_ZONE)
+                                         )
+
 }

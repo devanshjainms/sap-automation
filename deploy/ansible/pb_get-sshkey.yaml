@@ -19,9 +19,9 @@
       ansible.builtin.include_vars:    "{{ _workspace_directory }}/sap-parameters.yaml"
 
 
-    - name:                            Construct SSH key secret name
+    - name:                            Determine SSH key secret name
       ansible.builtin.set_fact:
-        secret_name:                   "{{ secret_prefix }}-sid-sshkey"
+        secret_name:                   "{{ sshkey_secret_name | default(secret_prefix + '-sid-sshkey') }}"
 
     - name:                            Retrieve SSH Key secret details and rescue on failure
       block:

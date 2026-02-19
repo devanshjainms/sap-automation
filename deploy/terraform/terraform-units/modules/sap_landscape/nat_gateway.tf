@@ -73,7 +73,7 @@ resource "azurerm_subnet_nat_gateway_association" "ng_subnet_assoc_db" {
 # NAT Gateway subnet association with web subnet
 resource "azurerm_subnet_nat_gateway_association" "ng_subnet_assoc_web" {
   provider                             = azurerm.main
-  count                                = local.create_nat_gateway ? 1 : 0
+  count                                = local.create_nat_gateway && var.infrastructure.virtual_networks.sap.subnet_web.defined ? 1 : 0
   nat_gateway_id                       = azurerm_nat_gateway.ng[0].id
   subnet_id                            = azurerm_subnet.web[0].id
   depends_on                           = [

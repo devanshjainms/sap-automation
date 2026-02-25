@@ -105,12 +105,20 @@
     - ansible_hostname == primary_instance_name
     - hana_system_replication_needed
   block:
+    - name:                            "4.0.1.0 Hana System Replication - Debug command"
+      ansible.builtin.debug:
+        msg:                           "Running command: {{ hdbsql_systemdb_command }} '{{ dummy_cmd }}' to check access to SYSTEMDB"
+
     - name:                            "4.0.1.0 Hana System Replication - Check that HANA DB SYSTEM user can access the SYSTEM database"
       become_user:                     "{{ db_sid_admin_user }}"
       become:                          true
       ansible.builtin.shell: >
                                        {{ hdbsql_systemdb_command }} '{{ dummy_cmd }}'
       changed_when:                    false
+
+    - name:                            "4.0.1.0 Hana System Replication - Debug tenant command"
+      ansible.builtin.debug:
+        msg:                           "{{ hdbsql_tenant_command }} '{{ dummy_cmd }}'"
 
     - name:                            "4.0.1.0 Hana System Replication - Check that HANA DB SYSTEM user can access the tenant database {{ hana_tenant_database_name }}"
       when:

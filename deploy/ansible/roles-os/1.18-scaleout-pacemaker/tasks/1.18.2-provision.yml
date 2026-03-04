@@ -136,6 +136,7 @@
         backup:                        true
         regexp:                        '^CLOUD_NETCONFIG_MANAGE='
         line:                          CLOUD_NETCONFIG_MANAGE='no'
+      when:                            ansible_distribution_major_version | int < 16
       tags:
         - cloudnetmanage
 

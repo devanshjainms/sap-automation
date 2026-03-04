@@ -62,7 +62,7 @@
       become:                          true
       ansible.builtin.shell:           /usr/sbin/SAPHanaSR-showAttr
       register:                        outsaphanasr
-      until:                           outsaphanasr.stdout | regex_search("(?s)\sSOK\s")
+      until:                           outsaphanasr.stdout | regex_search('(?s)\sSOK\s')
       retries:                         10
       delay:                           30
   rescue:
@@ -96,7 +96,7 @@
       become:                          true
       ansible.builtin.shell:           /usr/bin/SAPHanaSR-showAttr
       register:                        outsaphanasr
-      until:                           outsaphanasr.stdout | regex_search("(?s)\sSOK\s")
+      until:                           outsaphanasr.stdout | regex_search('(?s)\sSOK\s')
       retries:                         10
       delay:                           30
 

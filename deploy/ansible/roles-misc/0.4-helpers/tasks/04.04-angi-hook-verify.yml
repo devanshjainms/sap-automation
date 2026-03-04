@@ -54,7 +54,7 @@
 - name:                                "SAPHanaSR-angi verify - Check susChkSrv events"
   ansible.builtin.shell: |
                                        set -o pipefail;
-                                       egrep '(LOST:|STOP:|START:|DOWN:|init|load|fail)' nameserver_suschksrv.trc
+                                       tail -n 10000 nameserver_suschksrv.trc | egrep '(LOST:|STOP:|START:|DOWN:|init|load|fail)'
   args:
     chdir:                             "{{ cdtrace }}"
   become:                              true

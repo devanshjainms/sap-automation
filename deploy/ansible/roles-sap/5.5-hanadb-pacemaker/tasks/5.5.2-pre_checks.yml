@@ -140,6 +140,4 @@
                                        - Required: SAPHanaSR {{ min_saphanaSR_version_suschk }} or higher (Current: {{ saphanaSR_version }})
   register:                            suschk_hook_check
 
-
-
 # /*---------------------------------------------------------------------------8

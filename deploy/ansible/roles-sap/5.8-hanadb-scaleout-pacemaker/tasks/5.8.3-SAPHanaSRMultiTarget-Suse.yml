@@ -434,4 +434,3 @@
 
         - name:                        "[Rescue] 5.8 HANA Pacemaker Scale-out [angi] - Retry shared hook verification"
           ansible.builtin.include_tasks: ../../../roles-misc/0.4-helpers/tasks/04.04-angi-hook-verify.yml
-

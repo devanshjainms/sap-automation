@@ -306,6 +306,13 @@
         - db_high_availability is defined
         - database_high_availability is not defined
 
+    - name:                            "Database Installation Playbook: - HANA Scale-out - Set sshd_config path for SLES 16+"
+      ansible.builtin.set_fact:
+        ssh_config_path:               "/usr/etc/ssh/sshd_config"
+      when:
+        - ansible_os_family | upper == "SUSE"
+        - ansible_distribution_major_version | int >= 16
+
     # This configures root account on HANA nodes for scale out configuration ( shared and shared nothing with HSR ) to use password based login.
     - name:                            "Database Installation Playbook: - HANA Scale-out - Configure root credential for Scale-Out"
       when:
@@ -329,10 +336,10 @@
             password:                  "{{ hostvars.localhost.root_password | password_hash('sha512') }}"
             password_lock:             false
 
-        - name:                        "Database Installation Playbook: - HANA Scale-out - Enable {{ item.key }} in /etc/ssh/sshd_config"
+        - name:                        "Database Installation Playbook: - HANA Scale-out - Enable {{ item.key }} in sshd_config"
           become:                      true
           ansible.builtin.lineinfile:
-            path:                      "/etc/ssh/sshd_config"
+            path:                      "{{ ssh_config_path }}"
             regex:                     "^(# *)?{{ item.key }}"
             line:                      "{{ item.key }} {{ item.value }}"
             state:                     present
@@ -342,7 +349,7 @@
             - { key: "ChallengeResponseAuthentication", value: "yes" }
 
         - name:                        "Database Installation Playbook: - HANA Scale-out - Debug sshdconfig file"
-          ansible.builtin.shell:       "cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'"
+          ansible.builtin.shell:       "cat {{ ssh_config_path }} | grep -v '^#' | grep -v '^$'"
           register:                    sshdconfig
           changed_when:                false
           failed_when:                 false
@@ -351,7 +358,7 @@
         - name:                        "Database Installation Playbook: - HANA Scale-out - Append root user to AllowUsers if used"
           become:                      true
           ansible.builtin.lineinfile:
-            path:                      "/etc/ssh/sshd_config"
+            path:                      "{{ ssh_config_path }}"
             regexp:                    '^AllowUsers (?!.*root.*)(.*)'
             line:                      'AllowUsers \g<1> root'
             backrefs:                  true
@@ -364,7 +371,7 @@
             state:                     restarted
 
         - name:                        "Database Installation Playbook: - HANA Scale-out - Debug sshdconfig file after restart"
-          ansible.builtin.shell:       "cat /etc/ssh/sshd_config | grep -v '^#' | grep -v '^$'"
+          ansible.builtin.shell:       "cat {{ ssh_config_path }} | grep -v '^#' | grep -v '^$'"
           register:                    sshdconfig
           changed_when:                false
           failed_when:                 false
@@ -460,10 +467,10 @@
             update_password:               always
             password:                      "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) | password_hash('sha512') }}"
 
-        - name:                            "Database Installation Playbook: - HANA Scale-out - Enable {{ item.key }} in /etc/ssh/sshd_config"
+        - name:                            "Database Installation Playbook: - HANA Scale-out - Enable {{ item.key }} in sshd_config"
           become:                          true
           ansible.builtin.lineinfile:
-            path:                          "/etc/ssh/sshd_config"
+            path:                          "{{ ssh_config_path }}"
             regex:                         "^(# *)?{{ item.key }}"
             line:                          "{{ item.key }} {{ item.value }}"
             state:                         present

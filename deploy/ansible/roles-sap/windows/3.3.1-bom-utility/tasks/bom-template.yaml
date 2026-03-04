@@ -75,6 +75,7 @@
   register:                            result
   when:
     - distribution_id != 'suse15'
+    - distribution_id != 'suse16'
     - distribution_id != 'redhat8'
     - not always_upload_jinja_templates
 

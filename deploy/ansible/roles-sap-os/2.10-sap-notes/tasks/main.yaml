@@ -31,7 +31,7 @@
 - name:                                2.10 - SAP Note 2205917
   when:
                                        - node_tier == 'hana'
-                                       - distribution_id in ['suse12', 'suse15', 'sles_sap12', 'sles_sap15']
+                                       - distribution_id in ['suse12', 'suse15', 'suse16', 'sles_sap12', 'sles_sap15', 'sles_sap16']
   ansible.builtin.include_tasks:       2.10.0.yaml
 
 # -------------------------------------+---------------------------------------8
@@ -158,7 +158,7 @@
 
 - name:                                "2.10.3 - saptune for SUSE 12 and SUSE 15"
   when:
-                                       - distribution_id in ['suse12', 'suse15', 'sles_sap12', 'sles_sap15']
+                                       - distribution_id in ['suse12', 'suse15', 'suse16', 'sles_sap12', 'sles_sap15', 'sles_sap16']
   ansible.builtin.include_tasks:       2.10.3.yaml
 
 # /*----------------------------------------------------------------------------8

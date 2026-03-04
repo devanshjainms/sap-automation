@@ -32,7 +32,7 @@
 # SUSE 15 Activate public cloud extension
 - name:                                "1.4 Packages - SUSE15 - Activate public cloud extension"
   when:
-    - ansible_distribution_major_version == "15"
+    - ansible_distribution_major_version in ["15", "16"]
     - tier == 'os'
   block:
     - name:                            "1.4 Packages - SUSE15 - Activate public cloud extension ({{ ansible_distribution_major_version }})"

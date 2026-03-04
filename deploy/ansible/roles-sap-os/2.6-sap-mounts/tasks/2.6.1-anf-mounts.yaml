@@ -64,7 +64,7 @@
     - name:                            "2.6.1 ANF Mount - Domain is configured as
                                         the default Azure NetApp Files domain"
       ansible.builtin.lineinfile:
-        path:                          /etc/idmapd.conf
+        path:                          /usr/etc/idmapd.conf
         regexp:                        '^[ #]*Domain = '
         line:                          'Domain = defaultv4iddomain.com'
         insertafter:                   '[General]'
@@ -75,7 +75,7 @@
     - name:                            "2.6.1 ANF Mount - Make sure that user
                                         mapping is set to 'nobody'"
       ansible.builtin.lineinfile:
-        path:                          /etc/idmapd.conf
+        path:                          /usr/etc/idmapd.conf
         regexp:                        '^[ #]*Nobody-User = '
         line:                          'Nobody-User = nobody'
         insertafter:                   '^[ #]*Nobody-User = '
@@ -86,7 +86,7 @@
     - name:                            "2.6.1 ANF Mount - Make sure that group
                                         mapping is set to 'nobody'"
       ansible.builtin.lineinfile:
-        path:                          /etc/idmapd.conf
+        path:                          /usr/etc/idmapd.conf
         regexp:                        '^[ #]*Nobody-Group = '
         line:                          'Nobody-Group = nobody'
         insertafter:                   '^[ #]*Nobody-Group = '
@@ -98,7 +98,7 @@
 
 - name:                                "2.6.1 ANF Mount - Set nfs4_disable_idmapping to Y"
   ansible.builtin.lineinfile:
-    path:                              /etc/modprobe.d/nfs.conf
+    path:                              /usr/etc/modprobe.d/nfs.conf
     line:                              'options nfs nfs4_disable_idmapping=Y'
     create:                            true
     mode:                              0644

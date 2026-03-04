@@ -56,28 +56,30 @@
   become_user:                         root
   block:
     # Use the db subnet for configuring the cluster
-    - name:                            "1.18.2.0 Generic Pacemaker - Ensure corosync is configured"
-      ansible.builtin.shell:           "crm cluster init -y -u corosync --interface eth0"
-      register:                        crm_init_result
-      failed_when:                     crm_init_result.rc > 1
+    # - name:                            "1.18.2.0 Generic Pacemaker - Ensure corosync is configured"
+    #   ansible.builtin.shell:           "crm cluster init -y --interface eth0"
+    #   register:                        crm_init_result
+    #   failed_when:                     crm_init_result.rc > 1
 
+    # Initialize cluster when using Azure Fencing agent for fencing.
     - name:                            "1.18.2.0 Generic Pacemaker - Ensure cluster (hdb_{{ db_sid | upper }}) is configured"
-      ansible.builtin.shell:           "crm cluster init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0 --no-overwrite-sshkey"
-      register:                        crm_init_result
-      failed_when:                     crm_init_result.rc > 1
       when:
                                        - node_tier == 'hana'
                                        - database_cluster_type == "AFA"
-
-    - name:                            "1.18.2.0 Generic Pacemaker - Ensure cluster (hdb_{{ db_sid | upper }}) is configured - SBD"
-      ansible.builtin.shell: |
-                                       crm cluster init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0 \
-                                       --no-overwrite-sshkey --sbd-device="{{ sbd_device }}"
+      ansible.builtin.shell:           "crm cluster init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0"
       register:                        crm_init_result
       failed_when:                     crm_init_result.rc > 1
+
+    # Initialize cluster when using SBD for fencing, using either ISCSI or ASD as the SBD backend.
+    - name:                            "1.18.2.0 Generic Pacemaker - Ensure cluster (hdb_{{ db_sid | upper }}) is configured - SBD"
       when:
                                        - node_tier == 'hana'
                                        - not database_cluster_type == "AFA"
+      ansible.builtin.shell: |
+                                       crm cluster init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0 \
+                                       --sbd-device="{{ sbd_device }}"
+      register:                        crm_init_result
+      failed_when:                     crm_init_result.rc > 1
 
 
 - name:                                "1.18.2.0 Generic Pacemaker - Ensure additional nodes joins the Cluster"
@@ -89,7 +91,7 @@
   block:
     - name:                            "1.18.2.0 Generic Pacemaker - Ensure Secondary nodes joins the Cluster"
       # ha-cluster-join is not supported in SUSE 15 SP4 anymore, crm syntax required
-      ansible.builtin.shell:           "sudo crm cluster join -y -c {{ primary_instance_name }} --interface eth0"
+      ansible.builtin.shell:           "crm cluster join -y -c {{ primary_instance_name }} --interface eth0"
 
 
 - name:                                "1.18.2.0 Generic Pacemaker - Ensure HA Cluster password is set to something secure"

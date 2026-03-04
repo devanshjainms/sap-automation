@@ -79,7 +79,7 @@
 - name:                                "1.13 MOTD - Update PrintMotd when commented"
   ansible.builtin.lineinfile:
     state:                             present
-    dest:                              /etc/ssh/sshd_config
+    dest:                              /usr/etc/ssh/sshd_config
     regexp:                            '#PrintMotd'
     line:                              'PrintMotd yes'
   become:                              true
@@ -89,7 +89,7 @@
 - name:                                "1.13 MOTD - Update default Banner path"
   ansible.builtin.lineinfile:
     state:                             present
-    dest:                              /etc/ssh/sshd_config
+    dest:                              /usr/etc/ssh/sshd_config
     regexp:                            '#Banner'
     line:                              'Banner /etc/issue.net'
   become:                              true

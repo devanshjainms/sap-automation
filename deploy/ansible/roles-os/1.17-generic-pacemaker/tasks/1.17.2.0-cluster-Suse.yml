@@ -70,14 +70,14 @@
   block:
 
     - name:                            "1.17 Generic Pacemaker - Ensure corosync is configured"
-      ansible.builtin.shell:           "crm cluster init -y -u corosync --interface eth0"
+      ansible.builtin.shell:           "crm cluster init -y  --interface eth0"
       register:                        crm_init_result
       failed_when:                     crm_init_result.rc > 1
 
     - name:                            "1.17 Generic Pacemaker - Ensure cluster (hdb_{{ db_sid | upper }}) is configured"
       # ha-cluster-init is not supported in SUSE 15 SP4 anymore, crm syntax required
-      # ansible.builtin.shell:         "ha-cluster-init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0 --no-overwrite-sshkey"
-      ansible.builtin.shell:           "crm cluster init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0 --no-overwrite-sshkey"
+      # ansible.builtin.shell:         "ha-cluster-init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0 "
+      ansible.builtin.shell:           "crm cluster init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0 "
       register:                        crm_init_result
       failed_when:                     crm_init_result.rc > 1
       when:
@@ -87,7 +87,7 @@
     - name:                            "1.17 Generic Pacemaker - Ensure cluster (hdb_{{ db_sid | upper }}) is configured - SBD"
       ansible.builtin.shell: |
                                        crm cluster init -y --name 'hdb_{{ db_sid | upper }}' --interface eth0 \
-                                       --no-overwrite-sshkey --sbd-device="{{ sbd_device }}"
+                                        --sbd-device="{{ sbd_device }}"
       register:                        crm_init_result
       failed_when:                     crm_init_result.rc > 1
       when:
@@ -95,7 +95,7 @@
                                        - not database_cluster_type == "AFA"
 
     - name:                            "1.17 Generic Pacemaker - Ensure cluster (scs_{{ sap_sid | upper }}) is configured"
-      ansible.builtin.shell:           "crm cluster init -y --name 'scs_{{ sap_sid | upper }}' --interface eth0 --no-overwrite-sshkey"
+      ansible.builtin.shell:           "crm cluster init -y --name 'scs_{{ sap_sid | upper }}' --interface eth0 "
       register:                        crm_init_result
       failed_when:                     crm_init_result.rc > 1
       when:
@@ -105,7 +105,7 @@
     - name:                            "1.17 Generic Pacemaker - Ensure cluster (scs_{{ sap_sid | upper }}) is configured - SBD"
       ansible.builtin.shell: |
                                        crm cluster init -y --name 'scs_{{ sap_sid | upper }}' --interface eth0 \
-                                       --no-overwrite-sshkey --sbd-device="{{ sbd_device }}"
+                                        --sbd-device="{{ sbd_device }}"
       register:                        crm_init_result
       failed_when:                     crm_init_result.rc > 1
       when:
@@ -113,7 +113,7 @@
                                        - not scs_cluster_type == "AFA"
 
     - name:                            "1.17 Generic Pacemaker - Ensure cluster (db2_{{ db_sid | upper }}) is configured"
-      ansible.builtin.shell:           "crm cluster init -y --name 'db2_{{ db_sid | upper }}' --interface eth0 --no-overwrite-sshkey"
+      ansible.builtin.shell:           "crm cluster init -y --name 'db2_{{ db_sid | upper }}' --interface eth0 "
       register:                        crm_init_result
       failed_when:                     crm_init_result.rc > 1
       when:
@@ -123,7 +123,7 @@
     - name:                            "1.17 Generic Pacemaker - Ensure cluster (db2_{{ db_sid | upper }}) is configured - SBD"
       ansible.builtin.shell: |
                                        crm cluster init -y --name 'db2_{{ db_sid | upper }}' --interface eth0 \
-                                       --no-overwrite-sshkey --sbd-device="{{ sbd_device }}"
+                                        --sbd-device="{{ sbd_device }}"
       register:                        crm_init_result
       failed_when:                     crm_init_result.rc > 1
       when:
@@ -153,6 +153,18 @@
     src:                               corosync.conf.j2
     dest:                              /etc/corosync/corosync.conf
     mode:                              0600
+  when:
+    - "'corosync' in ansible_facts.packages"
+    - ansible_facts.packages.corosync[0].version.split('.')[0] | int != 3
+
+- name:                                "1.17 Generic Pacemaker - Ensure cluster configuration contains correct details v3"
+  ansible.builtin.template:
+    src:                               corosyncv3.conf.j2
+    dest:                              /etc/corosync/corosync.conf
+    mode:                              0600
+  when:
+    - "'corosync' in ansible_facts.packages"
+    - ansible_facts.packages.corosync[0].version.split('.')[0] | int == 3
 
 - name:                                "1.17 Generic Pacemaker - Ensure the corosync service is restarted on primary node."
   ansible.builtin.systemd:
@@ -276,6 +288,7 @@
                                          (database_cluster_type == "ISCSI") or
                                          (scs_cluster_type      == "ASD")   or
                                          (scs_cluster_type      == "ISCSI")
+                                       - inventory_hostname == primary_instance_name
   block:
 
     - name:                            "1.17 Generic Pacemaker - Restart all cluster services on all members"
@@ -315,14 +328,14 @@
 
         - name:                        "1.17 Generic Pacemaker - Recreate Stonith SBD in cluster"
           ansible.builtin.shell: |
-                                       crm configure primitive stonith-sbd stonith:external/sbd \
+                                       crm configure primitive stonith-sbd fence_sbd \
                                          params pcmk_delay_max="15" \
                                          op monitor interval="600" timeout="15"
 
     - name:                            "1.17 Generic Pacemaker - Ensure Stonith SBD is configured in cluster"
       when:                            stonith_sbd_configured.rc != 0
       ansible.builtin.shell: |
-                                       crm configure primitive stonith-sbd stonith:external/sbd \
+                                       crm configure primitive stonith-sbd fence_sbd \
                                          params pcmk_delay_max="15" \
                                          op monitor interval="600" timeout="15"
 

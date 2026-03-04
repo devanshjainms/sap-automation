@@ -94,7 +94,7 @@
     - name:                            "5.8.5 HANA Pacemaker Scale-out [angi] - Verify the hook Installation (SUSE)"
       become_user:                     root
       become:                          true
-      ansible.builtin.shell:           /usr/sbin/SAPHanaSR-showAttr
+      ansible.builtin.shell:           /usr/bin/SAPHanaSR-showAttr
       register:                        outsaphanasr
       until:                           outsaphanasr.stdout | regex_search("(?s)\sSOK\s")
       retries:                         10
@@ -148,7 +148,7 @@
       args:
         chdir:                         /usr/sap/{{ db_sid | upper }}/HDB{{ db_instance_number }}/{{ hostvars[primary_instance_name].virtual_host }}/trace
       register:                        saphanasr
-      until:                           saphanasr.stdout is search("Running")
+      until:                           saphanasr.stdout is search("susHanaSR.init")
       retries:                         10
       delay:                           30
 

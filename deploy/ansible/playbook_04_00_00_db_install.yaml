@@ -511,6 +511,35 @@
       ansible.builtin.set_fact:
         database_high_availability:    "{{ db_high_availability | default(false) }}"
 
+    - name:                            "Database Installation Playbook: - HANA Scale-out Pacemaker - Set sshd_config path for SLES 16+"
+      ansible.builtin.set_fact:
+        ssh_config_path:               "/usr/etc/ssh/sshd_config"
+      when:
+        - ansible_os_family | upper == "SUSE"
+        - ansible_distribution_major_version | int >= 16
+
+    - name:                            "Database Installation Playbook: - HANA Scale-out Pacemaker - Enable root SSH for observer (Scale-Out)"
+      when:
+        - node_tier == 'observer'
+        - database_scale_out
+        - database_high_availability
+      become:                          true
+      block:
+        - name:                        "Database Installation Playbook: - HANA Scale-out Pacemaker - Enable PermitRootLogin on observer"
+          ansible.builtin.lineinfile:
+            path:                      "{{ ssh_config_path }}"
+            regexp:                    "{{ item.key }}"
+            line:                      "{{ item.key }} {{ item.value }}"
+            state:                     present
+          loop:
+            - { key: "PermitRootLogin", value: "yes" }
+          register:                    sshd_config_result
+
+        - name:                        "Database Installation Playbook: - HANA Scale-out Pacemaker - Restart sshd on observer"
+          ansible.builtin.systemd:
+            name:                      sshd
+            state:                     restarted
+          when:                        sshd_config_result.changed
 
     - name:                            "Database Installation Playbook: - HANA Scale-out - Install Pacemaker (Scale Out)"
       become:                          true
@@ -599,6 +628,27 @@
               become_user:             root
           tags:
             - 1.18-scaleout-pacemaker
+
+        - name:                        "Database Installation Playbook: - HANA Scale-out Pacemaker - Disable PermitRootLogin on observer after cluster setup"
+          when:
+            - node_tier == 'observer'
+          become:                      true
+          block:
+            - name:                    "Database Installation Playbook: - HANA Scale-out Pacemaker - Reset sshd_config on observer"
+              ansible.builtin.lineinfile:
+                path:                  "{{ ssh_config_path }}"
+                regex:                 "^(# *)?{{ item.key }}"
+                line:                  "{{ item.key }} {{ item.value }}"
+                state:                 present
+              loop:
+                - { key: "PermitRootLogin", value: "no" }
+              register:                sshd_observer_reset
+
+            - name:                    "Database Installation Playbook: - HANA Scale-out Pacemaker - Restart sshd on observer"
+              ansible.builtin.systemd:
+                name:                  sshd
+                state:                 restarted
+              when:                    sshd_observer_reset.changed
 
         - name:                        "Database Installation Playbook: - HANA Scale-out - Create pacemaker-install-done flag"
           delegate_to:                 localhost

@@ -254,11 +254,9 @@
                                        crm configure location loc_azure_health \
                                        /'!health-.*'/ rule '#health-azure': defined '#uname'
 
-    - name:                            "1.17 Generic Pacemaker - Set initial value for cluster attributes for {{ primary_instance_name }}"
-      ansible.builtin.shell:           crm_attribute --node {{ primary_instance_name }} --name '#health-azure' --update 0
-
-    - name:                            "1.17 Generic Pacemaker - Set initial value for cluster attributes for {{ secondary_instance_name }}"
-      ansible.builtin.shell:           crm_attribute --node {{ secondary_instance_name }} --name '#health-azure' --update 0
+    - name:                            "1.18.2.0 Generic Pacemaker - Set initial value for cluster attributes for all nodes"
+      ansible.builtin.shell:           crm_attribute --node {{ item }} --name '#health-azure' --update 0
+      loop:                            "{{ ansible_play_hosts_all }}"
 
     - name:                            "1.17 Generic Pacemaker - Set the pacemaker cluster node health agent (pcmk < 2.13)"
       when:                            not is_pcmk_213_or_later | bool

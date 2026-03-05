@@ -136,6 +136,7 @@
         backup:                        true
         regexp:                        '^CLOUD_NETCONFIG_MANAGE='
         line:                          CLOUD_NETCONFIG_MANAGE='no'
+      when:                            ansible_distribution_major_version | int < 16
       tags:
         - cloudnetmanage
 
@@ -144,7 +145,7 @@
         user:                          root
         key:                           "{{ hostvars[item].cluster_public_ssh_key }}"
         state:                         present
-      when:                            ansible_hostname != item
+      when:                            ansible_hostname != item or ansible_distribution_major_version | int >= 16
       with_items:
         - "{{ ansible_play_hosts_all }}"
 

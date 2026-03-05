@@ -17,7 +17,7 @@ SDAF_Version:                           "3.19.0.0"
 chrony_pool:                            ""
 chrony_servers:                         []
 timezone:                               "Etc/GMT"
-suse_subscription_id:                   ""                                      # SUSE registration code for BYOS/BYOL images. Leave empty for PAYG marketplace images.
+ssh_config_path:                        "/etc/ssh/sshd_config"                  # Default SSH config path, overridden for SLES 16+
 # -------------------- End - OS Config Settings variables --------------------8
 
 # --------------------- Begin - BOM Processing variables ---------------------8

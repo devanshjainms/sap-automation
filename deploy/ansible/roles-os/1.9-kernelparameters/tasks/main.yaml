@@ -169,7 +169,7 @@
 
 - name:                                "1.9 Kernel parameters - Set limits for HANA"
   ansible.builtin.blockinfile:
-    path:                              /etc/security/limits.conf
+    path:                              /usr/etc/security/limits.conf
     insertafter:                       '#@student        -       maxlogins       4'
     state:                              present
     block: |
@@ -182,7 +182,7 @@
 
 - name:                                "1.9 Kernel parameters - Set limits for app tier"
   ansible.builtin.blockinfile:
-    path:                              /etc/security/limits.conf
+    path:                              /usr/etc/security/limits.conf
     insertafter:                       '#@student        -       maxlogins       4'
     state:                              present
     block: |

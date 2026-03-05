@@ -454,7 +454,7 @@ fi
 
 # Check for supported distro
 case "$(get_distro_name_version)" in
-sles_12*  | sles_15*)
+sles_12*  | sles_15* | sles_16*)
   error "Unsupported distro: $${distro_name_version} doesn't provide virtualenv in standard repos."
   exit 1
   ;;

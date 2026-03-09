@@ -297,7 +297,7 @@ echo "Configuration file:                  $system_environment_file_name"
 echo "Deployment region:                   $region"
 echo "Deployment region code:              $region_code"
 
-if [ 1 == $called_from_ado ]; then
+if [ -z "${TF_VAR_Agent_IP:-}" ]; then
 	this_ip=$(curl -s ipinfo.io/ip) >/dev/null 2>&1
 	export TF_VAR_Agent_IP=$this_ip
 	echo "Agent IP:                            $this_ip"

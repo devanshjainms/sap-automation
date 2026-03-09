@@ -199,6 +199,9 @@ fi
 allParameters=$(printf " -var-file=%s %s" "${var_file}" "${extra_vars}")
 allImportParameters=$(printf " -var-file=%s %s " "${var_file}" "${extra_vars}")
 
+TF_VAR_subscription_id="$ARM_SUBSCRIPTION_ID"
+export TF_VAR_subscription_id
+
 if [ ! -d ./.terraform/ ]; then
 	print_banner "New deployment" "info"
 	terraform -chdir="${terraform_module_directory}" init -upgrade=true -backend-config "path=${param_dirname}/terraform.tfstate"

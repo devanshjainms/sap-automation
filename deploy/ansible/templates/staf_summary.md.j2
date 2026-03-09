@@ -1,0 +1,17 @@
+# STAF Test Results Summary
+
+| Property | Value |
+|----------|-------|
+| **SAP SID** | {{ sap_sid }} |
+| **Environment** | {{ sap_sid[:3] | default('N/A') }} |
+| **Test Suites** | {{ test_suites | join(', ') }} |
+| **Timestamp** | {{ timestamp }} |
+
+## Test Suite Results
+
+{% for suite in test_suites %}
+### {{ suite }}
+
+Results directory: `{{ staf_results_dir }}/{{ suite }}`
+
+{% endfor %}

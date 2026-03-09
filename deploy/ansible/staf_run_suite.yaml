@@ -1,0 +1,112 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |  Task file: Execute a single STAF test suite                              |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+---
+- name:                                "STAF Suite [{{ suite_name }}]: Create results directory"
+  ansible.builtin.file:
+    path:                              "{{ staf_results_dir }}/{{ suite_name }}"
+    state:                             directory
+    mode:                              '0755'
+
+- name:                                "STAF Suite [{{ suite_name }}]: Check if suite directory exists"
+  ansible.builtin.stat:
+    path:                              "{{ staf_working_dir }}/testsuites/{{ suite_name }}"
+  register:                            suite_dir_stat
+
+- name:                                "STAF Suite [{{ suite_name }}]: Check for pytest tests"
+  ansible.builtin.find:
+    paths:                             "{{ staf_working_dir }}/testsuites/{{ suite_name }}"
+    patterns:                          "test_*.py,*_test.py"
+    recurse:                           true
+  register:                            pytest_files
+  when:                                suite_dir_stat.stat.exists
+
+- name:                                "STAF Suite [{{ suite_name }}]: Check for Ansible playbooks"
+  ansible.builtin.find:
+    paths:                             "{{ staf_working_dir }}/testsuites/{{ suite_name }}"
+    patterns:                          "playbook_*.yaml,playbook_*.yml"
+    recurse:                           true
+  register:                            playbook_files
+  when:                                suite_dir_stat.stat.exists
+
+- name:                                "STAF Suite [{{ suite_name }}]: Check for shell tests"
+  ansible.builtin.stat:
+    path:                              "{{ staf_working_dir }}/testsuites/{{ suite_name }}/run_tests.sh"
+  register:                            shell_test_stat
+  when:                                suite_dir_stat.stat.exists
+
+- name:                                "STAF Suite [{{ suite_name }}]: Run pytest tests"
+  ansible.builtin.shell: |
+    source {{ staf_working_dir }}/.venv/bin/activate 2>/dev/null || true
+    python -m pytest {{ staf_working_dir }}/testsuites/{{ suite_name }} \
+      --config-file={{ staf_config_file }} \
+      --junitxml={{ staf_results_dir }}/{{ suite_name }}/junit_results.xml \
+      -v \
+      2>&1 | tee {{ staf_results_dir }}/{{ suite_name }}/test_output.log
+  args:
+    executable:                        /bin/bash
+  register:                            pytest_result
+  failed_when:                         false
+  changed_when:                        false
+  when:
+    - suite_dir_stat.stat.exists
+    - pytest_files.matched | default(0) > 0
+
+- name:                                "STAF Suite [{{ suite_name }}]: Run Ansible playbook tests"
+  ansible.builtin.command: >
+    ansible-playbook
+    {{ playbook_files.files[0].path }}
+    --extra-vars="staf_config_file={{ staf_config_file }}"
+    --extra-vars="staf_results_dir={{ staf_results_dir }}/{{ suite_name }}"
+    -v
+  register:                            playbook_result
+  failed_when:                         false
+  changed_when:                        false
+  when:
+    - suite_dir_stat.stat.exists
+    - pytest_files.matched | default(0) == 0
+    - playbook_files.matched | default(0) > 0
+
+- name:                                "STAF Suite [{{ suite_name }}]: Run shell tests"
+  ansible.builtin.shell: >
+    bash {{ staf_working_dir }}/testsuites/{{ suite_name }}/run_tests.sh
+    {{ staf_config_file }}
+    {{ staf_results_dir }}/{{ suite_name }}
+    2>&1 | tee {{ staf_results_dir }}/{{ suite_name }}/test_output.log
+  args:
+    executable:                        /bin/bash
+  register:                            shell_result
+  failed_when:                         false
+  changed_when:                        false
+  when:
+    - suite_dir_stat.stat.exists
+    - pytest_files.matched | default(0) == 0
+    - playbook_files.matched | default(0) == 0
+    - shell_test_stat.stat.exists | default(false)
+
+- name:                                "STAF Suite [{{ suite_name }}]: Report result"
+  ansible.builtin.debug:
+    msg: >-
+      Suite '{{ suite_name }}' completed.
+      {% if pytest_result is defined and pytest_result.rc is defined %}
+      pytest exit code: {{ pytest_result.rc }}
+      {% elif playbook_result is defined and playbook_result.rc is defined %}
+      playbook exit code: {{ playbook_result.rc }}
+      {% elif shell_result is defined and shell_result.rc is defined %}
+      shell exit code: {{ shell_result.rc }}
+      {% elif not suite_dir_stat.stat.exists %}
+      WARNING: Suite directory not found.
+      {% else %}
+      WARNING: No runnable tests found.
+      {% endif %}
+
+- name:                                "STAF Suite [{{ suite_name }}]: Warn if suite not found"
+  ansible.builtin.debug:
+    msg:                               "WARNING: Test suite directory '{{ suite_name }}' does not exist in {{ staf_working_dir }}/testsuites/"
+  when:                                not suite_dir_stat.stat.exists

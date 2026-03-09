@@ -1,0 +1,67 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+name: STAF Testing $(sap_system_folder)
+
+parameters:
+  - name: sap_system_configuration_name
+    displayName: "SAP System configuration name, use the following syntax: ENV-LOCA-VNET-SID"
+    type: string
+    default: DEV-WEEU-SAP01-X00
+
+  - name: environment
+    displayName: Workload Environment (DEV, QUA, PRD, ...)
+    type: string
+    default: DEV
+
+  - name: staf_test_suites
+    displayName: "Comma-separated list of test suites to run"
+    type: string
+    default: "configuration_checks,db_ha,cs_ha"
+
+  - name: staf_repo_branch
+    displayName: "STAF repository branch"
+    type: string
+    default: main
+
+  - name: configuration_checks
+    displayName: Run Configuration Checks
+    type: boolean
+    default: true
+
+  - name: db_ha
+    displayName: Run Database High Availability Tests
+    type: boolean
+    default: true
+
+  - name: cs_ha
+    displayName: Run Central Services High Availability Tests
+    type: boolean
+    default: true
+
+  - name: extra_params
+    displayName: Extra Parameters
+    type: string
+    default: ""
+
+trigger: none
+
+pool:
+  name: $[coalesce(variables['POOL'], variables['Agent'])]
+
+extends:
+  template: ./resources.yml
+  parameters:
+    stages:
+      - template: deploy\pipelines\07-staf-testing.yaml@sap-automation
+        parameters:
+          sap_system_configuration_name: ${{ parameters.sap_system_configuration_name }}
+          environment: ${{ parameters.environment }}
+          staf_test_suites: ${{ parameters.staf_test_suites }}
+          staf_repo_branch: ${{ parameters.staf_repo_branch }}
+          configuration_checks: ${{ parameters.configuration_checks }}
+          db_ha: ${{ parameters.db_ha }}
+          cs_ha: ${{ parameters.cs_ha }}
+          extra_params: ${{ parameters.extra_params }}
+          sap_automation_repo_path: $(Build.SourcesDirectory)/sap-automation
+          config_repo_path: $(Build.SourcesDirectory)/config

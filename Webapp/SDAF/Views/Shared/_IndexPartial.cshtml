@@ -109,6 +109,7 @@
                             @if (controllerName == "System")
                             {
                                 @: | @Html.ActionLink("Install", "Install", new { id = sapObj.Id, partitionKey = sapObj.environment })
+                                @: | @Html.ActionLink("Test", "Test", new { id = sapObj.Id, partitionKey = sapObj.environment })
                             }
                         }
                     </td>

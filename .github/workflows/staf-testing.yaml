@@ -1,0 +1,263 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |  GitHub Actions workflow for STAF (SAP Testing Automation Framework)       |
+# |  integration. Triggers validation and regression tests against a           |
+# |  deployed SAP system using the Azure/sap-automation-qa repository.         |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+name: STAF - SAP Testing Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      sap_system_configuration_name:
+        description: "SAP System configuration name (e.g. DEV-WEEU-SAP01-X00)"
+        required: true
+        type: string
+      environment:
+        description: "Workload Environment (DEV, QUA, PRD, ...)"
+        required: true
+        type: string
+        default: "DEV"
+      staf_repo_branch:
+        description: "STAF repository branch"
+        required: false
+        type: string
+        default: "main"
+      configuration_checks:
+        description: "Run Configuration Checks"
+        required: false
+        type: boolean
+        default: true
+      db_ha:
+        description: "Run Database High Availability Tests"
+        required: false
+        type: boolean
+        default: true
+      cs_ha:
+        description: "Run Central Services High Availability Tests"
+        required: false
+        type: boolean
+        default: true
+      extra_params:
+        description: "Extra parameters"
+        required: false
+        type: string
+        default: ""
+
+  workflow_call:
+    inputs:
+      sap_system_configuration_name:
+        description: "SAP System configuration name"
+        required: true
+        type: string
+      environment:
+        description: "Workload Environment"
+        required: true
+        type: string
+      staf_repo_branch:
+        description: "STAF repository branch"
+        required: false
+        type: string
+        default: "main"
+      configuration_checks:
+        description: "Run Configuration Checks"
+        required: false
+        type: boolean
+        default: true
+      db_ha:
+        description: "Run Database High Availability Tests"
+        required: false
+        type: boolean
+        default: true
+      cs_ha:
+        description: "Run Central Services High Availability Tests"
+        required: false
+        type: boolean
+        default: true
+      extra_params:
+        description: "Extra parameters"
+        required: false
+        type: string
+        default: ""
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+  checks: write
+
+env:
+  STAF_REPO: Azure/sap-automation-qa
+
+jobs:
+  staf-preparation:
+    name: STAF - Preparation
+    runs-on: self-hosted
+    outputs:
+      sap_params_file: ${{ steps.prepare.outputs.SAP_PARAMS_FILE }}
+      hosts_file: ${{ steps.prepare.outputs.HOSTS_FILE }}
+      keyvault_name: ${{ steps.prepare.outputs.KEYVAULT_NAME }}
+      sid: ${{ steps.prepare.outputs.SID }}
+      environment: ${{ steps.prepare.outputs.ENVIRONMENT }}
+      location: ${{ steps.prepare.outputs.LOCATION }}
+      network: ${{ steps.prepare.outputs.NETWORK }}
+      system_config_dir: ${{ steps.prepare.outputs.SYSTEM_CONFIG_DIR }}
+      test_suites: ${{ steps.resolve-suites.outputs.RESOLVED_TEST_SUITES }}
+
+    steps:
+      - name: Checkout sap-automation
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: sap-automation
+
+      - name: Checkout configuration repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: ${{ github.repository_owner }}/sap-automation-config
+          path: config
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Azure Login
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Prepare STAF
+        id: prepare
+        shell: bash
+        run: |
+          chmod +x sap-automation/deploy/scripts/pipeline_scripts/07-staf-testing-prepare.sh
+          sap-automation/deploy/scripts/pipeline_scripts/07-staf-testing-prepare.sh
+        env:
+          SAP_SYSTEM_CONFIGURATION_NAME: ${{ inputs.sap_system_configuration_name }}
+          CONFIG_REPO_PATH: ${{ github.workspace }}/config
+          STAF_REPO_BRANCH: ${{ inputs.staf_repo_branch }}
+
+      - name: Resolve test suites
+        id: resolve-suites
+        shell: bash
+        run: |
+          SUITES=""
+          if [ "${{ inputs.configuration_checks }}" = "true" ]; then
+            SUITES="configuration_checks"
+          fi
+          if [ "${{ inputs.db_ha }}" = "true" ]; then
+            [ -n "$SUITES" ] && SUITES="${SUITES},"
+            SUITES="${SUITES}db_ha"
+          fi
+          if [ "${{ inputs.cs_ha }}" = "true" ]; then
+            [ -n "$SUITES" ] && SUITES="${SUITES},"
+            SUITES="${SUITES}cs_ha"
+          fi
+          if [ -z "$SUITES" ]; then
+            SUITES="configuration_checks,db_ha,cs_ha"
+          fi
+          echo "Resolved test suites: ${SUITES}"
+          echo "RESOLVED_TEST_SUITES=${SUITES}" >> "$GITHUB_OUTPUT"
+
+  staf-testing:
+    name: STAF - Execute Tests
+    runs-on: self-hosted
+    needs: staf-preparation
+    steps:
+      - name: Checkout sap-automation
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: sap-automation
+
+      - name: Checkout STAF repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: ${{ env.STAF_REPO }}
+          ref: ${{ inputs.staf_repo_branch }}
+          path: sap-automation-qa
+
+      - name: Checkout configuration repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: ${{ github.repository_owner }}/sap-automation-config
+          path: config
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Azure Login
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: '3.11'
+
+      - name: Install Ansible
+        shell: bash
+        run: |
+          pip install --upgrade pip
+          pip install ansible-core
+          ansible-galaxy collection install ansible.netcommon azure.azcollection
+
+      - name: Execute STAF tests
+        id: staf-run
+        shell: bash
+        run: |
+          chmod +x sap-automation/deploy/scripts/pipeline_scripts/07-staf-testing-run.sh
+          sap-automation/deploy/scripts/pipeline_scripts/07-staf-testing-run.sh
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ENVIRONMENT: ${{ needs.staf-preparation.outputs.environment }}
+          HOSTS_FILE: ${{ needs.staf-preparation.outputs.hosts_file }}
+          KEYVAULT_NAME: ${{ needs.staf-preparation.outputs.keyvault_name }}
+          LOCATION: ${{ needs.staf-preparation.outputs.location }}
+          NETWORK: ${{ needs.staf-preparation.outputs.network }}
+          SAP_PARAMS_FILE: ${{ needs.staf-preparation.outputs.sap_params_file }}
+          SAP_SYSTEM_CONFIGURATION_NAME: ${{ inputs.sap_system_configuration_name }}
+          SID: ${{ needs.staf-preparation.outputs.sid }}
+          STAF_REPO_BRANCH: ${{ inputs.staf_repo_branch }}
+          STAF_RESULTS_DIR: ${{ github.workspace }}/staf_results
+          STAF_TEST_SUITES: ${{ needs.staf-preparation.outputs.test_suites }}
+          STAF_WORKING_DIR: ${{ github.workspace }}/sap-automation-qa
+          SYSTEM_CONFIG_DIR: ${{ needs.staf-preparation.outputs.system_config_dir }}
+          CONFIG_REPO_PATH: ${{ github.workspace }}/config
+
+      - name: Publish Test Results
+        uses: dorny/test-reporter@3d76b34a4535afbd0600d347b09a6ee5deb3ed7f # v2.6.0
+        if: always()
+        with:
+          name: STAF Test Results - ${{ inputs.sap_system_configuration_name }}
+          path: staf_results/**/junit_results.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: staf-results-${{ inputs.sap_system_configuration_name }}
+          path: staf_results/
+          retention-days: 30
+
+      - name: Post test summary
+        if: always()
+        shell: bash
+        run: |
+          SUMMARY_FILE="${{ github.workspace }}/staf_results/summary.md"
+          if [[ -f "${SUMMARY_FILE}" ]]; then
+            cat "${SUMMARY_FILE}" >> "$GITHUB_STEP_SUMMARY"
+          fi

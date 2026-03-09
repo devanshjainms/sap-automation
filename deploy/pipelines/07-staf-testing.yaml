@@ -1,0 +1,217 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+---
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |  This pipeline triggers SAP Testing Automation Framework (STAF)            |
+# |  validation and regression tests against a deployed SAP system.            |
+# |  It integrates with the Azure/sap-automation-qa repository to              |
+# |  provide end-to-end automated lifecycle validation.                        |
+# |                                                                            |
+# |  Must run on a self-hosted deployment agent with access to the             |
+# |  deployed SAP landscape.                                                   |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+parameters:
+  - name:                                         sap_system_configuration_name
+    displayName:                                  "SAP System configuration name, use the following syntax: ENV-LOCA-VNET-SID"
+    type:                                         string
+    default:                                      DEV-WEEU-SAP01-X00
+
+  - name:                                         environment
+    displayName:                                  Workload Environment (DEV, QUA, PRD, ...)
+    type:                                         string
+    default:                                      DEV
+
+  - name:                                         staf_test_suites
+    displayName:                                  "Comma-separated list of test suites to run"
+    type:                                         string
+    default:                                      "configuration_checks,db_ha,cs_ha"
+
+  - name:                                         staf_repo_branch
+    displayName:                                  "STAF repository branch to use"
+    type:                                         string
+    default:                                      main
+
+  - name:                                         configuration_checks
+    displayName:                                  Run Configuration Checks
+    type:                                         boolean
+    default:                                      true
+
+  - name:                                         db_ha
+    displayName:                                  Run Database High Availability Tests
+    type:                                         boolean
+    default:                                      true
+
+  - name:                                         cs_ha
+    displayName:                                  Run Central Services High Availability Tests
+    type:                                         boolean
+    default:                                      true
+
+  - name:                                         extra_params
+    displayName:                                  Extra Parameters
+    type:                                         string
+    default:                                      ""
+
+  - name:                                         sap_automation_repo_path
+    displayName:                                  The local path on the agent where the sap_automation repo can be found
+    type:                                         string
+
+  - name:                                         config_repo_path
+    displayName:                                  The local path on the agent where the config repo can be found
+    type:                                         string
+
+stages:
+  - stage:                                        STAF_Preparation
+    condition:                                    and(not(failed()), not(canceled()))
+    variables:
+      - template:                                 variables/07-staf-testing-variables.yaml
+        parameters:
+          environment:                            ${{ parameters.environment }}
+    displayName:                                  STAF - Preparation and Test Execution
+    jobs:
+      - job:                                      STAF_Testing
+        displayName:                              STAF Validation & Regression Testing
+        timeoutInMinutes:                         0
+        workspace:
+          clean:                                  all
+        steps:
+          - template:                             templates\download.yaml
+            parameters:
+              getLatestFromBranch:                true
+          - task:                                 PostBuildCleanup@4
+          - task:                                 Bash@3
+            inputs:
+              targetType:                         'filePath'
+              filePath:                           "$(System.DefaultWorkingDirectory)/sap-automation/deploy/scripts/pipeline_scripts/install-ansible.sh"
+              failOnStderr:                       false
+              workingDirectory:                   "$(System.DefaultWorkingDirectory)"
+            env:
+              ansible_core_version:               $(ansible_core_version)
+            name:                                 AnsibleInstallation
+            displayName:                          Install Ansible
+
+          # Preparation: resolve deployment artifacts
+          - task:                                 Bash@3
+            inputs:
+              targetType:                         'filePath'
+              filePath:                           "$(System.DefaultWorkingDirectory)/sap-automation/deploy/scripts/pipeline_scripts/07-staf-testing-prepare.sh"
+              failOnStderr:                       false
+              workingDirectory:                   "$(System.DefaultWorkingDirectory)"
+            name:                                 Preparation
+            displayName:                          STAF - Resolve Deployment Artifacts
+            env:
+              ARM_CLIENT_ID:                      $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET:                  $(ARM_CLIENT_SECRET)
+              ARM_SUBSCRIPTION_ID:                $(ARM_SUBSCRIPTION_ID)
+              ARM_TENANT_ID:                      $(ARM_TENANT_ID)
+              ARM_USE_MSI:                        $(USE_MSI)
+              CONFIG_REPO_PATH:                   ${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)
+              CONTROL_PLANE_SUBSCRIPTION_ID:      $(TERRAFORM_REMOTE_STORAGE_SUBSCRIPTION)
+              KEYVAULT:                           $(KEYVAULT)
+              SAP_SYSTEM_CONFIGURATION_NAME:      ${{ parameters.sap_system_configuration_name }}
+              STAF_REPO_BRANCH:                   ${{ parameters.staf_repo_branch }}
+              SYSTEM_ACCESSTOKEN:                 $(System.AccessToken)
+              USE_MSI:                            $(Use_MSI)
+
+          # Build dynamic test suite list based on boolean parameters
+          - task:                                 Bash@3
+            inputs:
+              targetType:                         'inline'
+              script: |
+                #!/bin/bash
+                set -e
+                SUITES=""
+                if [ "$CONFIG_CHECKS" = "True" ]; then
+                  SUITES="configuration_checks"
+                fi
+                if [ "$DB_HA_TESTS" = "True" ]; then
+                  [ -n "$SUITES" ] && SUITES="${SUITES},"
+                  SUITES="${SUITES}db_ha"
+                fi
+                if [ "$CS_HA_TESTS" = "True" ]; then
+                  [ -n "$SUITES" ] && SUITES="${SUITES},"
+                  SUITES="${SUITES}cs_ha"
+                fi
+                if [ -z "$SUITES" ]; then
+                  SUITES="${CUSTOM_SUITES}"
+                fi
+                echo "Resolved test suites: ${SUITES}"
+                echo "##vso[task.setvariable variable=RESOLVED_TEST_SUITES;isOutput=true]${SUITES}"
+            name:                                 ResolveSuites
+            displayName:                          STAF - Resolve Test Suites
+            env:
+              CONFIG_CHECKS:                      ${{ parameters.configuration_checks }}
+              DB_HA_TESTS:                        ${{ parameters.db_ha }}
+              CS_HA_TESTS:                        ${{ parameters.cs_ha }}
+              CUSTOM_SUITES:                      ${{ parameters.staf_test_suites }}
+
+          # Execute STAF tests
+          - task:                                 Bash@3
+            inputs:
+              targetType:                         'filePath'
+              filePath:                           "$(System.DefaultWorkingDirectory)/sap-automation/deploy/scripts/pipeline_scripts/07-staf-testing-run.sh"
+              failOnStderr:                       false
+              workingDirectory:                   "$(System.DefaultWorkingDirectory)"
+            name:                                 STAFExecution
+            displayName:                          STAF - Execute Validation Tests
+            env:
+              ANSIBLE_COLLECTIONS_PATH:           ~/.ansible/collections:/opt/ansible/collections
+              ANSIBLE_HOST_KEY_CHECKING:          false
+              ANSIBLE_PYTHON_INTERPRETER:         auto_silent
+              ARM_CLIENT_ID:                      $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET:                  $(ARM_CLIENT_SECRET)
+              ARM_SUBSCRIPTION_ID:                $(ARM_SUBSCRIPTION_ID)
+              ARM_TENANT_ID:                      $(ARM_TENANT_ID)
+              ARM_USE_MSI:                        $(USE_MSI)
+              ENVIRONMENT:                        $(Preparation.ENVIRONMENT)
+              HOSTS_FILE:                         $(Preparation.HOSTS_FILE)
+              KEYVAULT_NAME:                      $(Preparation.KEYVAULT_NAME)
+              LOCATION:                           $(Preparation.LOCATION)
+              NETWORK:                            $(Preparation.NETWORK)
+              SAP_PARAMS_FILE:                    $(Preparation.SAP_PARAMS_FILE)
+              SAP_SYSTEM_CONFIGURATION_NAME:      ${{ parameters.sap_system_configuration_name }}
+              SID:                                $(Preparation.SID)
+              STAF_REPO_BRANCH:                   ${{ parameters.staf_repo_branch }}
+              STAF_REPO_URL:                      $(Preparation.STAF_REPO_URL)
+              STAF_RESULTS_DIR:                   $(System.DefaultWorkingDirectory)/staf_results
+              STAF_TEST_SUITES:                   $(ResolveSuites.RESOLVED_TEST_SUITES)
+              STAF_WORKING_DIR:                   $(System.DefaultWorkingDirectory)/sap-automation-qa
+              SYSTEM_CONFIG_DIR:                  $(Preparation.SYSTEM_CONFIG_DIR)
+              CONFIG_REPO_PATH:                   ${{ parameters.config_repo_path }}/$(Deployment_Configuration_Path)
+              SYSTEM_ACCESSTOKEN:                 $(System.AccessToken)
+              USE_MSI:                            $(Use_MSI)
+
+          # Publish test results
+          - task:                                 PublishTestResults@2
+            condition:                            always()
+            inputs:
+              testResultsFormat:                  'JUnit'
+              testResultsFiles:                   '**/junit_results.xml'
+              searchFolder:                       $(System.DefaultWorkingDirectory)/staf_results
+              mergeTestResults:                   true
+              testRunTitle:                        'STAF - ${{ parameters.sap_system_configuration_name }}'
+            displayName:                          STAF - Publish Test Results
+
+          # Publish test artifacts
+          - task:                                 PublishBuildArtifacts@1
+            condition:                            always()
+            inputs:
+              pathtoPublish:                      $(System.DefaultWorkingDirectory)/staf_results
+              artifactName:                       'STAF_Results_${{ parameters.sap_system_configuration_name }}'
+            displayName:                          STAF - Publish Test Artifacts
+
+          # Publish summary
+          - task:                                 Bash@3
+            condition:                            always()
+            inputs:
+              targetType:                         'inline'
+              script: |
+                #!/bin/bash
+                SUMMARY_FILE="$(System.DefaultWorkingDirectory)/staf_results/summary.md"
+                if [[ -f "${SUMMARY_FILE}" ]]; then
+                  echo "##vso[task.uploadsummary]${SUMMARY_FILE}"
+                fi
+            displayName:                          STAF - Upload Test Summary

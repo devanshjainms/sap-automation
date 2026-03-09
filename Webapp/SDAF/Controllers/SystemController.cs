@@ -392,6 +392,65 @@ namespace SDAFWebApp.Controllers
             return RedirectToAction("Index");
         }
 
+        // STAF (SAP Testing Automation Framework) integration actions
+        [ActionName("Test")]
+        public async Task<IActionResult> TestAsync(string id, string partitionKey)
+        {
+            try
+            {
+                SystemModel system = await GetById(id, partitionKey);
+                systemView.SapObject = system;
+
+                List<SelectListItem> environments = restHelper.GetEnvironmentsList().Result;
+                ViewBag.Environments = environments;
+
+                return View(systemView);
+            }
+            catch (Exception e)
+            {
+                TempData["error"] = e.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+        [HttpPost]
+        [ActionName("Test")]
+        public async Task<IActionResult> TestConfirmedAsync(string id, string partitionKey, Templateparameters parameters)
+        {
+            try
+            {
+                SystemModel system = await GetById(id, partitionKey);
+
+                string pipelineId = _configuration["STAF_PIPELINE_ID"];
+                string branch = _configuration["SourceBranch"];
+
+                parameters.sap_system_configuration_name = id;
+
+                PipelineRequestBody requestBody = new()
+                {
+                    resources = new Resources
+                    {
+                        repositories = new Repositories
+                        {
+                            self = new Self
+                            {
+                                refName = $"refs/heads/{branch}"
+                            }
+                        }
+                    },
+                    templateParameters = parameters
+                };
+
+                await restHelper.TriggerPipeline(pipelineId, requestBody);
+                TempData["success"] = "Successfully triggered STAF testing pipeline for " + id;
+            }
+            catch (Exception e)
+            {
+                TempData["error"] = "Error triggering STAF testing pipeline for system " + id + ": " + e.Message;
+            }
+            return RedirectToAction("Index");
+        }
+
         [ActionName("Delete")]
         public async Task<IActionResult> DeleteAsync(string id, string partitionKey)
         {

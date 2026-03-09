@@ -50,6 +50,13 @@ namespace SDAFWebApp.Models
         public string acss_environment { get; set; }
         public string acss_sap_product { get; set; }
 
+        // STAF (SAP Testing Automation Framework) integration parameters
+        public bool? configuration_checks { get; set; }
+        public bool? db_ha { get; set; }
+        public bool? cs_ha { get; set; }
+        public string staf_repo_branch { get; set; }
+        public string staf_test_suites { get; set; }
+
     }
 
 }

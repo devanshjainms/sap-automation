@@ -1,0 +1,179 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |  Ansible playbook for STAF (SAP Testing Automation Framework)              |
+# |  integration. This playbook orchestrates the execution of validation       |
+# |  and regression tests from Azure/sap-automation-qa against a               |
+# |  deployed SAP system.                                                      |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+---
+- name:                                "STAF: SAP Testing Automation Framework"
+  hosts:                               localhost
+  gather_facts:                        true
+  vars:
+    staf_repo_url:                     "https://github.com/Azure/sap-automation-qa.git"
+    staf_repo_branch:                  "main"
+    staf_working_dir:                  "{{ _workspace_directory | default(playbook_dir) }}/sap-automation-qa"
+    staf_results_dir:                  "{{ _workspace_directory | default(playbook_dir) }}/staf_results"
+    staf_test_suites:                  "configuration_checks,db_ha,cs_ha"
+    staf_config_file:                  "{{ staf_results_dir }}/staf_config.json"
+    system_config_dir:                 "{{ _workspace_directory | default(playbook_dir) }}"
+
+  tasks:
+    - name:                            "STAF: Validate required parameters"
+      ansible.builtin.assert:
+        that:
+          - sap_sid is defined
+          - sap_sid | length > 0
+        fail_msg:                      "SAP SID must be defined"
+        success_msg:                   "SAP SID: {{ sap_sid }}"
+
+    - name:                            "STAF: Create results directory"
+      ansible.builtin.file:
+        path:                          "{{ staf_results_dir }}"
+        state:                         directory
+        mode:                          '0755'
+
+    - name:                            "STAF: Clone sap-automation-qa repository"
+      ansible.builtin.git:
+        repo:                          "{{ staf_repo_url }}"
+        dest:                          "{{ staf_working_dir }}"
+        version:                       "{{ staf_repo_branch }}"
+        force:                         true
+      register:                        staf_clone_result
+
+    - name:                            "STAF: Display clone result"
+      ansible.builtin.debug:
+        msg:                           "STAF repository cloned to {{ staf_working_dir }} ({{ staf_clone_result.after }})"
+
+    - name:                            "STAF: Generate configuration file"
+      ansible.builtin.copy:
+        dest:                          "{{ staf_config_file }}"
+        mode:                          '0644'
+        content: |
+          {
+            "sap_sid": "{{ sap_sid }}",
+            "environment": "{{ sap_sid[:3] | default('') }}",
+            "keyvault_name": "{{ kv_name | default('') }}",
+            "test_suites": "{{ staf_test_suites }}",
+            "subscription_id": "{{ lookup('env', 'ARM_SUBSCRIPTION_ID') | default('') }}",
+            "tenant_id": "{{ lookup('env', 'ARM_TENANT_ID') | default('') }}",
+            "workspace_directory": "{{ _workspace_directory | default(playbook_dir) }}"
+          }
+
+    - name:                            "STAF: Install Python requirements"
+      ansible.builtin.pip:
+        requirements:                  "{{ staf_working_dir }}/requirements.txt"
+        virtualenv:                    "{{ staf_working_dir }}/.venv"
+        virtualenv_command:            python3 -m venv
+      when:                            staf_clone_result is succeeded
+      register:                        pip_result
+      failed_when:                     false
+
+    - name:                            "STAF: Resolve test suites to execute"
+      ansible.builtin.set_fact:
+        staf_suite_list:               "{{ staf_test_suites.split(',') | map('trim') | list }}"
+
+    - name:                            "STAF: Display test plan"
+      ansible.builtin.debug:
+        msg:
+          - "SAP SID:        {{ sap_sid }}"
+          - "Test suites:    {{ staf_suite_list | join(', ') }}"
+          - "STAF repo:      {{ staf_repo_url }} ({{ staf_repo_branch }})"
+          - "Results dir:    {{ staf_results_dir }}"
+
+    - name:                            "STAF: Execute test suites"
+      ansible.builtin.include_tasks:   "staf_run_suite.yaml"
+      loop:                            "{{ staf_suite_list }}"
+      loop_control:
+        loop_var:                      suite_name
+
+    - name:                            "STAF: Generate summary report"
+      ansible.builtin.template:
+        src:                           "../templates/staf_summary.md.j2"
+        dest:                          "{{ staf_results_dir }}/summary.md"
+        mode:                          '0644'
+      vars:
+        test_suites:                   "{{ staf_suite_list }}"
+        timestamp:                     "{{ ansible_date_time.iso8601 }}"
+
+    # -----------------------------------------------------------------
+    # Persist results to the configuration repository
+    # -----------------------------------------------------------------
+    - name:                            "STAF: Create sap-automation-qa directory in config repo"
+      ansible.builtin.file:
+        path:                          "{{ system_config_dir }}/sap-automation-qa/{{ item }}"
+        state:                         directory
+        mode:                          '0755'
+      loop:                            "{{ staf_suite_list }}"
+
+    - name:                            "STAF: Create logs directory in config repo"
+      ansible.builtin.file:
+        path:                          "{{ system_config_dir }}/logs/{{ item }}"
+        state:                         directory
+        mode:                          '0755'
+      loop:                            "{{ staf_suite_list }}"
+
+    - name:                            "STAF: Copy HTML reports to config repo"
+      ansible.builtin.copy:
+        src:                           "{{ staf_results_dir }}/{{ item }}/report.html"
+        dest:                          "{{ system_config_dir }}/sap-automation-qa/{{ item }}/report.html"
+        remote_src:                    true
+        mode:                          '0644'
+      loop:                            "{{ staf_suite_list }}"
+      failed_when:                     false
+
+    - name:                            "STAF: Copy timestamped HTML reports to config repo"
+      ansible.builtin.copy:
+        src:                           "{{ staf_results_dir }}/{{ item }}/report.html"
+        dest:                          "{{ system_config_dir }}/sap-automation-qa/{{ item }}/report_{{ ansible_date_time.iso8601_basic_short }}.html"
+        remote_src:                    true
+        mode:                          '0644'
+      loop:                            "{{ staf_suite_list }}"
+      failed_when:                     false
+
+    - name:                            "STAF: Copy JUnit results to config repo"
+      ansible.builtin.copy:
+        src:                           "{{ staf_results_dir }}/{{ item }}/junit_results.xml"
+        dest:                          "{{ system_config_dir }}/sap-automation-qa/{{ item }}/junit_results.xml"
+        remote_src:                    true
+        mode:                          '0644'
+      loop:                            "{{ staf_suite_list }}"
+      failed_when:                     false
+
+    - name:                            "STAF: Copy log files to config repo"
+      ansible.builtin.copy:
+        src:                           "{{ staf_results_dir }}/{{ item }}/test_output.log"
+        dest:                          "{{ system_config_dir }}/logs/{{ item }}/test_output.log"
+        remote_src:                    true
+        mode:                          '0644'
+      loop:                            "{{ staf_suite_list }}"
+      failed_when:                     false
+
+    - name:                            "STAF: Copy timestamped log files to config repo"
+      ansible.builtin.copy:
+        src:                           "{{ staf_results_dir }}/{{ item }}/test_output.log"
+        dest:                          "{{ system_config_dir }}/logs/{{ item }}/test_output_{{ ansible_date_time.iso8601_basic_short }}.log"
+        remote_src:                    true
+        mode:                          '0644'
+      loop:                            "{{ staf_suite_list }}"
+      failed_when:                     false
+
+    - name:                            "STAF: Copy summary to config repo"
+      ansible.builtin.copy:
+        src:                           "{{ staf_results_dir }}/summary.md"
+        dest:                          "{{ system_config_dir }}/sap-automation-qa/summary.md"
+        remote_src:                    true
+        mode:                          '0644'
+      failed_when:                     false
+
+    - name:                            "STAF: Display summary"
+      ansible.builtin.debug:
+        msg:
+          - "STAF testing complete. Results available in {{ staf_results_dir }}"
+          - "HTML reports persisted to: {{ system_config_dir }}/sap-automation-qa/"
+          - "Log files persisted to:    {{ system_config_dir }}/logs/"

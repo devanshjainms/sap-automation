@@ -119,6 +119,7 @@ options=(
         "ACSS Registration"
         "AMS Provider Creation"
         "HCMT"
+        "STAF Testing (SAP Automation QA)"
 
         # Special menu entries
         "BOM Download"
@@ -184,6 +185,85 @@ do
                 playbooks+=( "${all_playbooks[@]:9:2}" );;
         "${options[-4]}")   # Run through first 7 playbooks i.e.  SAP installation
                 playbooks+=( "${all_playbooks[@]:0:9}" );;
+        "STAF Testing (SAP Automation QA)")
+                # ---------------------------------------------------------------------------
+                # STAF Integration - Trigger SAP Testing Automation Framework
+                # ---------------------------------------------------------------------------
+                echo ""
+                echo "##########################################################################"
+                echo "#  STAF - SAP Testing Automation Framework Integration                  #"
+                echo "##########################################################################"
+                echo ""
+
+                # Collect STAF parameters
+                STAF_REPO_URL="${STAF_REPO_URL:-https://github.com/Azure/sap-automation-qa.git}"
+                STAF_REPO_BRANCH="${STAF_REPO_BRANCH:-main}"
+
+                read -rp "STAF repository URL [${STAF_REPO_URL}]: " input_repo_url
+                STAF_REPO_URL="${input_repo_url:-${STAF_REPO_URL}}"
+
+                read -rp "STAF repository branch [${STAF_REPO_BRANCH}]: " input_repo_branch
+                STAF_REPO_BRANCH="${input_repo_branch:-${STAF_REPO_BRANCH}}"
+
+                echo ""
+                echo "Available test suites:"
+                echo "  1) configuration_checks   - Configuration Checks"
+                echo "  2) db_ha                  - Database High Availability"
+                echo "  3) cs_ha                  - Central Services High Availability"
+                echo "  4) all                    - Run all test suites"
+                echo ""
+                read -rp "Select test suites (comma-separated numbers or names) [1,2,3]: " input_suites
+
+                # Resolve suite selections
+                STAF_TEST_SUITES=""
+                if [[ -z "${input_suites}" || "${input_suites}" == "4" || "${input_suites}" == "all" ]]; then
+                  STAF_TEST_SUITES="configuration_checks,db_ha,cs_ha"
+                else
+                  IFS=',' read -ra suite_selections <<< "${input_suites}"
+                  for sel in "${suite_selections[@]}"; do
+                    sel=$(echo "${sel}" | xargs)
+                    case "${sel}" in
+                      1|configuration_checks)  suite_name="configuration_checks" ;;
+                      2|db_ha)                 suite_name="db_ha" ;;
+                      3|cs_ha)                 suite_name="cs_ha" ;;
+                      *)                       suite_name="${sel}" ;;
+                    esac
+                    [ -n "${STAF_TEST_SUITES}" ] && STAF_TEST_SUITES="${STAF_TEST_SUITES},"
+                    STAF_TEST_SUITES="${STAF_TEST_SUITES}${suite_name}"
+                  done
+                fi
+
+                echo ""
+                echo "Configuration:"
+                echo "  SAP SID:        ${sap_sid}"
+                echo "  Repository:     ${STAF_REPO_URL}"
+                echo "  Branch:         ${STAF_REPO_BRANCH}"
+                echo "  Test Suites:    ${STAF_TEST_SUITES}"
+                echo ""
+                read -rp "Proceed with STAF testing? [Y/n]: " confirm
+                if [[ "${confirm}" =~ ^[Nn] ]]; then
+                  echo "STAF testing cancelled."
+                  break
+                fi
+
+                # Determine the script directory for STAF runner
+                staf_script_dir="$(dirname "${cmd_dir}")/scripts/pipeline_scripts"
+
+                export SAP_PARAMS_FILE="$(pwd)/${sap_params_file}"
+                export SID="${sap_sid}"
+                export HOSTS_FILE="$(pwd)/${sap_sid%$'\r'}_hosts.yaml"
+                export KEYVAULT_NAME="${workload_vault_name}"
+                export STAF_REPO_URL
+                export STAF_REPO_BRANCH
+                export STAF_TEST_SUITES
+                export STAF_WORKING_DIR="$(pwd)/sap-automation-qa"
+                export STAF_RESULTS_DIR="$(pwd)/staf_results"
+                export SYSTEM_CONFIG_DIR="$(pwd)"
+
+                ${DEBUG:+echo} \
+                bash "${staf_script_dir}/07-staf-testing-run.sh"
+
+                break;;
         *)
                 # If not a numeric reply
                 if ! [[ "${REPLY}" =~ ^[0-9]{1,2}$ ]]; then

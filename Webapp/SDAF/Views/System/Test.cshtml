@@ -1,0 +1,111 @@
+@model SDAFWebApp.Models.FormViewModel<SystemModel>
+
+@{
+    ViewBag.Title = "STAF Testing";
+    ViewData["environment"] = Model.SapObject.environment;
+    IEnumerable<SelectListItem> environments = ViewBag.Environments;
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+
+    window.onload = function () {
+        $(".js-example-placeholder-single").select2({
+            placeholder: "Search...",
+            allowClear: true,
+            tags: true
+        });
+
+        toggleNullParameters();
+    }
+
+</script>
+
+<fluent-breadcrumb>
+    <fluent-breadcrumb-item href="@Url.Action("Index", "Home")">Home</fluent-breadcrumb-item>
+    <fluent-breadcrumb-item href="@Url.Action("Index", "System")">Systems</fluent-breadcrumb-item>
+    <fluent-breadcrumb-item href="#">STAF Testing</fluent-breadcrumb-item>
+</fluent-breadcrumb>
+
+<div class="text-center">
+    <h2>STAF - SAP Testing Automation</h2>
+</div>
+
+<h4>Run STAF validation and regression tests for System @Model.SapObject.Id</h4>
+<p>
+    This triggers the <strong>SAP Testing Automation Framework (STAF)</strong> pipeline from
+    <a href="https://github.com/Azure/sap-automation-qa" target="_blank" rel="noopener noreferrer">Azure/sap-automation-qa</a>
+    to validate the deployed SAP system.
+</p>
+
+<div>
+    @await Html.PartialAsync("_DetailsPartial", Model)
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="ms-TextField">
+            <div class="left-input">
+                @Html.Label("sap_system_configuration_name", "SAP System", new { @class = $"ms-Label required" })
+                <p>SAP System configuration name</p>
+            </div>
+
+            <div class="right-input">
+                @Html.TextBox("sap_system_configuration_name", Model.SapObject.Id, new { @class = "ms-TextField-field", @readonly = "readonly" })
+            </div>
+        </div>
+
+        <div class="ms-TextField">
+            <div class="left-input">
+                @Html.Label("environment", "Workload Environment", new { @class = $"ms-Label required" })
+                <p>Please specify the workload environment (DEV, QA, PRD, ...)</p>
+            </div>
+
+            <div class="right-input">
+                @Html.DropDownList("environment", environments, new { @class = "js-example-placeholder-single", @style = "width: 100%;", @onchange = $"toggleDisableViaNInputs(['sap_system_configuration_name', 'environment'], 'confirm-test-system-checkbox')" })
+            </div>
+        </div>
+
+        <div class="ms-TextField">
+            <div class="left-input">
+                @Html.Label("staf_repo_branch", "STAF Repository Branch", new { @class = $"ms-Label" })
+                <p>Branch of sap-automation-qa to use</p>
+            </div>
+
+            <div class="right-input">
+                @Html.TextBox("staf_repo_branch", "main", new { @class = "ms-TextField-field" })
+            </div>
+        </div>
+
+        <div class="ms-TextField">
+            <div class="left-input">
+                @Html.Label("extra_params", "Extra Parameters", new { @class = $"ms-Label" })
+                <p>Additional parameters for test execution</p>
+            </div>
+
+            <div class="right-input">
+                @Html.TextBox("extra_params", "", new { @class = "ms-TextField-field" })
+            </div>
+        </div>
+
+        <h4 style="margin-top: 20px;">Test Suites</h4>
+        <p>Select the validation and regression test suites to execute:</p>
+
+        @Html.EditorForModel("Checkbox", new { ParameterName = "configuration_checks", DisplayName = "Configuration Checks", IsChecked = true })
+
+        @Html.EditorForModel("Checkbox", new { ParameterName = "db_ha", DisplayName = "Database High Availability", IsChecked = true })
+
+        @Html.EditorForModel("Checkbox", new { ParameterName = "cs_ha", DisplayName = "Central Services High Availability", IsChecked = true })
+
+        <fluent-checkbox id="confirm-test-system-checkbox" onchange="toggleDisableViaCheckbox(this, 'test-system-button')" disabled>I confirm that I wish to run STAF tests on this system</fluent-checkbox><br />
+
+        <fluent-button id="test-system-button" appearance="accent" value="Run Tests" type="submit" disabled>
+            <i class="ms-Icon ms-Icon--TestBeaker" aria-hidden="true"></i> Run STAF Tests
+        </fluent-button>
+
+        <fluent-anchor appearance="lightweight" href="@Url.Action("Index")">
+            Cancel
+        </fluent-anchor>
+    }
+</div>

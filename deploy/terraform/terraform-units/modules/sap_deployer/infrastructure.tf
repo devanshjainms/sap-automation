@@ -47,6 +47,12 @@ resource "azurerm_virtual_network" "vnet_mgmt" {
   address_space                        = [var.infrastructure.virtual_network.management.address_space]
   flow_timeout_in_minutes              = var.infrastructure.virtual_network.management.flow_timeout_in_minutes
   tags                                 = var.infrastructure.tags
+
+  lifecycle {
+              ignore_changes = [
+                tags
+              ]
+            }
 }
 
 data "azurerm_virtual_network" "vnet_mgmt" {
@@ -94,7 +100,7 @@ resource "azurerm_storage_account" "deployer" {
   allow_nested_items_to_be_public      = false
   shared_access_key_enabled            = var.deployer.shared_access_key_enabled
   default_to_oauth_authentication      = true
-  public_network_access_enabled        = var.public_network_access_enabled
+  public_network_access_enabled        = var.bootstrap ? true : var.public_network_access_enabled
 
 
   cross_tenant_replication_enabled     = false
@@ -105,6 +111,12 @@ resource "azurerm_storage_account" "deployer" {
     bypass                             = ["Metrics", "Logging", "AzureServices"]
   }
   tags                                 = var.infrastructure.tags
+
+  lifecycle {
+              ignore_changes = [
+                tags
+              ]
+            }
 }
 
 data "azurerm_storage_account" "deployer" {

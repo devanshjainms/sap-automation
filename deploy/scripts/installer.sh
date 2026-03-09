@@ -653,6 +653,9 @@ else
 
 			terraform_module_directory="${SAP_AUTOMATION_REPO_PATH}/deploy/terraform/bootstrap/${deployment_system}"/
 
+			# Allow time for Azure Blob Storage permissions to propagate before migrating state
+			sleep 30
+
 			if terraform -chdir="${terraform_module_directory}" init -migrate-state -upgrade --backend-config "path=${param_dirname}/terraform.tfstate"; then
 				return_value=$?
 				print_banner "$banner_title" "Terraform local init succeeded" "success"

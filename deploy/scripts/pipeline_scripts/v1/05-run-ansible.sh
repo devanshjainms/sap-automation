@@ -39,6 +39,15 @@ fi
 export DEBUG
 set -eu
 
+if [ -n "${GITHUB_ACTIONS+x}" ]; then
+	PLATFORM="github"
+elif [ -n "${TF_BUILD+x}" ]; then
+	PLATFORM="devops"
+else
+	PLATFORM="cli"
+fi
+export PLATFORM
+
 # Print the execution environment details
 print_header
 

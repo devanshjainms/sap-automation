@@ -23,6 +23,7 @@ data "terraform_remote_state" "deployer" {
 
 data "terraform_remote_state" "landscape" {
   backend = "azurerm"
+  count   = var.landscape_override == null ? 1 : 0
 
   config = {
     resource_group_name  = local.SAPLibrary_resource_group_name
@@ -46,12 +47,12 @@ locals {
   control_plane_name_resolved = coalesce(
     var.control_plane_name,
     try(data.terraform_remote_state.deployer[0].outputs.environment, ""),
-    try(data.terraform_remote_state.landscape.outputs.control_plane_name, "")
+    try(local.landscape_tfstate.control_plane_name, "")
   )
 
   workload_zone_name_resolved = coalesce(
     var.workload_zone_name,
-    try(data.terraform_remote_state.landscape.outputs.workload_zone_name, "")
+    try(local.landscape_tfstate.workload_zone_name, "")
   )
 
   # Conditions for credential retrieval

@@ -1709,4 +1709,61 @@ variable "workload_zone_name"                   {
                                                   default     = ""
                                                 }
 
+#######################################4#######################################8
+#                                                                              #
+#                Landscape override (bypass remote tfstate)                     #
+#                                                                              #
+#######################################4#######################################8
+
+variable "landscape_override"                    {
+                                                   description = "Direct resource IDs to bypass landscape remote tfstate lookup. When provided, landscape_tfstate_key is not required."
+                                                   type = object({
+                                                     vnet_sap_arm_id                    = string
+                                                     admin_subnet_id                    = optional(string, "")
+                                                     admin_nsg_id                       = optional(string, "")
+                                                     db_subnet_id                       = optional(string, "")
+                                                     db_nsg_id                          = optional(string, "")
+                                                     app_subnet_id                      = optional(string, "")
+                                                     app_nsg_id                         = optional(string, "")
+                                                     web_subnet_id                      = optional(string, "")
+                                                     web_nsg_id                         = optional(string, "")
+                                                     storage_subnet_id                  = optional(string, "")
+                                                     storage_nsg_id                     = optional(string, "")
+                                                     subnet_mgmt_id                     = optional(string, "")
+                                                     route_table_id                     = optional(string, "")
+                                                     storageaccount_name                = optional(string, "")
+                                                     storageaccount_rg_name             = optional(string, "")
+                                                     public_network_access_enabled      = optional(bool, true)
+                                                     use_separate_storage_subnet        = optional(bool, false)
+                                                     privatelink_file_id                = optional(string, "")
+                                                     landscape_key_vault_user_arm_id    = optional(string, "")
+                                                     landscape_key_vault_spn_arm_id     = optional(string, "")
+                                                     user_credential_vault_id           = optional(string, "")
+                                                     spn_credential_vault_id            = optional(string, "")
+                                                     spn_kv_id                          = optional(string, "")
+                                                     sid_public_key_secret_name         = optional(string, "")
+                                                     sid_username_secret_name           = optional(string, "")
+                                                     sid_password_secret_name           = optional(string, "")
+                                                     dns_label                          = optional(string, "")
+                                                     dns_resource_group_name            = optional(string, "")
+                                                     use_custom_dns_a_registration      = optional(bool, false)
+                                                     management_dns_subscription_id     = optional(string, "")
+                                                     management_dns_resourcegroup_name  = optional(string, "")
+                                                     privatelink_dns_resourcegroup_name = optional(string, "")
+                                                     privatelink_dns_subscription_id    = optional(string, "")
+                                                     register_virtual_network_to_dns    = optional(bool, false)
+                                                     saptransport_path                  = optional(string, "")
+                                                     install_path                       = optional(string, "")
+                                                     iSCSI_server_ips                   = optional(list(string), [])
+                                                     iSCSI_server_names                 = optional(list(string), [])
+                                                     iSCSI_servers                      = optional(list(any), [])
+                                                     ANF_pool_settings                  = optional(any, null)
+                                                     ams_resource_id                    = optional(string, "")
+                                                     automation_version                 = optional(string, "")
+                                                     control_plane_name                 = optional(string, "")
+                                                     workload_zone_name                 = optional(string, "")
+                                                   })
+                                                   default = null
+                                                 }
+
 

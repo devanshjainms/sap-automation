@@ -33,7 +33,7 @@ output "automation_version"            {
 
 output "workload_automation_version"   {
                                          description = "Defines the version of the terraform templates used in the workload zone deployment"
-                                         value       = data.terraform_remote_state.landscape.outputs.automation_version
+                                         value       = try(local.landscape_tfstate.automation_version, local.version_label)
                                        }
 
 output "random_id"                     {
@@ -121,15 +121,15 @@ output "scs_loadbalancer_id"           {
 
 output "use_custom_dns_a_registration" {
                                          description = "Use custom DNS registration"
-                                         value       = try(data.terraform_remote_state.landscape.outputs.use_custom_dns_a_registration, true)
+                                         value       = try(local.landscape_tfstate.use_custom_dns_a_registration, true)
                                        }
 output "management_dns_subscription_id" {
                                          description = "Subscription Id for DNS resource group"
-                                         value       = try(data.terraform_remote_state.landscape.outputs.management_dns_subscription_id, null)
+                                         value       = try(local.landscape_tfstate.management_dns_subscription_id, null)
                                         }
 output "management_dns_resourcegroup_name" {
                                              description = "Resource group name for DNS resource group"
-                                             value       = try(data.terraform_remote_state.landscape.outputs.management_dns_resourcegroup_name, local.SAPLibrary_resource_group_name)
+                                             value       = try(local.landscape_tfstate.management_dns_resourcegroup_name, local.SAPLibrary_resource_group_name)
                                            }
 
 

@@ -5,9 +5,13 @@
 locals {
 
   version_label                        = trimspace(file("${path.module}/../../../configs/version.txt"))
+  use_landscape_override               = var.landscape_override != null
+  landscape_tfstate                    = local.use_landscape_override ? var.landscape_override : data.terraform_remote_state.landscape[0].outputs
+  deployer_tfstate                     = length(try(var.deployer_tfstate_key, "")) > 0 ? data.terraform_remote_state.deployer[0].outputs : null
+
   // The environment of sap landscape and sap system
   environment                          = upper(local.infrastructure.environment)
-  vnet_sap_arm_id                      = try(data.terraform_remote_state.landscape.outputs.vnet_sap_arm_id, "")
+  vnet_sap_arm_id                      = try(local.landscape_tfstate.vnet_sap_arm_id, "")
 
   vnet_logical_name                    = local.infrastructure.virtual_networks.sap.logical_name
   vnet_sap_exists                      = length(local.vnet_sap_arm_id) > 0 ? true : false
@@ -42,8 +46,8 @@ locals {
   // Retrieve the arm_id of deployer's Key Vault
   spn_key_vault_arm_id               = trimspace(coalesce(
                                          var.spn_keyvault_id,
-                                         try(data.terraform_remote_state.landscape.outputs.landscape_key_vault_spn_arm_id, ""),
-                                         try(data.terraform_remote_state.deployer[0].outputs.deployer_kv_user_arm_id, ""),
+                                         try(local.landscape_tfstate.landscape_key_vault_spn_arm_id, ""),
+                                         try(local.deployer_tfstate.deployer_kv_user_arm_id, ""),
                                          " "
                                        ))
 

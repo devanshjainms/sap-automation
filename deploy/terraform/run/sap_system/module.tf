@@ -68,7 +68,7 @@ module "common_infrastructure" {
   custom_prefix                                 = var.use_prefix ? var.custom_prefix : " "
   database                                      = local.database
   deploy_application_security_groups            = var.deploy_application_security_groups
-  deployer_tfstate                              = length(var.deployer_tfstate_key) > 0 ? data.terraform_remote_state.deployer[0].outputs : null
+  deployer_tfstate                              = local.deployer_tfstate
   deployment                                    = var.deployment
   enable_purge_control_for_keyvaults            = var.enable_purge_control_for_keyvaults
   ha_validator                                  = format("%d%d-%s",
@@ -80,7 +80,7 @@ module "common_infrastructure" {
   infrastructure                                = local.infrastructure
   is_single_node_hana                           = "true"
   key_vault                                     = local.key_vault
-  landscape_tfstate                             = data.terraform_remote_state.landscape.outputs
+  landscape_tfstate                             = local.landscape_tfstate
   license_type                                  = var.license_type
   naming                                        = length(var.name_override_file) > 0 ? local.custom_names : local.generator_as_lists
   NFS_provider                                  = var.NFS_provider
@@ -147,7 +147,7 @@ module "hdb_node" {
   hanashared_private_endpoint_id                = length(var.hanashared_private_endpoint_id) > 0 ? (length(var.hanashared_private_endpoint_id[0]) > 0 ? var.hanashared_private_endpoint_id : []) : []
   hanashared_volume_size                        = var.hanashared_volume_size
   infrastructure                                = local.infrastructure
-  landscape_tfstate                             = data.terraform_remote_state.landscape.outputs
+  landscape_tfstate                             = local.landscape_tfstate
   license_type                                  = var.license_type
   naming                                        = length(var.name_override_file) > 0 ? local.custom_names : local.generator_as_lists
   NFS_provider                                  = var.NFS_provider
@@ -203,10 +203,10 @@ module "app_tier" {
   deploy_application_security_groups            = var.deploy_application_security_groups
   deployment                                    = var.deployment
   fencing_role_name                             = var.fencing_role_name
-  firewall_id                                   = module.common_infrastructure.firewall_id
+  firewall_id                                   = try(module.common_infrastructure.firewall_id, "")
   idle_timeout_scs_ers                          = var.idle_timeout_scs_ers
   infrastructure                                = local.infrastructure
-  landscape_tfstate                             = data.terraform_remote_state.landscape.outputs
+  landscape_tfstate                             = local.landscape_tfstate
   license_type                                  = var.license_type
   naming                                        = length(var.name_override_file) > 0 ? local.custom_names : local.generator_as_lists
   network_location                              = module.common_infrastructure.network_location
@@ -270,7 +270,7 @@ module "anydb_node" {
   deployment                                    = var.deployment
   fencing_role_name                             = var.fencing_role_name
   infrastructure                                = local.infrastructure
-  landscape_tfstate                             = data.terraform_remote_state.landscape.outputs
+  landscape_tfstate                             = local.landscape_tfstate
   license_type                                  = var.license_type
   naming                                        = length(var.name_override_file) > 0 ? local.custom_names : local.generator_as_lists
   observer_vm_size                              = var.observer_vm_size
@@ -329,7 +329,7 @@ module "output_files" {
                                                   )
   is_use_fence_kdump                            = var.use_fence_kdump
   infrastructure                                = local.infrastructure
-  landscape_tfstate                             = data.terraform_remote_state.landscape.outputs
+  landscape_tfstate                             = local.landscape_tfstate
   naming                                        = length(var.name_override_file) > 0 ? (
                                                     local.custom_names) : (
                                                     module.sap_namegenerator.naming
@@ -442,8 +442,8 @@ module "output_files" {
   #########################################################################################
   NFS_provider                                  = var.NFS_provider
   sap_mnt                                       = module.common_infrastructure.sapmnt_path
-  sap_transport                                 = try(data.terraform_remote_state.landscape.outputs.saptransport_path, "")
-  install_path                                  = try(data.terraform_remote_state.landscape.outputs.install_path, "")
+  sap_transport                                 = try(local.landscape_tfstate.saptransport_path, "")
+  install_path                                  = try(local.landscape_tfstate.install_path, "")
   shared_home                                   = var.shared_home
   hana_data                                     = module.hdb_node.hana_data_ANF_volumes
   hana_log                                      = module.hdb_node.hana_log_ANF_volumes
@@ -454,10 +454,10 @@ module "output_files" {
   #########################################################################################
   #  DNS information                                                                      #
   #########################################################################################
-  dns                                           = try(data.terraform_remote_state.landscape.outputs.dns_label, "")
-  use_custom_dns_a_registration                 = try(data.terraform_remote_state.landscape.outputs.use_custom_dns_a_registration, false)
-  management_dns_subscription_id                = try(data.terraform_remote_state.landscape.outputs.management_dns_subscription_id, null)
-  management_dns_resourcegroup_name             = try(data.terraform_remote_state.landscape.outputs.management_dns_resourcegroup_name, local.SAPLibrary_resource_group_name)
+  dns                                           = try(local.landscape_tfstate.dns_label, "")
+  use_custom_dns_a_registration                 = try(local.landscape_tfstate.use_custom_dns_a_registration, false)
+  management_dns_subscription_id                = try(local.landscape_tfstate.management_dns_subscription_id, null)
+  management_dns_resourcegroup_name             = try(local.landscape_tfstate.management_dns_resourcegroup_name, local.SAPLibrary_resource_group_name)
   dns_zone_names                                = var.dns_zone_names
   dns_a_records_for_secondary_names             = var.dns_a_records_for_secondary_names
 
@@ -484,14 +484,14 @@ module "output_files" {
   #########################################################################################
   #  iSCSI                                                                                #
   #########################################################################################
-  iSCSI_server_ips                              = var.database_cluster_type == "ISCSI" || var.scs_cluster_type == "ISCSI" ? data.terraform_remote_state.landscape.outputs.iSCSI_server_ips : []
-  iSCSI_server_names                            = var.database_cluster_type == "ISCSI" || var.scs_cluster_type == "ISCSI" ? data.terraform_remote_state.landscape.outputs.iSCSI_server_names : []
-  iSCSI_servers                                 = var.database_cluster_type == "ISCSI" || var.scs_cluster_type == "ISCSI" ? data.terraform_remote_state.landscape.outputs.iSCSI_servers : []
+  iSCSI_server_ips                              = var.database_cluster_type == "ISCSI" || var.scs_cluster_type == "ISCSI" ? try(local.landscape_tfstate.iSCSI_server_ips, []) : []
+  iSCSI_server_names                            = var.database_cluster_type == "ISCSI" || var.scs_cluster_type == "ISCSI" ? try(local.landscape_tfstate.iSCSI_server_names, []) : []
+  iSCSI_servers                                 = var.database_cluster_type == "ISCSI" || var.scs_cluster_type == "ISCSI" ? try(local.landscape_tfstate.iSCSI_servers, []) : []
 
   #########################################################################################
   #  AMS                                                                                  #
   #########################################################################################
-  ams_resource_id                               = try(coalesce(var.ams_resource_id, try(data.terraform_remote_state.landscape.outputs.ams_resource_id, "")),"")
+  ams_resource_id                               = try(coalesce(var.ams_resource_id, try(local.landscape_tfstate.ams_resource_id, "")),"")
   enable_ha_monitoring                          = var.enable_ha_monitoring
   enable_os_monitoring                          = var.enable_os_monitoring
 

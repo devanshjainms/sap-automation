@@ -250,6 +250,22 @@ output "app_id_used"                   {
 
 output "subscription_id_used"          {
                                          description = "The Subscription ID configured in the key vault"
-                                         value       = length(var.subscription_id) > 0 ? var.subscription_id : data.azurerm_key_vault_secret.subscription_id[0].value
+                                         value       = length(var.subscription_id) > 0 ? var.subscription_id : try(data.azurerm_key_vault_secret.subscription_id[0].value, "")
                                          sensitive   = true
+                                       }
+
+###############################################################################
+#                                                                             #
+#                     Inventory and SAP Parameters                            #
+#                                                                             #
+###############################################################################
+
+output "inventory_content"             {
+                                         description = "Content of the ansible inventory file"
+                                         value       = module.output_files.inventory_content
+                                       }
+
+output "sap_parameters_content"        {
+                                         description = "Content of the sap-parameters file"
+                                         value       = module.output_files.sap_parameters_content
                                        }

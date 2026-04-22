@@ -17,22 +17,25 @@ locals {
 
   vnet_logical_name                    = local.infrastructure.virtual_networks.sap.logical_name
 
+  use_deployer_override                = var.deployer_override != null
+  deployer_tfstate                     = local.use_deployer_override ? var.deployer_override : try(data.terraform_remote_state.deployer[0].outputs, {})
 
   // Locate the tfstate storage account
-  parsed_id                           = provider::azurerm::parse_resource_id(var.tfstate_resource_id)
+  has_tfstate_resource_id              = length(var.tfstate_resource_id) > 0
+  parsed_id                           = local.has_tfstate_resource_id ? provider::azurerm::parse_resource_id(var.tfstate_resource_id) : {}
 
-  SAPLibrary_subscription_id          = local.parsed_id["subscription_id"]
-  SAPLibrary_resource_group_name      = local.parsed_id["resource_group_name"]
-  tfstate_storage_account_name        = local.parsed_id["resource_name"]
+  SAPLibrary_subscription_id          = try(local.parsed_id["subscription_id"], "")
+  SAPLibrary_resource_group_name      = try(local.parsed_id["resource_group_name"], "")
+  tfstate_storage_account_name        = try(local.parsed_id["resource_name"], "")
   tfstate_container_name              = module.sap_namegenerator.naming.resource_suffixes.tfstate
 
   // Retrieve the arm_id of deployer's Key Vault from deployer's terraform.tfstate
 
-  deployer_subscription_id             = coalesce(
-                                           try(data.terraform_remote_state.deployer[0].outputs.created_resource_group_subscription_id,""),
+  deployer_subscription_id             = try(coalesce(
+                                           try(local.deployer_tfstate.created_resource_group_subscription_id,""),
                                            length(var.spn_keyvault_id) > 0 ? (split("/", var.spn_keyvault_id)[2]) : (""),
                                            local.SAPLibrary_subscription_id
-                                           )
+                                           ), "")
 
   # spn                                  = {
   #                                          subscription_id = length(var.subscription_id) > 0 ? var.subscription_id : data.azurerm_key_vault_secret.subscription_id[0].value,

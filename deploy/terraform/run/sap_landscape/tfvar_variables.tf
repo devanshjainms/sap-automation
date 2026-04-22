@@ -1221,9 +1221,9 @@ variable "nat_gateway_public_ip_tags"             {
 
 variable "tfstate_resource_id"                   {
                                                     description = "Resource id of tfstate storage account"
+                                                    default     = ""
                                                     validation {
-                                                                condition = can(provider::azurerm::parse_resource_id(var.tfstate_resource_id)
-                                                                )
+                                                                condition = var.tfstate_resource_id == "" || can(provider::azurerm::parse_resource_id(var.tfstate_resource_id))
                                                                 error_message = "The Azure Resource ID for the storage account containing the Terraform state files must be provided and be in correct format."
                                                               }
                                                   }
@@ -1306,5 +1306,39 @@ variable "control_plane_name"                   {
                                                   description = "The name of the control plane"
                                                   default     = ""
                                                 }
+
+#######################################4#######################################8
+#                                                                              #
+#                Deployer override (bypass remote tfstate)                      #
+#                                                                              #
+#######################################4#######################################8
+
+variable "deployer_override"                     {
+                                                   description = "Direct resource IDs to bypass deployer remote tfstate lookup. When provided, deployer_tfstate_key is not required."
+                                                   type = object({
+                                                     environment                                        = optional(string, "")
+                                                     created_resource_group_subscription_id              = optional(string, "")
+                                                     additional_network_id                               = optional(string, "")
+                                                     application_configuration_id                        = optional(string, "")
+                                                     deployer_kv_user_arm_id                             = optional(string, "")
+                                                     firewall_id                                         = optional(string, "")
+                                                     firewall_ip                                         = optional(string, "")
+                                                     deployer_public_ip_address                          = optional(string, "")
+                                                     subnet_mgmt_id                                      = optional(string, "")
+                                                     vnet_mgmt_id                                        = optional(string, "")
+                                                     deployer_kv_user_name                               = optional(string, "")
+                                                     subnet_mgmt_address_prefixes                        = optional(list(string), [])
+                                                     subnet_bastion_address_prefixes                     = optional(list(string), [])
+                                                     subnets_to_add_to_firewall_for_key_vaults_and_storage = optional(list(string), [])
+                                                     deployer_uai                                        = optional(object({
+                                                       principal_id = optional(string, "")
+                                                       tenant_id    = optional(string, "")
+                                                     }), {
+                                                       principal_id = ""
+                                                       tenant_id    = ""
+                                                     })
+                                                   })
+                                                   default = null
+                                                 }
 
 

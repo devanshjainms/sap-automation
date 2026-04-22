@@ -10,7 +10,7 @@ data "azurerm_client_config" "current" {}
 
 data "terraform_remote_state" "deployer" {
   backend = "azurerm"
-  count   = length(try(var.deployer_tfstate_key, "")) > 0 ? 1 : 0
+  count   = local.has_tfstate_resource_id && !local.use_deployer_override && length(try(var.deployer_tfstate_key, "")) > 0 ? 1 : 0
 
   config = {
     resource_group_name  = local.SAPLibrary_resource_group_name
@@ -32,10 +32,10 @@ locals {
   environment_name                     = local.use_control_plane_naming ? var.control_plane_name : local.environment
 
   # Control plane naming resolution
-  control_plane_name_resolved          = coalesce(
+  control_plane_name_resolved          = try(coalesce(
                                            var.control_plane_name,
-                                           try(data.terraform_remote_state.deployer[0].outputs.environment, "")
-                                         )
+                                           try(local.deployer_tfstate.environment, "")
+                                         ), "")
 
 
   # Conditions for credential retrieval

@@ -329,7 +329,7 @@ output "automation_version"                      {
 
 output "controlplane_environment"                {
                                                    description = "Control plane environment"
-                                                   value       = try(data.terraform_remote_state.deployer[0].outputs.environment, "")
+                                                   value       = try(local.deployer_tfstate.environment, "")
                                                  }
 
 output "use_spn"                                 {

@@ -33,9 +33,9 @@ locals {
   temp_infrastructure                  = {
                                            additional_network_id         = length(var.additional_network_id) > 0 ? (
                                                                             var.additional_network_id) : (
-                                                                            try(length(local.deployer_tfstate.additional_network_id) > 0, false) ? (
-                                                                              local.deployer_tfstate.additional_network_id) : (
-                                                                              ""))
+                                                                            local.use_deployer_override ? (
+                                                                              try(length(var.deployer_override.additional_network_id) > 0, false) ? var.deployer_override.additional_network_id : "") : (
+                                                                              try(length(data.terraform_remote_state.deployer[0].outputs.additional_network_id) > 0, false) ? data.terraform_remote_state.deployer[0].outputs.additional_network_id : ""))
                                            additional_subnet_id          = var.additional_subnet_id
                                            codename                      = var.codename
                                            deploy_defender_extension     = var.deploy_defender_extension
@@ -52,12 +52,12 @@ locals {
                                            user_assigned_identity_id     = var.user_assigned_identity_id
                                            application_configuration_id  = try(coalesce(
                                                                              var.application_configuration_id,
-                                                                             try(local.deployer_tfstate.application_configuration_id, "")
+                                                                             local.use_deployer_override ? try(var.deployer_override.application_configuration_id, "") : try(data.terraform_remote_state.deployer[0].outputs.application_configuration_id, "")
                                                                            ), "")
 
                                            use_application_configuration = length(try(coalesce(
                                                                              var.application_configuration_id,
-                                                                             try(local.deployer_tfstate.application_configuration_id, "")
+                                                                             local.use_deployer_override ? try(var.deployer_override.application_configuration_id, "") : try(data.terraform_remote_state.deployer[0].outputs.application_configuration_id, "")
                                                                            ), "")) > 0 ? true : false
                                            workload_zone_name            = local.workload_zone_name
                                            control_plane_name            = var.control_plane_name
@@ -99,12 +99,12 @@ locals {
                                            spn                                    = {
 
                                                                                       id     = trimspace(coalesce(
-                                                                                                         try(contains(keys(local.deployer_tfstate), "deployer_kv_user_arm_id") ? local.deployer_tfstate.deployer_kv_user_arm_id : "",""),
+                                                                                                         local.use_deployer_override ? try(var.deployer_override.deployer_kv_user_arm_id, "") : try(data.terraform_remote_state.deployer[0].outputs.deployer_kv_user_arm_id, ""),
                                                                                                          var.spn_keyvault_id,
                                                                                                          " ")
                                                                                                          )
                                                                                       exists = length(trimspace(coalesce(
-                                                                                                         try(contains(keys(local.deployer_tfstate), "deployer_kv_user_arm_id") ? local.deployer_tfstate.deployer_kv_user_arm_id : "",""),
+                                                                                                         local.use_deployer_override ? try(var.deployer_override.deployer_kv_user_arm_id, "") : try(data.terraform_remote_state.deployer[0].outputs.deployer_kv_user_arm_id, ""),
                                                                                                          var.spn_keyvault_id,
                                                                                                          " ")
                                                                                                          )) > 0

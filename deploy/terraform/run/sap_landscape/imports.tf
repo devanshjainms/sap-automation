@@ -34,7 +34,7 @@ locals {
   # Control plane naming resolution
   control_plane_name_resolved          = try(coalesce(
                                            var.control_plane_name,
-                                           try(local.deployer_tfstate.environment, "")
+                                           local.use_deployer_override ? try(var.deployer_override.environment, "") : try(data.terraform_remote_state.deployer[0].outputs.environment, "")
                                          ), "")
 
 

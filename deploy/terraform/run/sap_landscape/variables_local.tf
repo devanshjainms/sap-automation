@@ -32,7 +32,7 @@ locals {
   // Retrieve the arm_id of deployer's Key Vault from deployer's terraform.tfstate
 
   deployer_subscription_id             = try(coalesce(
-                                           try(local.deployer_tfstate.created_resource_group_subscription_id,""),
+                                           local.use_deployer_override ? try(var.deployer_override.created_resource_group_subscription_id, "") : try(data.terraform_remote_state.deployer[0].outputs.created_resource_group_subscription_id, ""),
                                            length(var.spn_keyvault_id) > 0 ? (split("/", var.spn_keyvault_id)[2]) : (""),
                                            local.SAPLibrary_subscription_id
                                            ), "")

@@ -22,19 +22,20 @@ locals {
 
   // Locate the tfstate storage account
   has_tfstate_resource_id              = length(var.tfstate_resource_id) > 0
-  parsed_id                           = local.has_tfstate_resource_id ? provider::azurerm::parse_resource_id(var.tfstate_resource_id) : {}
+  tfstate_id_parts                     = local.has_tfstate_resource_id ? split("/", var.tfstate_resource_id) : []
 
-  SAPLibrary_subscription_id          = try(local.parsed_id["subscription_id"], "")
-  SAPLibrary_resource_group_name      = try(local.parsed_id["resource_group_name"], "")
-  tfstate_storage_account_name        = try(local.parsed_id["resource_name"], "")
+  SAPLibrary_subscription_id          = local.has_tfstate_resource_id ? try(local.tfstate_id_parts[2], "") : ""
+  SAPLibrary_resource_group_name      = local.has_tfstate_resource_id ? try(local.tfstate_id_parts[4], "") : ""
+  tfstate_storage_account_name        = local.has_tfstate_resource_id ? try(local.tfstate_id_parts[8], "") : ""
   tfstate_container_name              = module.sap_namegenerator.naming.resource_suffixes.tfstate
 
   // Retrieve the arm_id of deployer's Key Vault from deployer's terraform.tfstate
 
-  deployer_subscription_id             = try(coalesce(
-                                           local.use_deployer_override ? try(var.deployer_override.created_resource_group_subscription_id, "") : try(data.terraform_remote_state.deployer[0].outputs.created_resource_group_subscription_id, ""),
+    deployer_subscription_id             = try(coalesce(
+                                           local.use_deployer_override ? try(var.deployer_override.created_resource_group_subscription_id, "") : "",
                                            length(var.spn_keyvault_id) > 0 ? (split("/", var.spn_keyvault_id)[2]) : (""),
-                                           local.SAPLibrary_subscription_id
+                                           local.SAPLibrary_subscription_id,
+                                           var.subscription_id
                                            ), "")
 
   # spn                                  = {

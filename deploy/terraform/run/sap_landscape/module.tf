@@ -22,7 +22,7 @@ module "sap_landscape" {
   ANF_settings                                 = local.ANF_settings
   authentication                               = local.authentication
   create_transport_storage                     = var.create_transport_storage
-  deployer_tfstate                             = try(data.terraform_remote_state.deployer[0].outputs, [])
+  deployer_tfstate                             = local.deployer_tfstate
   diagnostics_storage_account                  = local.diagnostics_storage_account
   enable_firewall_for_keyvaults_and_storage    = var.enable_firewall_for_keyvaults_and_storage
   infrastructure                               = local.infrastructure
@@ -50,7 +50,7 @@ module "sap_landscape" {
   transport_volume_size                        = var.transport_volume_size
   use_AFS_for_shared_storage                   = var.use_AFS_for_shared_storage
   AFS_enable_encryption_in_transit             = var.AFS_enable_encryption_in_transit
-  use_deployer                                 = length(var.deployer_tfstate_key) > 0
+  use_deployer                                 = local.use_deployer_override || length(var.deployer_tfstate_key) > 0
   use_private_endpoint                         = var.use_private_endpoint
   use_service_endpoint                         = var.use_service_endpoint
   vm_settings                                  = local.vm_settings

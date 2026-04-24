@@ -33,7 +33,7 @@ output "automation_version"            {
 
 output "workload_automation_version"   {
                                          description = "Defines the version of the terraform templates used in the workload zone deployment"
-                                         value       = data.terraform_remote_state.landscape.outputs.automation_version
+                                         value       = try(local.landscape_tfstate.automation_version, local.version_label)
                                        }
 
 output "random_id"                     {
@@ -121,15 +121,15 @@ output "scs_loadbalancer_id"           {
 
 output "use_custom_dns_a_registration" {
                                          description = "Use custom DNS registration"
-                                         value       = try(data.terraform_remote_state.landscape.outputs.use_custom_dns_a_registration, true)
+                                         value       = try(local.landscape_tfstate.use_custom_dns_a_registration, true)
                                        }
 output "management_dns_subscription_id" {
                                          description = "Subscription Id for DNS resource group"
-                                         value       = try(data.terraform_remote_state.landscape.outputs.management_dns_subscription_id, null)
+                                         value       = try(local.landscape_tfstate.management_dns_subscription_id, null)
                                         }
 output "management_dns_resourcegroup_name" {
                                              description = "Resource group name for DNS resource group"
-                                             value       = try(data.terraform_remote_state.landscape.outputs.management_dns_resourcegroup_name, local.SAPLibrary_resource_group_name)
+                                             value       = try(local.landscape_tfstate.management_dns_resourcegroup_name, local.SAPLibrary_resource_group_name)
                                            }
 
 
@@ -250,6 +250,22 @@ output "app_id_used"                   {
 
 output "subscription_id_used"          {
                                          description = "The Subscription ID configured in the key vault"
-                                         value       = length(var.subscription_id) > 0 ? var.subscription_id : data.azurerm_key_vault_secret.subscription_id[0].value
+                                         value       = length(var.subscription_id) > 0 ? var.subscription_id : try(data.azurerm_key_vault_secret.subscription_id[0].value, "")
                                          sensitive   = true
+                                       }
+
+###############################################################################
+#                                                                             #
+#                     Inventory and SAP Parameters                            #
+#                                                                             #
+###############################################################################
+
+output "inventory_content"             {
+                                         description = "Content of the ansible inventory file"
+                                         value       = module.output_files.inventory_content
+                                       }
+
+output "sap_parameters_content"        {
+                                         description = "Content of the sap-parameters file"
+                                         value       = module.output_files.sap_parameters_content
                                        }

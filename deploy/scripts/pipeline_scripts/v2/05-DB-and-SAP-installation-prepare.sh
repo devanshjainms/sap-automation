@@ -170,6 +170,7 @@ echo "##vso[task.setvariable variable=SAP_PARAMETERS;isOutput=true]sap-parameter
 echo "##vso[task.setvariable variable=SID;isOutput=true]${SID}"
 echo "##vso[task.setvariable variable=SSH_KEY_NAME;isOutput=true]${WORKLOAD_ZONE_NAME}-sid-sshkey"
 echo "##vso[task.setvariable variable=USERNAME_KEY_NAME;isOutput=true]${WORKLOAD_ZONE_NAME}-sid-username"
+echo "##vso[task.setvariable variable=WORKLOAD_ZONE_NAME;isOutput=true]${WORKLOAD_ZONE_NAME}"
 
 az keyvault secret show --name "${WORKLOAD_ZONE_NAME}-sid-sshkey" --vault-name "$key_vault" --subscription "$key_vault_subscription_id" --query value -o tsv >"artifacts/${SAP_SYSTEM_CONFIGURATION_NAME}_sshkey"
 cp sap-parameters.yaml artifacts/.

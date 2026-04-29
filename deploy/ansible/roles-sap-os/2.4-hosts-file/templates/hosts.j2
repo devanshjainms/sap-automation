@@ -144,6 +144,10 @@ ansible_facts.
 {%   endfor %}
 {# Keep only unique values in the virtual_host_names #}
 {% set virtual_host_names = virtual_host_names | unique %}
+{# Add virtual_host when it differs from inventory hostname (use_secondary_ips scenario) #}
+{% if default_virtual_host and default_virtual_host != host and default_virtual_host not in virtual_host_names %}
+{%   set _ = virtual_host_names.append(default_virtual_host) %}
+{% endif %}
 {# Determine the IPs for the current host from ipadd variable. Do not sort it, the order is already correct. #}
 {%   set host_ips = hostvars[host]['ipadd'] if 'ipadd' in hostvars[host] else [] %}
 {# Check if there are IPs available for the current host #}

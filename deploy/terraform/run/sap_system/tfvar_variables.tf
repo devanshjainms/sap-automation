@@ -460,6 +460,37 @@ variable "use_spn"                              {
                                                   default     = false
                                                 }
 
+#########################################################################################
+#                                                                                       #
+#  Storage SPN settings                                                                 #
+#                                                                                       #
+#########################################################################################
+
+variable "use_storage_spn"                      {
+                                                  description = "If true, use a separate service principal for storage operations"
+                                                  type        = bool
+                                                  default     = false
+                                                }
+
+variable "storage_spn_client_id"                {
+                                                  description = "Client ID for the storage service principal"
+                                                  type        = string
+                                                  default     = ""
+                                                }
+
+variable "storage_spn_client_secret"            {
+                                                  description = "Client secret for the storage service principal"
+                                                  type        = string
+                                                  default     = ""
+                                                  sensitive   = true
+                                                }
+
+variable "storage_spn_tenant_id"                {
+                                                  description = "Tenant ID for the storage service principal"
+                                                  type        = string
+                                                  default     = ""
+                                                }
+
 
 #########################################################################################
 #                                                                                       #

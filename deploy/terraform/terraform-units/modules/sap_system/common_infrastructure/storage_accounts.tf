@@ -9,7 +9,7 @@
 #######################################4#######################################8
 
 resource "azurerm_storage_account" "sapmnt" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = local.use_AFS_for_shared ? (
                                            length(var.azure_files_sapmnt_id) > 0 ? (
                                              0) : (
@@ -69,7 +69,7 @@ resource "azurerm_storage_account" "sapmnt" {
 }
 
 data "azurerm_storage_account" "sapmnt" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.NFS_provider == "AFS" ? (
                                            length(var.azure_files_sapmnt_id) > 0 ? (
                                              1) : (
@@ -82,7 +82,7 @@ data "azurerm_storage_account" "sapmnt" {
 }
 
 resource "azurerm_private_endpoint" "sapmnt" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = local.use_AFS_for_shared && var.use_private_endpoint ? (
                                           length(var.sapmnt_private_endpoint_id) > 0 ? (
                                             0) : (
@@ -156,7 +156,7 @@ resource "time_sleep" "wait_for_private_endpoints" {
 
 
 data "azurerm_private_endpoint_connection" "sapmnt" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = local.use_AFS_for_shared && var.use_private_endpoint ? (
                                            length(var.sapmnt_private_endpoint_id) > 0 ? (
                                              1) : (
@@ -176,7 +176,7 @@ data "azurerm_private_endpoint_connection" "sapmnt" {
 #########################################################################################
 
 resource "azurerm_storage_share" "sapmnt" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = local.use_AFS_for_shared ? 1 : 0
   depends_on                           = [
                                            azurerm_storage_account.sapmnt,
@@ -208,7 +208,7 @@ resource "azurerm_storage_share" "sapmnt" {
 #########################################################################################
 // we don't create SMB share if NFS provider when AFS is not used for shared storage
 resource "azurerm_storage_share" "sapmnt_smb" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = local.use_AFS_for_shared && local.app_tier_os == "WINDOWS" ? (
                                            length(var.azure_files_sapmnt_id) > 0 ? (
                                              0) : (

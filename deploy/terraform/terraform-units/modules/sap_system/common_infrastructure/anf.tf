@@ -8,7 +8,7 @@
 #######################################4#######################################8
 
 resource "azurerm_netapp_volume" "sapmnt" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.NFS_provider == "ANF" && !local.use_AFS_for_shared ? (
                                            var.hana_ANF_volumes.use_existing_sapmnt_volume ? (
                                              0
@@ -59,7 +59,7 @@ resource "azurerm_netapp_volume" "sapmnt" {
 }
 
 resource "azurerm_netapp_volume" "sapmnt_secondary" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.NFS_provider == "ANF" && !local.use_AFS_for_shared ? (
                                            var.hana_ANF_volumes.sapmnt_use_clone_in_secondary_zone ? (
                                              1
@@ -111,7 +111,7 @@ resource "azurerm_netapp_volume" "sapmnt_secondary" {
 
 
 data "azurerm_netapp_volume" "sapmnt" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.NFS_provider == "ANF" && !local.use_AFS_for_shared ? (
                                            var.hana_ANF_volumes.use_existing_sapmnt_volume ? (
                                              1
@@ -130,7 +130,7 @@ data "azurerm_netapp_volume" "sapmnt" {
 
 
 resource "azurerm_netapp_volume" "usrsap" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.hana_ANF_volumes.use_for_usr_sap ? (
                                           var.hana_ANF_volumes.use_existing_usr_sap_volume ? (
                                             0
@@ -181,7 +181,7 @@ resource "azurerm_netapp_volume" "usrsap" {
 }
 
 data "azurerm_netapp_volume" "usrsap" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.hana_ANF_volumes.use_for_usr_sap ? (
                                            var.hana_ANF_volumes.use_existing_usr_sap_volume ? (
                                              1

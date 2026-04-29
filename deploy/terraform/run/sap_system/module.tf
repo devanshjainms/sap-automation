@@ -58,6 +58,7 @@ module "common_infrastructure" {
                                                     azurerm.main                     = azurerm.system
                                                     azurerm.dnsmanagement            = azurerm.dnsmanagement
                                                     azurerm.privatelinkdnsmanagement = azurerm.privatelinkdnsmanagement
+                                                    azurerm.storage                  = azurerm.storage
                                                   }
   Agent_IP                                      = var.add_Agent_IP ? var.Agent_IP : ""
   application_tier                              = local.application_tier
@@ -113,6 +114,7 @@ module "hdb_node" {
                                                     azurerm.main                     = azurerm.system
                                                     azurerm.dnsmanagement            = azurerm.dnsmanagement
                                                     azurerm.privatelinkdnsmanagement = azurerm.privatelinkdnsmanagement
+                                                    azurerm.storage                  = azurerm.storage
                                                   }
 
   admin_subnet                                  = module.common_infrastructure.admin_subnet
@@ -192,7 +194,7 @@ module "app_tier" {
                                                     azurerm.main                     = azurerm.system
                                                     azurerm.dnsmanagement            = azurerm.dnsmanagement
                                                     azurerm.privatelinkdnsmanagement = azurerm.privatelinkdnsmanagement
-                                                    # azapi.api                                 = azapi.api
+                                                    azurerm.storage                  = azurerm.storage
                                                   }
 
   depends_on                                    = [module.common_infrastructure]
@@ -247,7 +249,7 @@ module "anydb_node" {
                                                     azurerm.main                     = azurerm.system
                                                     azurerm.dnsmanagement            = azurerm.dnsmanagement
                                                     azurerm.privatelinkdnsmanagement = azurerm.privatelinkdnsmanagement
-                                                    # azapi.api                                 = azapi.api
+                                                    azurerm.storage                  = azurerm.storage
                                                   }
 
   depends_on                                    = [module.common_infrastructure]

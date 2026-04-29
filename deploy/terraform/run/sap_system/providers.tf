@@ -62,6 +62,25 @@
                                         }
 
   provider "azurerm"                     {
+                                          features {
+                                                      resource_group {
+                                                                      prevent_deletion_if_contains_resources      = var.prevent_deletion_if_contains_resources
+                                                                    }
+                                                      storage        {
+                                                                          data_plane_available                     = var.data_plane_available
+                                                                    }
+                                                    }
+                                          subscription_id            = length(var.subscription_id) > 0 ? var.subscription_id : data.azurerm_key_vault_secret.subscription_id[0].value
+                                          client_id                  = var.use_storage_spn ? var.storage_spn_client_id : (var.use_spn ? data.azurerm_key_vault_secret.cp_client_id[0].value : null)
+                                          client_secret              = var.use_storage_spn ? var.storage_spn_client_secret : (var.use_spn ? ephemeral.azurerm_key_vault_secret.cp_client_secret[0].value : null)
+                                          tenant_id                  = var.use_storage_spn ? var.storage_spn_tenant_id : (var.use_spn ? data.azurerm_key_vault_secret.cp_tenant_id[0].value : null)
+                                          use_msi                    = var.use_storage_spn ? false : (var.use_spn ? false : true)
+
+                                          storage_use_azuread        = true
+                                          alias                      = "storage"
+                                        }
+
+  provider "azurerm"                     {
                                           features {}
                                           alias                      = "dnsmanagement"
                                           subscription_id            = coalesce(var.management_dns_subscription_id, length(local.deployer_subscription_id) > 0 ? local.deployer_subscription_id : "")

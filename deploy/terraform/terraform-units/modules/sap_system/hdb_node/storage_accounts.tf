@@ -3,7 +3,7 @@
 
 
 resource "azurerm_storage_account" "hanashared" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.NFS_provider == "AFS" && var.database.scale_out ? (
                                            try(length(var.hanashared_id) > 0, false) ? (
                                              0) : (
@@ -64,7 +64,7 @@ resource "azurerm_storage_account" "hanashared" {
 #########################################################################################
 
 resource "azurerm_storage_share" "hanashared" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
    count                                = var.NFS_provider == "AFS" && var.database.scale_out ? (
                                            length(try(var.hanashared_id, "")) > 0 ? (
                                              0) : (
@@ -96,7 +96,7 @@ resource "azurerm_storage_share" "hanashared" {
 }
 
 resource "azurerm_private_endpoint" "hanashared" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.NFS_provider == "AFS" && var.use_private_endpoint && var.database.scale_out ? (
                                           length(try(var.hanashared_private_endpoint_id, "")) > 0 ? (
                                             0) : (
@@ -169,7 +169,7 @@ resource "time_sleep" "wait_for_private_endpoints" {
 }
 
 data "azurerm_private_endpoint_connection" "hanashared" {
-  provider                             = azurerm.main
+  provider                             = azurerm.storage
   count                                = var.NFS_provider == "AFS" && var.use_private_endpoint && var.database.scale_out && try(length(var.hanashared_private_endpoint_id) > 0, false) ? (
                                            length(var.hanashared_private_endpoint_id) > 0 ? (
                                              length(var.database.zones)) : (

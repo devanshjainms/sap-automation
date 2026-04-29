@@ -51,7 +51,7 @@ locals {
   ]
 
   app_computer_names = [for idx in range(var.app_server_count) :
-    format("%sapp%02d%s%s", lower(var.sap_sid), idx + var.resource_offset, local.app_oscode, local.random_id_vm_verified)
+    format("%sapp%02d%s%s", lower(local.env_verified), idx + var.resource_offset, local.app_oscode, local.random_id_vm_verified)
   ]
 
   app_server_vm_names = [for idx in range(var.app_server_count) :
@@ -62,7 +62,7 @@ locals {
   ]
 
   iscsi_server_names = [for idx in range(var.iscsi_server_count) :
-    lower(format("%s%s%siscsi%02d", lower(local.env_verified), local.sap_vnet_verified, local.location_short, idx))
+    lower(format("%s%s%siscsi%02d", lower(var.sap_sid), local.sap_vnet_verified, local.location_short, idx))
   ]
 
   hana_computer_names = [for idx in range(var.db_server_count) :
@@ -133,7 +133,7 @@ locals {
 
   //For customer who want to have an alternative name for the second IP address
   app_secondary_dnsnames = [for idx in range(var.app_server_count) :
-    format("v%sa%02d%s%s", lower(var.sap_sid), idx + var.resource_offset, local.app_oscode, substr(local.random_id_vm_verified, 0, 2))
+    format("v%sa%02d%s%s", lower(local.env_verified), idx + var.resource_offset, local.app_oscode, substr(local.random_id_vm_verified, 0, 2))
   ]
 
   anchor_secondary_dnsnames = [for idx in range(length(local.zones)) :

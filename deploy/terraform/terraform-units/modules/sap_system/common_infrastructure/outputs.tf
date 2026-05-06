@@ -131,9 +131,12 @@ output "subnet_cidr_db"                        {
 
 output "db_subnet"                               {
                                                    description = "Database subnet object"
-                                                   value       = var.infrastructure.virtual_networks.sap.subnet_db.defined ? (
-                                                                   azurerm_subnet.db[0]) : (
-                                                                   data.azurerm_subnet.db[0]
+                                                   value       = local.enable_db_deployment ? (
+                                                                   var.infrastructure.virtual_networks.sap.subnet_db.defined ? (
+                                                                     azurerm_subnet.db[0]) : (
+                                                                     data.azurerm_subnet.db[0]
+                                                                   )) : (
+                                                                   null
                                                                  )
                                                  }
 

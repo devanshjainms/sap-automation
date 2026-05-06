@@ -195,7 +195,7 @@ locals {
                                                   local.hdb_ip_offsets.hdb_lb
                                               ))
                                             )
-                                            private_ip_address_allocation = length(try(var.database.loadbalancer.frontend_ips[1], "")) > 0 ? "Static" : "Dynamic"
+                                            private_ip_address_allocation = length(try(var.database.loadbalancer.frontend_ips[0], "")) > 0 ? "Static" : "Dynamic"
                                           },
                                           {
                                             name = format("%s%s%s%s",
@@ -212,7 +212,7 @@ locals {
                                                 var.db_subnet.id
                                               )
                                             private_ip_address = length(try(var.database.loadbalancer.frontend_ips[1], "")) > 0 ? (
-                                              var.database.loadbalancer.frontend_ips[0]) : (
+                                              var.database.loadbalancer.frontend_ips[1]) : (
                                               var.database.use_DHCP ? (
                                                 null) : (
                                                 cidrhost(

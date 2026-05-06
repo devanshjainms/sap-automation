@@ -96,3 +96,8 @@ __pycache__
 
 .idea/
 
+.copilot/*
+.github/agents/*
+.github/workflows/squad*
+.github/workflows/sync*
+.squad/*

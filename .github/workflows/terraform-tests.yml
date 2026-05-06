@@ -1,0 +1,189 @@
+# Terraform Native Tests for SAP Automation (SDAF)
+#
+# Validates Terraform modules using the native test framework (terraform test).
+# Tests run with mock providers — no Azure credentials or real infrastructure needed.
+#
+# Pipeline stages:
+#   1. Format Check  — terraform fmt -check -recursive
+#   2. Variable Tests — validates input variable validation logic (run/ modules)
+#   3. Unit Tests     — plan-level resource tests with mocked providers (terraform-units)
+#
+# Triggered on PRs targeting development branch when Terraform code changes.
+
+name: "Terraform Tests"
+
+on:
+  pull_request:
+    paths:
+      - "deploy/terraform/**"
+  push:
+    paths:
+      - "deploy/terraform/**"
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-fmt:
+    name: "Format Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.2"
+          terraform_wrapper: false
+
+      - name: Terraform Format Check
+        run: |
+          echo "::group::Checking terraform fmt across all modules"
+          if ! terraform fmt -check -recursive deploy/terraform/; then
+            echo ""
+            echo "::error::Terraform formatting check failed. Run 'terraform fmt -recursive deploy/terraform/' locally to fix."
+            echo ""
+            echo "Files requiring formatting:"
+            terraform fmt -recursive -diff deploy/terraform/ 2>&1 | head -100
+            exit 1
+          fi
+          echo "✅ All Terraform files are properly formatted."
+          echo "::endgroup::"
+
+  terraform-test:
+    name: "Test ${{ matrix.module }}"
+    runs-on: ubuntu-latest
+    needs: terraform-fmt
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - sap_deployer
+          - sap_landscape
+          - sap_library
+          - sap_system
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.2"
+          terraform_wrapper: false
+
+      - name: Terraform Init (validate run module)
+        working-directory: deploy/terraform/run/${{ matrix.module }}
+        run: terraform init -backend=false
+
+      - name: Terraform Validate (run module)
+        working-directory: deploy/terraform/run/${{ matrix.module }}
+        run: terraform validate
+
+      - name: Terraform Init (test harness)
+        working-directory: deploy/terraform/tests/run/${{ matrix.module }}
+        run: terraform init
+
+      - name: Terraform Test
+        working-directory: deploy/terraform/tests/run/${{ matrix.module }}
+        run: |
+          terraform test -junit-xml=test-results.xml 2>&1 | tee test-output.txt
+          echo ""
+          echo "--- Test Summary ---"
+          grep -cE "^(  pass|  fail)" test-output.txt | xargs -I{} echo "Total assertions: {}" || true
+          echo "Exit code: ${PIPESTATUS[0]}"
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.module }}
+          path: deploy/terraform/tests/run/${{ matrix.module }}/test-results.xml
+
+      - name: Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: "Results - ${{ matrix.module }}"
+          path: deploy/terraform/tests/run/${{ matrix.module }}/test-results.xml
+          reporter: java-junit
+          fail-on-error: true
+
+  terraform-units-test:
+    name: "Units Test ${{ matrix.module }}"
+    runs-on: ubuntu-latest
+    needs: terraform-fmt
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - module: sap_namegenerator
+            working_dir: deploy/terraform/tests/units/sap_namegenerator
+            extra_args: ""
+          - module: sap_deployer
+            working_dir: deploy/terraform/tests/units/sap_deployer
+            extra_args: ""
+          - module: sap_landscape
+            working_dir: deploy/terraform/tests/units/sap_landscape
+            extra_args: ""
+          - module: sap_library
+            working_dir: deploy/terraform/tests/units/sap_library
+            extra_args: ""
+          - module: sap_system_common
+            working_dir: deploy/terraform/tests/units/sap_system/common_infrastructure
+            extra_args: ""
+          - module: sap_system_hdb
+            working_dir: deploy/terraform/tests/units/sap_system/hdb_node
+            extra_args: ""
+          - module: sap_system_anydb
+            working_dir: deploy/terraform/tests/units/sap_system/anydb_node
+            extra_args: ""
+          - module: sap_system_app
+            working_dir: deploy/terraform/tests/units/sap_system/app_tier
+            extra_args: ""
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.2"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.working_dir }}
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: ${{ matrix.working_dir }}
+        run: terraform validate
+
+      - name: Terraform Test
+        working-directory: ${{ matrix.working_dir }}
+        run: |
+          terraform test ${{ matrix.extra_args }} -junit-xml=test-results.xml 2>&1 | tee test-output.txt
+          echo ""
+          echo "--- Test Summary ---"
+          tail -3 test-output.txt
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: units-test-results-${{ matrix.module }}
+          path: ${{ matrix.working_dir }}/test-results.xml
+
+      - name: Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: "Units - ${{ matrix.module }}"
+          path: ${{ matrix.working_dir }}/test-results.xml
+          reporter: java-junit
+          fail-on-error: true

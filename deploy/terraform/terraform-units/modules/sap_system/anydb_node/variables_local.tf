@@ -124,6 +124,12 @@ locals {
                                                          "sku"       = "ol8_6-gen2"
                                                          "version"   = "latest"
                                                        }
+                                           ORACLE-ASM = {
+                                                         "publisher" = "Oracle",
+                                                         "offer"     = "Oracle-Linux",
+                                                         "sku"       = "ol8_6-gen2"
+                                                         "version"   = "latest"
+                                                       }
                                            SQLSERVER = {
                                                          "publisher" = "MicrosoftSqlServer",
                                                          "offer"     = "SQL2017-WS2016",

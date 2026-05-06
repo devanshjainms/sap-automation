@@ -10,12 +10,14 @@ data "azurerm_client_config" "current" {
 #                                                                             #
 ###############################################################################
 data "azurerm_key_vault_secret" "sid_pk" {
+  provider                             = azurerm.kv_user
   count                                = local.use_local_credentials ? 0 : 1
   name                                 = var.landscape_tfstate.sid_public_key_secret_name
   key_vault_id                         = var.key_vault.user.id
 }
 
 data "azurerm_key_vault_secret" "sid_username" {
+  provider                             = azurerm.kv_user
   count                                = local.use_local_credentials ? 0 : 1
   name                                 = try(
                                            var.landscape_tfstate.sid_username_secret_name,
@@ -25,6 +27,7 @@ data "azurerm_key_vault_secret" "sid_username" {
 }
 
 data "azurerm_key_vault_secret" "sid_password" {
+  provider                             = azurerm.kv_user
   count                                = local.use_local_credentials ? 0 : 1
   name                                 = try(
                                            var.landscape_tfstate.sid_password_secret_name,
@@ -72,7 +75,7 @@ resource "azurerm_key_vault" "sid_keyvault_user" {
 
 // Import an existing user Key Vault
 data "azurerm_key_vault" "sid_keyvault_user" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = (local.enable_sid_deployment && length(local.user_key_vault_id) > 0) ? 1 : 0
   name                                 = local.user_keyvault_name
   resource_group_name                  = local.user_keyvault_resourcegroup_name
@@ -108,7 +111,7 @@ resource "random_password" "password" {
 
 // Store the logon username in KV when authentication type is password
 resource "azurerm_key_vault_secret" "auth_username" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = local.enable_sid_deployment && local.use_local_credentials ? 1 : 0
   content_type                         = "configuration"
   name                                 = format("%s-username", try(coalesce(var.naming.resource_prefixes.sdu_secret, local.prefix), ""))
@@ -119,7 +122,7 @@ resource "azurerm_key_vault_secret" "auth_username" {
 
 // Store the password in KV when authentication type is password
 resource "azurerm_key_vault_secret" "auth_password" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = local.enable_sid_deployment && local.use_local_credentials ? 1 : 0
   content_type                         = "secret"
   name                                 = format("%s-password", try(coalesce(var.naming.resource_prefixes.sdu_secret, local.prefix), ""))
@@ -140,7 +143,7 @@ resource "tls_private_key" "sdu" {
 
 // By default the SSH keys are stored in landscape key vault. By defining the authenticationb block the SDU keyvault
 resource "azurerm_key_vault_secret" "sdu_private_key" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = local.enable_sid_deployment && local.use_local_credentials ? 1 : 0
   content_type                         = "secret"
   name                                 = format("%s-sshkey", try(coalesce(var.naming.resource_prefixes.sdu_secret, local.prefix), ""))
@@ -150,7 +153,7 @@ resource "azurerm_key_vault_secret" "sdu_private_key" {
 }
 
 resource "azurerm_key_vault_secret" "sdu_public_key" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = local.enable_sid_deployment && local.use_local_credentials ? 1 : 0
   content_type                         = "secret"
   name                                 = format("%s-sshkey-pub", try(coalesce(var.naming.resource_prefixes.sdu_secret, local.prefix), ""))

@@ -233,7 +233,7 @@ resource "azurerm_role_assignment" "kv_user_msi_rbac_secret_officer" {
 #######################################4#######################################8
 
 resource "azurerm_key_vault_access_policy" "kv_user" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = 0
   key_vault_id                         = var.key_vault.user.exists ? (
                                            data.azurerm_key_vault.kv_user[0].id) : (
@@ -254,7 +254,7 @@ resource "azurerm_key_vault_access_policy" "kv_user" {
 }
 
 resource "azurerm_key_vault_access_policy" "kv_user_spn" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = !var.key_vault.user.exists && !var.key_vault.enable_rbac_authorization && var.options.use_spn ? 1 : 0
   key_vault_id                         = var.key_vault.user.exists ? (
                                            data.azurerm_key_vault.kv_user[0].id) : (
@@ -274,7 +274,7 @@ resource "azurerm_key_vault_access_policy" "kv_user_spn" {
                                         ]
 }
 resource "azurerm_key_vault_access_policy" "kv_user_msi" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = !var.key_vault.user.exists && !var.key_vault.enable_rbac_authorization && var.options.assign_permissions && (contains(keys(var.deployer_tfstate), "deployer_uai") ? length(var.deployer_tfstate.deployer_uai.principal_id) > 0 : false) ? 1 : 0
   key_vault_id                         = var.key_vault.user.exists ? (
                                            data.azurerm_key_vault.kv_user[0].id) : (
@@ -358,7 +358,7 @@ data "azurerm_private_endpoint_connection" "kv_user" {
 ###############################################################################
 
 resource "azurerm_key_vault_access_policy" "kv_user_additional_users" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = var.key_vault.enable_rbac_authorization ? (
                                            0) : (
                                            length(compact(var.additional_users_to_add_to_keyvault_policies)) > 0 ? (
@@ -381,7 +381,7 @@ resource "azurerm_key_vault_access_policy" "kv_user_additional_users" {
 }
 
 resource "azurerm_role_assignment" "kv_user_additional_users" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = var.key_vault.enable_rbac_authorization ? (
                                            length(compact(var.additional_users_to_add_to_keyvault_policies)) > 0 ? (
                                              length(var.additional_users_to_add_to_keyvault_policies)) : (
@@ -482,7 +482,7 @@ resource "azurerm_private_endpoint" "kv_user" {
 
 // Key pair/password will be stored in the existing KV if specified, otherwise will be stored in a newly provisioned KV
 resource "azurerm_key_vault_secret" "sid_ppk" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,
@@ -511,7 +511,7 @@ resource "azurerm_key_vault_secret" "sid_ppk" {
 }
 
 data "azurerm_key_vault_secret" "sid_ppk" {
-  provider                              = azurerm.main
+  provider                              = azurerm.kv_user
   count                                 = length(var.key_vault.private_key_secret_name) > 0 ? 1 : 0
   depends_on                            = [
                                            time_sleep.wait_for_role_assignment,
@@ -523,7 +523,7 @@ data "azurerm_key_vault_secret" "sid_ppk" {
 }
 
 resource "azurerm_key_vault_secret" "sid_pk" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,
@@ -549,7 +549,7 @@ resource "azurerm_key_vault_secret" "sid_pk" {
 }
   
 data "azurerm_key_vault_secret" "sid_pk" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,
@@ -566,7 +566,7 @@ data "azurerm_key_vault_secret" "sid_pk" {
 
 // Credentials will be stored in the existing KV if specified, otherwise will be stored in a newly provisioned KV
 resource "azurerm_key_vault_secret" "sid_username" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,
@@ -595,7 +595,7 @@ resource "azurerm_key_vault_secret" "sid_username" {
 }
 
 data "azurerm_key_vault_secret" "sid_username" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,
@@ -610,7 +610,7 @@ data "azurerm_key_vault_secret" "sid_username" {
 }
 
 resource "azurerm_key_vault_secret" "sid_password" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,
@@ -639,7 +639,7 @@ resource "azurerm_key_vault_secret" "sid_password" {
 }
 
 resource "azurerm_key_vault_secret" "deployer_keyvault_user_name" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,
@@ -667,7 +667,7 @@ resource "azurerm_key_vault_secret" "deployer_keyvault_user_name" {
 }
 
 data "azurerm_key_vault_secret" "sid_password" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,
@@ -684,7 +684,7 @@ data "azurerm_key_vault_secret" "sid_password" {
 
 //Witness access key
 resource "azurerm_key_vault_secret" "witness_access_key" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   depends_on                           = [
                                            time_sleep.wait_for_role_assignment,
                                            azurerm_private_endpoint.kv_user,

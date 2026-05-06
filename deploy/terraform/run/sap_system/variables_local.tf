@@ -49,6 +49,15 @@ locals {
 
   deployer_subscription_id           = length(local.spn_key_vault_arm_id) > 0 ? split("/", local.spn_key_vault_arm_id)[2] : ""
 
+  // Resolve the user key vault subscription for cross-subscription access
+  user_kv_arm_id                     = trimspace(coalesce(
+                                         try(contains(keys(data.terraform_remote_state.landscape.outputs), "user_credential_vault_id") ? data.terraform_remote_state.landscape.outputs.user_credential_vault_id : "", ""),
+                                         try(contains(keys(data.terraform_remote_state.landscape.outputs), "landscape_key_vault_user_arm_id") ? data.terraform_remote_state.landscape.outputs.landscape_key_vault_user_arm_id : "", ""),
+                                         var.user_keyvault_id,
+                                         " "
+                                       ))
+  user_kv_subscription_id            = length(trimspace(local.user_kv_arm_id)) > 0 ? split("/", local.user_kv_arm_id)[2] : ""
+
   // Custom naming: Load from JSON file (jsondecode creates tuples from JSON arrays)
   custom_names_raw                   = length(var.name_override_file) > 0 ? (
                                         jsondecode(file(format("%s/%s", path.cwd, var.name_override_file)))) : (

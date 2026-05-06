@@ -14,6 +14,7 @@ module "sap_landscape" {
                                                    azurerm.dnsmanagement            = azurerm.dnsmanagement
                                                    azurerm.peering                  = azurerm.peering
                                                    azurerm.privatelinkdnsmanagement = azurerm.privatelinkdnsmanagement
+                                                   azurerm.kv_user                  = azurerm.kv_user
                                                    azapi.api                        = azapi.api
                                                  }
 

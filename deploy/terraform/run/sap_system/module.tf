@@ -58,6 +58,7 @@ module "common_infrastructure" {
                                                     azurerm.main                     = azurerm.system
                                                     azurerm.dnsmanagement            = azurerm.dnsmanagement
                                                     azurerm.privatelinkdnsmanagement = azurerm.privatelinkdnsmanagement
+                                                    azurerm.kv_user                  = azurerm.kv_user
                                                   }
   Agent_IP                                      = var.add_Agent_IP ? var.Agent_IP : ""
   application_tier                              = local.application_tier

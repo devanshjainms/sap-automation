@@ -83,6 +83,20 @@
 
 
 
+  provider "azurerm"                     {
+                                          features {}
+                                          alias                      = "kv_user"
+                                          subscription_id            = length(local.user_kv_subscription_id) > 0 ? (
+                                                                        local.user_kv_subscription_id) : (
+                                                                        length(var.subscription_id) > 0 ? var.subscription_id : data.azurerm_key_vault_secret.subscription_id[0].value
+                                                                      )
+                                          client_id                  = var.use_spn ? data.azurerm_key_vault_secret.client_id[0].value : null
+                                          client_secret              = var.use_spn ? ephemeral.azurerm_key_vault_secret.client_secret[0].value : null
+                                          tenant_id                  = var.use_spn ? data.azurerm_key_vault_secret.tenant_id[0].value : null
+                                          use_msi                    = var.use_spn ? false : true
+                                          storage_use_azuread        = true
+                                        }
+
   provider "azuread"                     {
                                           client_id                  = var.use_spn ? data.azurerm_key_vault_secret.cp_client_id[0].value : null
                                           client_secret              = var.use_spn ? ephemeral.azurerm_key_vault_secret.cp_client_secret[0].value : null

@@ -73,7 +73,7 @@ resource "azurerm_key_vault" "kv_user" {
 
 // Import an existing user Key Vault
 data "azurerm_key_vault" "kv_user" {
-  provider                             = azurerm.main
+  provider                             = azurerm.kv_user
   count                                = var.key_vault.user.exists ? 1 : 0
   name                                 = split("/", var.key_vault.user.id)[8]
   resource_group_name                  = split("/", var.key_vault.user.id)[4]

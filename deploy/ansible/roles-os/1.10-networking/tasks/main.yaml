@@ -9,12 +9,24 @@
 
 # Process the first secondary IP configuration available on the primary NIC
 - name:                                "1.10 Networking - Get the IP information from instance meta data service"
-  ansible.builtin.uri:
-    url:                               http://169.254.169.254/metadata/instance/network/interface/0?api-version=2021-02-01
-    use_proxy:                         false
-    headers:
-      Metadata:                        true
-  register: azure_metadata
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --silent
+      - --show-error
+      - --fail
+      - --noproxy
+      - "*"
+      - -H
+      - Metadata:true
+      - http://169.254.169.254/metadata/instance/network/interface/0?api-version=2021-02-01
+  register: azure_metadata_raw
+  changed_when:                        false
+
+- name:                                "1.10 Networking - Parse IP information from instance meta data service"
+  ansible.builtin.set_fact:
+    azure_metadata:
+      json:                            "{{ azure_metadata_raw.stdout | from_json }}"
 
 - name:                                "1.10 Networking - Filter out the values for IPAddresses in json format"
   ansible.builtin.set_fact:
@@ -101,12 +113,24 @@
 # Get interface data and process network information for all interfaces except the first one
 
 - name:                                "1.10 Networking - Get IMDS data for all interfaces"
-  ansible.builtin.uri:
-    url:                               http://169.254.169.254/metadata/instance/network/interface?api-version=2021-02-01&format=json
-    use_proxy:                         false
-    headers:
-      Metadata:                        true
-  register: azure_network_metadata
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --silent
+      - --show-error
+      - --fail
+      - --noproxy
+      - "*"
+      - -H
+      - Metadata:true
+      - http://169.254.169.254/metadata/instance/network/interface?api-version=2021-02-01&format=json
+  register: azure_network_metadata_raw
+  changed_when:                        false
+
+- name:                                "1.10 Networking - Parse IMDS data for all interfaces"
+  ansible.builtin.set_fact:
+    azure_network_metadata:
+      json:                            "{{ azure_network_metadata_raw.stdout | from_json }}"
 
 # build a list of all the network interfaces
 - name:                                "1.10 Networking - Get the network interfaces"

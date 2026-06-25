@@ -357,6 +357,10 @@ packages:
     - { tier: 'os',     package: 'NetworkManager-cloud-setup',                   node_tier: 'all',            state: 'present' }
     - { tier: 'ha',     package: 'NetworkManager-cloud-setup',                   node_tier: 'all',            state: 'absent'  }
     - { tier: 'sapos',  package: 'compat-sap-c++-13',                            node_tier: 'hana',           state: 'present' }
+  redhat9.8:
+    - { tier: 'os',     package: 'NetworkManager-cloud-setup',                   node_tier: 'all',            state: 'present' }
+    - { tier: 'ha',     package: 'NetworkManager-cloud-setup',                   node_tier: 'all',            state: 'absent'  }
+    - { tier: 'sapos',  package: 'compat-sap-c++-13',                            node_tier: 'hana',           state: 'present' }
   redhat10:
     - { tier: 'os',     package: '@base',                                        node_tier: 'all',            state: 'present' }
     - { tier: 'os',     package: 'bind-utils',                                   node_tier: 'all',            state: 'present' }

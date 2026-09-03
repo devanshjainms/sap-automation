@@ -231,12 +231,34 @@ fi
 # an eval command.
 validate_extra_parameters "quality assurance parameters" "$qa_parameters"
 
-# The setup playbook runs privileged git and pip operations, so it is given
-# only the parameters this script constructs. Free-form queue time parameters
-# reach the unprivileged execution playbook alone, otherwise anyone able to
-# queue the pipeline could override the framework repository or directory and
-# have their own code run as root on the agent.
+# The setup playbook runs privileged git and pip operations, so arbitrary queue
+# time parameters remain execution-only. The framework fork and version are
+# allowlisted so a queued validation run can select its source explicitly.
 setup_parameters="$qa_parameters"
+declare -a setup_source_tokens=()
+read -r -a setup_source_tokens <<< "$new_parameters"
+for ((index = 0; index < ${#setup_source_tokens[@]}; index += 2)); do
+	assignment="${setup_source_tokens[$((index + 1))]}"
+	parameter_name="${assignment%%=*}"
+	parameter_value="${assignment#*=}"
+
+	case "$parameter_name" in
+	sap_automation_qa_fork)
+		if ! [[ "$parameter_value" =~ ^[A-Za-z0-9-]+$ ]]; then
+			echo "##vso[task.logissue type=error]The sap_automation_qa_fork value must be a GitHub owner name."
+			exit 2
+		fi
+		setup_parameters="$setup_parameters -e $assignment"
+		;;
+	sap_automation_qa_version)
+		if ! [[ "$parameter_value" =~ ^[A-Za-z0-9._/@+-]+$ ]]; then
+			echo "##vso[task.logissue type=error]The sap_automation_qa_version value must be a branch, tag, or commit."
+			exit 2
+		fi
+		setup_parameters="$setup_parameters -e $assignment"
+		;;
+	esac
+done
 
 # The framework authenticates with a managed identity regardless of how the
 # pipeline itself authenticates, so the identity has to be selectable in
